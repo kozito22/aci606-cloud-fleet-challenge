@@ -645,21 +645,48 @@ function render(t) {
   front.forEach((it) => it.draw());
   if (state.toggles.tags) {
     for (const it of back) if (it.label) { const [x, y] = iso(...it.label.at); pillTag(x, y, "#22d3ee", it.label.text); }
-    for (const it of front) {
-      const r = it.robot;
-      if (!r || !r.head) continue;
-      const status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
-      ctx.save(); ctx.globalAlpha = Math.max(.35, r.alpha ?? 1);
-      const plate = pillTag(r.head[0], r.head[1], COLORS[status], r.name, LABEL[status], status === "NONE" || status === "OFF" ? "#6b7387" : COLORS[status]);
-      const batt = Math.max(0, Math.min(100, r.data.battery));
-      ctx.fillStyle = "#e6e8ef"; ctx.fillRect(plate.left + 10, plate.top + plate.h + 2, plate.w - 20, 3);
-      ctx.fillStyle = batt < 20 ? COLORS.CRITICAL : batt < 50 ? COLORS.WARNING : COLORS.NORMAL;
-      ctx.fillRect(plate.left + 10, plate.top + plate.h + 2, (plate.w - 20) * batt / 100, 3);
-      if (r.bubble && performance.now() < r.bubble.until) bubble(r.head[0], plate.top, r.bubble.text);
-      ctx.restore();
-    }
+    drawRobotTags(front.map((it) => it.robot).filter((r) => r && r.head));
   }
   requestAnimationFrame(render);
+}
+
+// Name plates never overlap: the front-most robot keeps its spot and the ones
+// behind it are stacked upwards with a thin leader line. Speech bubbles are
+// shown only where they fit (at most 3, critical robots first).
+const overlaps = (a, b) => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3;
+function textWidth(t, font) { ctx.font = font; return ctx.measureText(t).width; }
+function drawRobotTags(robots) {
+  const placed = [], bubbles = [], now = performance.now();
+  for (const r of robots.sort((a, b) => b.head[1] - a.head[1])) {
+    const status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
+    const w = Math.round(textWidth(r.name, "600 11px Inter, sans-serif") + textWidth(LABEL[status], "500 10px Inter, sans-serif") + 36);
+    const [x, headY] = r.head;
+    const rect = { x: x - w / 2, y: headY - 20, w, h: 26 };
+    for (let tries = 0; tries < 5 && placed.some((p) => overlaps(rect, p)); tries++) rect.y -= 27;
+    placed.push(rect);
+    ctx.save(); ctx.globalAlpha = Math.max(.35, r.alpha ?? 1);
+    if (rect.y + 20 < headY - 1) {
+      ctx.strokeStyle = "rgba(100,116,139,.55)"; ctx.beginPath(); ctx.moveTo(x, headY); ctx.lineTo(x, rect.y + 25); ctx.stroke();
+    }
+    const plate = pillTag(x, rect.y + 20, COLORS[status], r.name, LABEL[status], status === "NONE" || status === "OFF" ? "#6b7387" : COLORS[status]);
+    const batt = Math.max(0, Math.min(100, r.data.battery));
+    ctx.fillStyle = "#e6e8ef"; ctx.fillRect(plate.left + 10, plate.top + plate.h + 2, plate.w - 20, 3);
+    ctx.fillStyle = batt < 20 ? COLORS.CRITICAL : batt < 50 ? COLORS.WARNING : COLORS.NORMAL;
+    ctx.fillRect(plate.left + 10, plate.top + plate.h + 2, (plate.w - 20) * batt / 100, 3);
+    ctx.restore();
+    if (r.bubble && now < r.bubble.until) bubbles.push({ r, x, top: plate.top, crit: status === "CRITICAL" });
+  }
+  bubbles.sort((a, b) => (b.crit - a.crit) || (b.r.bubble.until - a.r.bubble.until));
+  let shown = 0;
+  for (const b of bubbles) {
+    if (shown >= 3) break;
+    const bw = Math.min(190, textWidth(b.r.bubble.text, "500 11px Inter, sans-serif") + 16);
+    const rect = { x: b.x - bw / 2, y: b.top - 32, w: bw, h: 30 };
+    if (placed.some((p) => overlaps(rect, p))) continue;
+    placed.push(rect);
+    bubble(b.x, b.top, b.r.bubble.text);
+    shown++;
+  }
 }
 
 function robotAt(e) {
@@ -730,6 +757,11 @@ function setApi(ok) {
 }
 const POLL_MS = 1500;
 const who = (r) => `<b>${esc(r.name)}</b> <span class="mono" style="color:var(--faint)">${esc(r.id)}</span>`;
+function announce(r, d) {
+  if (r.stable === "CRITICAL") { say(r, `¡${symptom(d)}!`); log(`${who(r)} pasó a <b style="color:${COLORS.CRITICAL}">crítico</b> · ${esc(symptom(d))} · conf. ${fmt(d.confidence * 100, 0)}%`, "bad", r.id); }
+  else if (r.stable === "WARNING") { say(r, "Algo no anda bien…"); log(`${who(r)} en <b style="color:${COLORS.WARNING}">alerta</b> · temp. ${fmt(d.motor_temp, 0)} °C`, "warn", r.id); }
+  else { say(r, "¡De vuelta al trabajo!"); log(`${who(r)} volvió a estado normal.`, "ok", r.id); }
+}
 function ingestRobots(list) {
   const now = performance.now();
   const seen = new Set();
@@ -737,9 +769,10 @@ function ingestRobots(list) {
     seen.add(d.robot_id);
     let r = state.robots.get(d.robot_id);
     const x = wrap10(d.x), y = wrap10(d.y);
+    const isNewSample = !r || d.timestamp !== r.lastTs;
     if (!r) {
       r = { id: d.robot_id, ...identity(d.robot_id), seed: hashIndex(d.robot_id) % 37, from: { x, y }, to: { x, y }, t0: now, dur: 1,
-            px: x, py: y, data: d, connected: d.connected, lastTs: d.timestamp };
+            px: x, py: y, data: d, connected: d.connected, lastTs: d.timestamp, stable: d.predicted_status, cand: null, candN: 0 };
       state.robots.set(d.robot_id, r);
       if (state.fleet) log(`${who(r)} se unió a la oficina como ${esc(r.role.rol.toLowerCase())}.`, "info", r.id);
       say(r, "¡Hola! Me reporto");
@@ -755,11 +788,14 @@ function ingestRobots(list) {
       r.from = { x: fx, y: fy }; r.to = { x: fx + dx, y: fy + dy }; r.px = fx; r.py = fy;
       r.t0 = now; r.dur = POLL_MS; r.lastTs = d.timestamp;
     }
-    const prev = r.data.predicted_status;
-    if (prev && d.predicted_status && prev !== d.predicted_status && d.connected) {
-      if (d.predicted_status === "CRITICAL") { say(r, `¡${symptom(d)}!`); log(`${who(r)} pasó a <b style="color:${COLORS.CRITICAL}">crítico</b> · ${esc(symptom(d))} · conf. ${fmt(d.confidence * 100, 0)}%`, "bad", r.id); }
-      else if (d.predicted_status === "WARNING") { say(r, "Algo no anda bien…"); log(`${who(r)} en <b style="color:${COLORS.WARNING}">alerta</b> · temp. ${fmt(d.motor_temp, 0)} °C`, "warn", r.id); }
-      else { say(r, "¡De vuelta al trabajo!"); log(`${who(r)} volvió a estado normal.`, "ok", r.id); }
+    // The plate always shows the latest prediction, but a change is announced
+    // (feed + bubble) only when it repeats in two consecutive samples: a single
+    // flip near a class boundary is sensor noise, not a real change.
+    if (isNewSample && d.predicted_status && d.connected) {
+      if (!r.stable || d.predicted_status === r.stable) { r.stable = d.predicted_status; r.cand = null; }
+      else if (d.predicted_status === r.cand) r.candN++;
+      else { r.cand = d.predicted_status; r.candN = 1; }
+      if (r.cand && r.candN >= 2) { r.stable = r.cand; r.cand = null; announce(r, d); }
     }
     if (r.connected && !d.connected) { log(`${who(r)} perdió la señal.`, "off", r.id); say(r, "Zzz… sin señal", 6000); }
     if (d.battery < 15 && r.data.battery >= 15) { say(r, `Batería baja: ${fmt(d.battery, 0)}%`); log(`${who(r)} con batería baja (${fmt(d.battery, 0)}%).`, "warn", r.id); }
