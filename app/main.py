@@ -80,6 +80,8 @@ def health() -> dict:
         "version": app.version,
         "database": db.backend_name(),
         "database_ok": db.ping(),
+        # Commit being served (set by Vercel/Render): proves which deploy answered.
+        "commit": (os.environ.get("VERCEL_GIT_COMMIT_SHA") or os.environ.get("RENDER_GIT_COMMIT") or "local")[:7],
         "utc": datetime.now(timezone.utc).isoformat(),
     }
 
