@@ -4,163 +4,170 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fleet Office · ACI606</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 18' shape-rendering='crispEdges'%3E%3Crect x='2' y='2' width='9' height='7' fill='%23161b29'/%3E%3Crect x='3' y='3' width='7' height='5' fill='%2359a5ff'/%3E%3Crect x='4' y='4' width='5' height='3' fill='%2313203b'/%3E%3Crect x='5' y='5' width='1' height='1' fill='%235ef2b5'/%3E%3Crect x='7' y='5' width='1' height='1' fill='%235ef2b5'/%3E%3Crect x='1' y='10' width='11' height='6' fill='%23161b29'/%3E%3Crect x='2' y='11' width='9' height='4' fill='%2359a5ff'/%3E%3Crect x='6' y='0' width='1' height='2' fill='%235ef2b5'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 18' shape-rendering='crispEdges'%3E%3Crect x='2' y='2' width='9' height='7' fill='%23161b29'/%3E%3Crect x='3' y='3' width='7' height='5' fill='%2359a5ff'/%3E%3Crect x='4' y='4' width='5' height='3' fill='%2313203b'/%3E%3Crect x='5' y='5' width='1' height='1' fill='%2310b981'/%3E%3Crect x='7' y='5' width='1' height='1' fill='%2310b981'/%3E%3Crect x='1' y='10' width='11' height='6' fill='%23161b29'/%3E%3Crect x='2' y='11' width='9' height='4' fill='%2359a5ff'/%3E%3Crect x='6' y='0' width='1' height='2' fill='%2310b981'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0d1220;
-      --panel: #151c2e;
-      --panel-2: #1b2438;
-      --line: #2a3654;
-      --shadow: #070a12;
-      --text: #e8edf7;
-      --muted: #8d9ab5;
-      --mint: #5ef2b5;
-      --cyan: #59c8ff;
-      --amber: #ffc857;
-      --red: #ff5d6c;
-      --gray: #7d879c;
-      --pixel: "Pixelify Sans", "Silkscreen", ui-monospace, monospace;
-      --tiny: "Silkscreen", ui-monospace, monospace;
-      --body: "Inter", system-ui, sans-serif;
-      color-scheme: dark;
+      --bg: #eceef5;
+      --panel: #ffffff;
+      --panel-2: #f6f7fb;
+      --line: #e3e6ef;
+      --text: #1d2433;
+      --muted: #6b7387;
+      --faint: #9aa1b3;
+      --accent: #0891b2;
+      --glass: #22d3ee;
+      --ok: #10b981;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --off: #9aa3b5;
+      --shadow: 0 10px 30px rgba(30, 40, 80, .08), 0 1px 2px rgba(30, 40, 80, .06);
+      --radius: 14px;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+      color-scheme: light;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--body); }
-    body::before { /* subtle scanline/pixel texture */
-      content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
-      background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px); background-size: 4px 4px;
-    }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 var(--sans); }
+    button { font: inherit; }
 
     /* ---------- top bar ---------- */
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-      padding: 14px 24px; border-bottom: 2px solid var(--line); background: #10172a; position: sticky; top: 0; z-index: 5; }
+    .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+      padding: 12px 24px; background: rgba(255,255,255,.82); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand canvas { width: 40px; height: 52px; image-rendering: pixelated; }
-    .brand h1 { margin: 0; font: 700 24px/1 var(--pixel); letter-spacing: 1px; }
-    .brand p { margin: 4px 0 0; color: var(--muted); font: 11px var(--tiny); text-transform: uppercase; }
+    .hex { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: #ecfeff; border: 1px solid #a5f3fc; }
+    .brand h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: .14em; }
+    .brand p { margin: 0; color: var(--muted); font-size: 12px; }
     .pills { display: flex; gap: 8px; flex-wrap: wrap; }
-    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; font: 11px var(--tiny);
-      text-transform: uppercase; background: var(--panel); border: 2px solid var(--line); box-shadow: 3px 3px 0 var(--shadow); white-space: nowrap; }
-    .dot { width: 8px; height: 8px; background: var(--gray); box-shadow: 0 0 0 2px rgba(0,0,0,.35); }
-    .ok .dot { background: var(--mint); box-shadow: 0 0 8px var(--mint); }
-    .bad .dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
-    .warn .dot { background: var(--amber); }
+    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--panel);
+      border: 1px solid var(--line); font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--off); flex: none; display: inline-block; }
+    .ok .dot { background: var(--ok); box-shadow: 0 0 0 3px rgba(16,185,129,.18); }
+    .bad .dot { background: var(--bad); box-shadow: 0 0 0 3px rgba(239,68,68,.18); }
+    .live { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+    .live .dot { background: var(--ok); animation: pulse 1.6s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.45); } 70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
 
     /* ---------- layout ---------- */
-    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 18px; padding: 18px 24px 28px; max-width: 1640px; margin: 0 auto; }
-    .main-col { display: grid; gap: 18px; min-width: 0; }
-    .side { display: grid; gap: 18px; align-content: start; }
-    .card { background: var(--panel); border: 2px solid var(--line); box-shadow: 5px 5px 0 var(--shadow); min-width: 0; }
-    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-      padding: 10px 14px; border-bottom: 2px solid var(--line); background: var(--panel-2); }
-    .card-head h2 { margin: 0; font: 600 15px var(--pixel); letter-spacing: .5px; text-transform: uppercase; color: var(--mint); }
-    .card-body { padding: 14px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; padding: 20px 24px 32px; max-width: 1640px; margin: 0 auto; }
+    .main-col, .side { display: grid; gap: 20px; align-content: start; min-width: 0; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); min-width: 0; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 14px 16px 0; }
+    .card-head h2 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .card-body { padding: 14px 16px 16px; }
     .hint { color: var(--muted); font-size: 12px; }
+    .mono { font-family: var(--mono); }
 
-    /* ---------- office ---------- */
+    /* ---------- office stage ---------- */
     .toggles { display: flex; gap: 6px; flex-wrap: wrap; }
-    .toggle { font: 11px var(--tiny); text-transform: uppercase; color: var(--muted); background: var(--panel); cursor: pointer;
-      border: 2px solid var(--line); padding: 5px 9px; box-shadow: 2px 2px 0 var(--shadow); }
-    .toggle[aria-pressed="true"] { color: #08111f; background: var(--mint); border-color: var(--mint); }
-    .toggle:focus-visible, .agent:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
-    .stage { position: relative; background: linear-gradient(#18213a, #0f1628); overflow: hidden; }
-    #office { display: block; width: 100%; height: auto; image-rendering: pixelated; cursor: default; }
-    .chat { position: absolute; left: 12px; bottom: 12px; width: min(330px, 46%); background: rgba(16, 24, 44, .92);
-      border: 2px solid #3a4a72; box-shadow: 3px 3px 0 var(--shadow); font-size: 12px; }
-    .chat-head { display: flex; justify-content: space-between; padding: 4px 8px; background: #22335c; font: 10px var(--tiny); text-transform: uppercase; color: #bcd0ff; }
-    .chat-log { max-height: 112px; overflow-y: auto; padding: 6px 8px; display: grid; gap: 3px; }
-    .chat-log div { line-height: 1.35; }
-    .chat-log b { font-weight: 600; }
-    .chat-log .t { color: var(--muted); font: 10px var(--tiny); margin-right: 4px; }
-    .legend { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
-      background: rgba(16, 24, 44, .9); border: 2px solid #3a4a72; padding: 6px 9px; font: 10px var(--tiny); text-transform: uppercase; }
-    .legend span { display: inline-flex; align-items: center; gap: 5px; }
-    .sw { width: 9px; height: 9px; display: inline-block; }
-    .offline-banner { position: absolute; inset: 0; display: none; place-items: center; background: rgba(8, 10, 18, .65);
-      font: 700 20px var(--pixel); color: var(--red); text-transform: uppercase; letter-spacing: 1px; }
+    .toggle { cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 999px; padding: 5px 11px; font-size: 12px; }
+    .toggle[aria-pressed="true"] { color: #0e7490; background: #ecfeff; border-color: #a5f3fc; }
+    .toggle:focus-visible, .agent:focus-visible, .tab:focus-visible, .close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .stage { position: relative; margin: 12px; border-radius: 12px; overflow: hidden; background: linear-gradient(180deg, #f3f4f9 0%, #e4e7f0 100%); }
+    #office { display: block; width: 100%; height: auto; }
+    .feed { position: absolute; left: 12px; bottom: 12px; width: min(560px, calc(100% - 24px)); background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
+      border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+    .feed-head { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px 0; font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+    .feed-head button { border: 0; background: none; color: var(--accent); cursor: pointer; font-size: 12px; text-transform: none; letter-spacing: 0; }
+    .feed-log { max-height: 68px; overflow-y: auto; padding: 4px 12px 8px; display: grid; gap: 2px; font-size: 13px; }
+    .feed.open .feed-log { max-height: 220px; }
+    .feed-log div { display: flex; gap: 10px; align-items: baseline; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-log .t { font: 12px var(--mono); color: var(--faint); flex: none; }
+    .feed-log .i { flex: none; font-weight: 700; width: 10px; text-align: center; }
+    .offline-banner { position: absolute; inset: 0; display: none; place-items: center; background: rgba(236,238,245,.75);
+      font-weight: 700; color: var(--bad); letter-spacing: .08em; text-transform: uppercase; }
     .api-down .offline-banner { display: grid; }
 
-    /* ---------- KPIs ---------- */
-    .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .kpi { background: #0f1526; border: 2px solid var(--line); padding: 8px 10px; }
-    .kpi .label { font: 10px var(--tiny); text-transform: uppercase; color: var(--muted); }
-    .kpi .value { font: 700 22px/1.15 var(--pixel); color: var(--mint); font-variant-numeric: tabular-nums; }
-    .kpi .sub { font-size: 11px; color: var(--muted); }
-    .state-line { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; padding: 8px 10px;
-      border: 2px dashed var(--line); font: 12px var(--tiny); text-transform: uppercase; }
-
-    /* ---------- fleet status ---------- */
-    .stack { display: flex; height: 16px; border: 2px solid var(--line); background: #0f1526; }
-    .stack div { height: 100%; transition: width .4s; }
-    .stack-legend { display: flex; justify-content: space-between; margin-top: 6px; font: 10px var(--tiny); text-transform: uppercase; }
-    .trend { margin-top: 14px; }
-    .trend svg { width: 100%; height: 74px; display: block; }
-    .subhead { font: 10px var(--tiny); text-transform: uppercase; color: var(--muted); margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-
-    /* ---------- detail ---------- */
-    .detail-top { display: flex; gap: 12px; align-items: center; }
-    .detail-top canvas { width: 52px; height: 72px; image-rendering: pixelated; background: #0f1526; border: 2px solid var(--line); padding: 4px; }
-    .detail-name { font: 700 20px/1.1 var(--pixel); }
-    .detail-role { color: var(--muted); font-size: 12px; }
-    .badge { display: inline-block; font: 10px var(--tiny); text-transform: uppercase; padding: 3px 6px; color: #08111f; }
-    .b-NORMAL { background: var(--mint); } .b-WARNING { background: var(--amber); } .b-CRITICAL { background: var(--red); color: #fff; }
-    .b-OFF { background: var(--gray); color: #fff; } .b-NONE { background: #4b5674; color: #fff; }
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-top: 12px; font-size: 12px; }
-    .grid2 div { display: flex; justify-content: space-between; border-bottom: 1px dashed #26314d; padding: 3px 0; }
+    /* ---------- profile card ---------- */
+    .profile { position: absolute; top: 12px; right: 12px; width: 310px; max-height: calc(100% - 24px); overflow-y: auto; display: none;
+      background: rgba(255,255,255,.97); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 40px rgba(30,40,80,.16); }
+    .profile.show { display: block; }
+    .p-head { display: flex; gap: 12px; padding: 14px 14px 10px; align-items: center; }
+    .p-head canvas { width: 42px; height: 58px; image-rendering: pixelated; background: var(--panel-2); border-radius: 10px; padding: 4px; }
+    .p-name { font-weight: 700; font-size: 16px; }
+    .p-role { font-size: 12px; color: var(--accent); }
+    .p-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .close { margin-left: auto; align-self: flex-start; border: 0; background: none; cursor: pointer; color: var(--faint); font-size: 20px; line-height: 1; padding: 2px 6px; }
+    .p-bio { margin: 0; padding: 0 14px 10px; font-size: 13px; color: var(--muted); }
+    .tabs { display: flex; gap: 4px; padding: 0 14px; border-bottom: 1px solid var(--line); }
+    .tab { border: 0; background: none; cursor: pointer; padding: 8px; font-size: 13px; color: var(--muted); border-bottom: 2px solid transparent; }
+    .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--glass); font-weight: 600; }
+    .p-body { padding: 12px 14px 14px; }
+    .label { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin: 12px 0 6px; }
+    .label:first-child { margin-top: 0; }
+    .p-body ul { margin: 0; padding-left: 18px; font-size: 13px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip { font: 11px var(--mono); padding: 3px 8px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); color: #334155; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; font-size: 12px; }
+    .grid2 div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f1f6; }
     .grid2 span:first-child { color: var(--muted); }
-    .grid2 span:last-child { font-variant-numeric: tabular-nums; }
-    .spark { margin-top: 12px; }
-    .spark svg { width: 100%; height: 38px; display: block; background: #0f1526; border: 2px solid var(--line); }
-    .timeline { display: flex; height: 10px; margin-top: 4px; gap: 1px; }
+    .grid2 span:last-child { font-variant-numeric: tabular-nums; font-weight: 500; }
+    .spark svg { width: 100%; height: 34px; display: block; }
+    .subhead { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); margin: 10px 0 3px; }
+    .timeline { display: flex; height: 8px; gap: 1px; border-radius: 4px; overflow: hidden; }
     .timeline i { flex: 1; }
+    .activity { display: grid; gap: 6px; font-size: 12px; }
+    .activity .t { font: 11px var(--mono); color: var(--faint); margin-right: 6px; }
 
-    /* ---------- backups & model ---------- */
-    .row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed #26314d; font-size: 12px; }
+    /* ---------- side panels ---------- */
+    .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .kpi { background: var(--panel-2); border-radius: 10px; padding: 10px 12px; }
+    .kpi .k { font-size: 11px; color: var(--muted); }
+    .kpi .v { font-size: 22px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .kpi .s { font-size: 11px; color: var(--faint); }
+    .state-line { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-radius: 10px; background: var(--panel-2); font-size: 13px; }
+    .stack { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: var(--panel-2); }
+    .stack div { height: 100%; transition: width .4s; }
+    .stack-legend { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; flex-wrap: wrap; }
+    .stack-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .trend svg { width: 100%; height: 70px; display: block; }
+    .row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f1f6; font-size: 13px; }
     .row:last-child { border-bottom: 0; }
-    .row strong { font: 600 13px var(--pixel); }
-    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-    .chip { font: 10px var(--tiny); text-transform: uppercase; padding: 3px 6px; border: 2px solid var(--line); color: var(--cyan); }
+    .row strong { font-weight: 600; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .b-NORMAL { color: #047857; background: #ecfdf5; } .b-WARNING { color: #b45309; background: #fffbeb; }
+    .b-CRITICAL { color: #b91c1c; background: #fef2f2; } .b-OFF, .b-NONE { color: #475569; background: #f1f5f9; }
 
     /* ---------- roster ---------- */
-    .roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
-    .agent { text-align: left; color: inherit; font: inherit; cursor: pointer; background: #0f1526; border: 2px solid var(--line);
-      padding: 10px; display: grid; gap: 6px; box-shadow: 3px 3px 0 var(--shadow); transition: transform .12s, border-color .12s; }
-    .agent:hover { transform: translate(-1px, -1px); border-color: #3b4c78; }
-    .agent.sel { border-color: var(--mint); }
-    .agent.off { opacity: .55; }
+    .roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .agent { text-align: left; color: inherit; cursor: pointer; background: var(--panel-2); border: 1px solid transparent; border-radius: 12px;
+      padding: 10px 12px; display: grid; gap: 6px; transition: border-color .15s, background .15s; }
+    .agent:hover { border-color: #a5f3fc; background: #fff; }
+    .agent.sel { border-color: var(--glass); background: #fff; }
+    .agent.off { opacity: .6; }
     .agent-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-    .agent-name { font: 600 15px var(--pixel); }
-    .agent-name small { font: 10px var(--tiny); color: var(--muted); margin-left: 4px; }
-    .agent-role { font-size: 11px; color: var(--muted); }
-    .bar { height: 8px; background: #26314d; }
+    .agent-name { font-weight: 600; }
+    .agent-name small { font: 11px var(--mono); color: var(--faint); margin-left: 4px; }
+    .agent-role { font-size: 12px; color: var(--muted); }
+    .bar { height: 5px; border-radius: 99px; background: #e6e8ef; overflow: hidden; }
     .bar div { height: 100%; }
     .agent-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-    .empty { padding: 24px; text-align: center; color: var(--muted); border: 2px dashed var(--line); grid-column: 1 / -1; }
+    .empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; grid-column: 1 / -1; }
 
     @media (max-width: 1150px) { .layout { grid-template-columns: 1fr; } .side { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
-    @media (max-width: 640px) {
+    @media (max-width: 700px) {
       .topbar, .layout { padding-left: 16px; padding-right: 16px; }
-      .chat { position: static; width: auto; border-width: 0 0 2px; box-shadow: none; }
-      .legend { position: static; justify-content: flex-start; border-width: 2px 0 0; }
-      .kpi .value { font-size: 19px; }
+      .stage { margin: 12px 0 0; border-radius: 0; }
+      .feed, .profile { position: static; width: auto; max-height: none; border-radius: 0; box-shadow: none; border-width: 1px 0 0; }
     }
-    @media (prefers-reduced-motion: reduce) { .agent, .stack div { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { .live .dot { animation: none; } .stack div { transition: none; } }
   </style>
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
-    <canvas id="logo" width="13" height="18" aria-hidden="true"></canvas>
-    <div><h1>FLEET OFFICE</h1><p>ACI606 · Cloud Fleet Challenge</p></div>
+    <div class="hex"><canvas id="logo" width="13" height="18" style="width:20px;height:28px;image-rendering:pixelated" aria-hidden="true"></canvas></div>
+    <div><h1>FLEET OFFICE</h1><p>ACI606 · Cloud Fleet HQ</p></div>
   </div>
   <div class="pills" aria-live="polite">
+    <span class="pill live"><i class="dot"></i>En vivo · flota real</span>
     <span id="pill-api" class="pill"><i class="dot"></i><span>API conectando…</span></span>
     <span id="pill-db" class="pill"><i class="dot"></i><span>Base de datos</span></span>
     <span id="pill-model" class="pill"><i class="dot"></i><span>Modelo</span></span>
-    <span id="pill-uptime" class="pill"><span>Uptime —</span></span>
+    <span id="pill-uptime" class="pill"><span class="mono">uptime —</span></span>
   </div>
 </header>
 
@@ -176,46 +183,36 @@
         </div>
       </div>
       <div class="stage" id="stage">
-        <canvas id="office" width="880" height="630" aria-label="Vista isométrica de la flota de robots"></canvas>
-        <div class="chat" aria-live="polite">
-          <div class="chat-head"><span>Canal del director · API</span><span id="chat-count">0</span></div>
-          <div class="chat-log" id="chat"></div>
-        </div>
-        <div class="legend">
-          <span><i class="sw" style="background:var(--mint)"></i>Trabajando</span>
-          <span><i class="sw" style="background:var(--amber)"></i>Alerta</span>
-          <span><i class="sw" style="background:var(--red)"></i>Crítico</span>
-          <span><i class="sw" style="background:var(--gray)"></i>Sin señal</span>
+        <canvas id="office" width="880" height="640" aria-label="Vista isométrica de la oficina con la flota de robots"></canvas>
+        <div class="profile" id="profile" role="dialog" aria-label="Ficha del agente"></div>
+        <div class="feed" id="feed">
+          <div class="feed-head"><span>Actividad en vivo · <span id="feed-count">0</span></span><button id="feed-toggle" type="button">Ver todo</button></div>
+          <div class="feed-log" id="feed-log" aria-live="polite"></div>
         </div>
         <div class="offline-banner">API no disponible · reintentando</div>
       </div>
     </section>
 
     <section class="card" aria-labelledby="roster-title">
-      <div class="card-head"><h2 id="roster-title">Agentes</h2><span class="hint" id="roster-hint">Haz clic en un agente para ver su ficha</span></div>
+      <div class="card-head"><h2 id="roster-title">Agentes</h2><span class="hint">Haz clic en un agente para abrir su ficha</span></div>
       <div class="card-body"><div class="roster" id="roster"><div class="empty">Ejecuta el simulador para que lleguen agentes a la oficina.</div></div></div>
     </section>
   </div>
 
   <aside class="side">
     <section class="card" aria-labelledby="control-title">
-      <div class="card-head"><h2 id="control-title">Tablero de control</h2><span class="hint" id="last-update">—</span></div>
+      <div class="card-head"><h2 id="control-title">Tablero de control</h2><span class="hint mono" id="last-update">—</span></div>
       <div class="card-body">
         <div class="kpis">
-          <div class="kpi"><div class="label">Agentes activos</div><div class="value" id="k-active">—</div><div class="sub" id="k-active-sub">&nbsp;</div></div>
-          <div class="kpi"><div class="label">Telemetría / min</div><div class="value" id="k-tpm">—</div><div class="sub" id="k-rows">&nbsp;</div></div>
-          <div class="kpi"><div class="label">Predicciones</div><div class="value" id="k-pred">—</div><div class="sub" id="k-pred-sub">POST /predict</div></div>
-          <div class="kpi"><div class="label">Latencia p95</div><div class="value" id="k-lat">—</div><div class="sub" id="k-lat-sub">&nbsp;</div></div>
-          <div class="kpi"><div class="label">Errores</div><div class="value" id="k-err">—</div><div class="sub" id="k-err-sub">&nbsp;</div></div>
-          <div class="kpi"><div class="label">Cobertura 60 s</div><div class="value" id="k-cov">—</div><div class="sub" id="k-cov-sub">&nbsp;</div></div>
+          <div class="kpi"><div class="k">Agentes activos</div><div class="v" id="k-active">—</div><div class="s" id="k-active-sub">&nbsp;</div></div>
+          <div class="kpi"><div class="k">Telemetría / min</div><div class="v" id="k-tpm">—</div><div class="s" id="k-rows">&nbsp;</div></div>
+          <div class="kpi"><div class="k">Predicciones</div><div class="v" id="k-pred">—</div><div class="s" id="k-pred-sub">POST /predict</div></div>
+          <div class="kpi"><div class="k">Latencia p95</div><div class="v" id="k-lat">—</div><div class="s" id="k-lat-sub">&nbsp;</div></div>
+          <div class="kpi"><div class="k">Errores</div><div class="v" id="k-err">—</div><div class="s" id="k-err-sub">&nbsp;</div></div>
+          <div class="kpi"><div class="k">Cobertura 60 s</div><div class="v" id="k-cov">—</div><div class="s" id="k-cov-sub">&nbsp;</div></div>
         </div>
-        <div class="state-line"><span>Estado</span><span id="k-state">—</span></div>
+        <div class="state-line"><span class="hint">Estado del servicio</span><span id="k-state">—</span></div>
       </div>
-    </section>
-
-    <section class="card" aria-labelledby="detail-title">
-      <div class="card-head"><h2 id="detail-title">Ficha del agente</h2></div>
-      <div class="card-body" id="detail"><p class="hint">Selecciona un agente en la oficina o en la lista.</p></div>
     </section>
 
     <section class="card" aria-labelledby="fleet-title">
@@ -224,8 +221,8 @@
         <div class="stack" id="stack"></div>
         <div class="stack-legend" id="stack-legend"></div>
         <div class="trend">
-          <p class="subhead"><span>Estados por minuto · 15 min</span><span id="trend-total"></span></p>
-          <svg id="trend" viewBox="0 0 300 74" preserveAspectRatio="none" role="img" aria-label="Tendencia de estados por minuto"></svg>
+          <p class="subhead"><span>Estados predichos por minuto · 15 min</span><span id="trend-total"></span></p>
+          <svg id="trend" viewBox="0 0 300 70" preserveAspectRatio="none" role="img" aria-label="Tendencia de estados por minuto"></svg>
         </div>
       </div>
     </section>
@@ -245,91 +242,66 @@
 <script>
 "use strict";
 /* =====================================================================
-   Data + identity
+   Identity of each agent
    ===================================================================== */
-const COLORS = { NORMAL: "#5ef2b5", WARNING: "#ffc857", CRITICAL: "#ff5d6c", OFF: "#7d879c", NONE: "#9aa6c2" };
+const COLORS = { NORMAL: "#10b981", WARNING: "#f59e0b", CRITICAL: "#ef4444", OFF: "#9aa3b5", NONE: "#94a3b8" };
 const LABEL = { NORMAL: "Trabajando", WARNING: "Alerta", CRITICAL: "Crítico", OFF: "Sin señal", NONE: "Sin modelo" };
 const NAMES = ["Nano", "Atlas", "Bolt", "Chispa", "Pixel", "Tuerca", "Radar", "Volt", "Kiro", "Lumen", "Orbit", "Rayo", "Cobre", "Sonda", "Zeta", "Brío"];
 const ROLES = [
-  { rol: "Explorador", fn: "Recorre zonas sin cubrir y amplía el mapa de la planta." },
-  { rol: "Inspector", fn: "Revisa motores y sensores del resto de la flota." },
-  { rol: "Logística", fn: "Traslada materiales entre las estaciones de trabajo." },
-  { rol: "Vigilancia", fn: "Patrulla el perímetro y detecta obstáculos." },
-  { rol: "Cartógrafo", fn: "Mantiene actualizado el mapa de cobertura." },
-  { rol: "Mantenimiento", fn: "Asiste a los robots que reportan fallas." },
+  { rol: "Explorador", depto: "Exploración", bio: "Recorre zonas sin cubrir y amplía el mapa de la planta.",
+    resp: ["Recorrer zonas sin cubrir", "Reportar obstáculos", "Ampliar el mapa"], tools: ["lidar.scan", "imu.read", "telemetry.send"], nivel: "alta" },
+  { rol: "Inspector", depto: "Mantenimiento predictivo", bio: "Revisa motores y sensores del resto de la flota.",
+    resp: ["Vigilar vibración y temperatura", "Escalar fallas al director", "Validar reparaciones"], tools: ["thermo.read", "vibration.fft", "telemetry.send"], nivel: "media" },
+  { rol: "Logística", depto: "Operaciones", bio: "Traslada materiales entre las estaciones de trabajo.",
+    resp: ["Trasladar materiales", "Optimizar rutas", "Coordinar entregas"], tools: ["route.plan", "gripper.ctl", "telemetry.send"], nivel: "media" },
+  { rol: "Vigilancia", depto: "Seguridad", bio: "Patrulla el perímetro y detecta obstáculos.",
+    resp: ["Patrullar el perímetro", "Detectar obstáculos", "Emitir alertas"], tools: ["camera.stream", "proximity.read", "alert.send"], nivel: "alta" },
+  { rol: "Cartógrafo", depto: "Mapeo", bio: "Mantiene actualizado el mapa de cobertura.",
+    resp: ["Medir la cobertura", "Ir a su punto óptimo", "Publicar el mapa"], tools: ["coverage.read", "odometry.read", "map.write"], nivel: "media" },
+  { rol: "Mantenimiento", depto: "Soporte", bio: "Asiste a los robots que reportan fallas.",
+    resp: ["Asistir robots en falla", "Gestionar la carga", "Registrar incidencias"], tools: ["dock.charge", "diagnostics.run", "ticket.write"], nivel: "baja" },
 ];
 const BODY = ["#59a5ff", "#ff8fb1", "#ffd166", "#3ddc97", "#c38bff", "#ff9f43", "#7be0f5", "#f25f7a", "#a5b8ff", "#b8e986", "#e0a96d", "#8de1c3"];
 
 function hashIndex(id) { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
 function identity(id) {
-  const m = /(\d+)$/.exec(id);
-  const n = m ? parseInt(m[1], 10) - 1 : hashIndex(id);
-  const k = Math.max(0, n);
+  const m = /^R(\d+)$/.exec(id);
+  const k = m ? Math.max(0, parseInt(m[1], 10) - 1) : hashIndex(id);
   return { name: NAMES[k % NAMES.length], role: ROLES[k % ROLES.length], color: BODY[k % BODY.length] };
 }
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (v, d = 1) => (v === null || v === undefined || Number.isNaN(v) ? "—" : Number(v).toFixed(d));
-function ago(seconds) {
-  if (seconds === null || seconds === undefined) return "nunca";
-  if (seconds < 60) return `hace ${Math.round(seconds)} s`;
-  if (seconds < 3600) return `hace ${Math.round(seconds / 60)} min`;
-  return `hace ${(seconds / 3600).toFixed(1)} h`;
+const wrap10 = (v) => ((v % 10) + 10) % 10;
+function ago(s) {
+  if (s === null || s === undefined) return "nunca";
+  if (s < 60) return `hace ${Math.round(s)} s`;
+  if (s < 3600) return `hace ${Math.round(s / 60)} min`;
+  return `hace ${(s / 3600).toFixed(1)} h`;
 }
-function inTime(seconds) {
-  if (seconds <= 0) return "en curso";
-  if (seconds < 60) return `en ${Math.round(seconds)} s`;
-  if (seconds < 3600) return `en ${Math.round(seconds / 60)} min`;
-  return `en ${(seconds / 3600).toFixed(1)} h`;
-}
+function inTime(s) { return s <= 0 ? "en curso" : s < 60 ? `en ${Math.round(s)} s` : s < 3600 ? `en ${Math.round(s / 60)} min` : `en ${(s / 3600).toFixed(1)} h`; }
 function every(min) { return min >= 60 ? `cada ${+(min / 60).toFixed(1)} h` : `cada ${+min.toFixed(1)} min`; }
 function uptime(s) {
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
+const clock = () => new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 
 const state = {
-  robots: new Map(),       // id -> robot view model
-  fleet: null, summary: null, apiOk: null,
-  selected: null, history: [],
+  robots: new Map(), fleet: null, summary: null, apiOk: null,
+  selected: null, tab: "telemetria", history: [],
   toggles: { heat: true, targets: true, tags: true },
-  lastBackup: null, chat: [],
+  lastBackup: null, feed: [], events: new Map(),
 };
 
 /* =====================================================================
-   Pixel sprites
+   Pixel sprites (robots and operators)
    ===================================================================== */
 const ROBOT_SPRITE = [
-  "......L......",
-  "......A......",
-  "...KKKKKKK...",
-  "..KHHHHHHBK..",
-  "..KHVVVVVBK..",
-  "..KHVEVEVBK..",
-  "..KHVVVVVBK..",
-  "..KBBBBBBbK..",
-  "...KKKKKKK...",
-  "....KGGGK....",
-  ".KKKKKKKKKKK.",
-  ".KHBBBBBBBbK.",
-  ".KHBBLLLBBbK.",
-  ".KHBBBBBBBbK.",
-  ".KbbbbbbbbbK.",
-  "..KKKKKKKKK..",
-  "..KWWK.KWWK..",
-  "..KKKK.KKKK..",
+  "......L......", "......A......", "...KKKKKKK...", "..KHHHHHHBK..", "..KHVVVVVBK..", "..KHVEVEVBK..",
+  "..KHVVVVVBK..", "..KBBBBBBbK..", "...KKKKKKK...", "....KGGGK....", ".KKKKKKKKKKK.", ".KHBBBBBBBbK.",
+  ".KHBBLLLBBbK.", ".KHBBBBBBBbK.", ".KbbbbbbbbbK.", "..KKKKKKKKK..", "..KWWK.KWWK..", "..KKKK.KKKK..",
 ];
-const PERSON_SPRITE = [
-  "..HHHHH..",
-  ".HHHHHHH.",
-  ".HHHHHHH.",
-  "..HSSSH..",
-  "...SSS...",
-  ".CCCCCCC.",
-  "CCCCCCCCC",
-  "CCCCCCCCC",
-  "SCCCCCCCS",
-  ".PPPPPPP.",
-];
+const PERSON_SPRITE = ["..HHHHH..", ".HHHHHHH.", ".HHHHHHH.", "..HSSSH..", "...SSS...", ".CCCCCCC.", "CCCCCCCCC", "CCCCCCCCC", "SCCCCCCCS", ".PPPPPPP."];
 function shade(hex, f) {
   const n = parseInt(hex.slice(1), 16);
   const ch = (v) => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f)));
@@ -340,40 +312,36 @@ function makeSprite(rows, palette) {
   const c = document.createElement("canvas");
   c.width = rows[0].length; c.height = rows.length;
   const g = c.getContext("2d");
-  rows.forEach((row, y) => [...row].forEach((ch, x) => {
-    const col = palette[ch];
-    if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); }
-  }));
+  rows.forEach((row, y) => [...row].forEach((ch, x) => { if (palette[ch]) { g.fillStyle = palette[ch]; g.fillRect(x, y, 1, 1); } }));
   return c;
 }
 function robotSprite(body, status, blink, off) {
   const key = `${body}|${status}|${blink}|${off}`;
   if (!spriteCache.has(key)) {
-    const base = off ? "#8b93a7" : body;
-    const glow = off ? "#4b5263" : COLORS[status] || COLORS.NONE;
+    const base = off ? "#a3abbd" : body;
+    const glow = off ? "#5b6275" : COLORS[status] || COLORS.NONE;
     spriteCache.set(key, makeSprite(ROBOT_SPRITE, {
-      K: "#161b29", B: base, b: shade(base, -0.28), H: shade(base, 0.35), V: "#13203b",
-      E: blink ? "#13203b" : glow, A: "#9aa3b5", L: glow, G: "#c4cad8", W: "#2c3145",
+      K: "#1b2133", B: base, b: shade(base, -0.28), H: shade(base, 0.35), V: "#13203b",
+      E: blink ? "#13203b" : glow, A: "#8a93a8", L: glow, G: "#c4cad8", W: "#2c3145",
     }));
   }
   return spriteCache.get(key);
 }
 function personSprite(shirt, hair) {
   const key = `p|${shirt}|${hair}`;
-  if (!spriteCache.has(key)) spriteCache.set(key, makeSprite(PERSON_SPRITE, { H: hair, S: "#f2c79a", C: shirt, P: "#2f3a56" }));
+  if (!spriteCache.has(key)) spriteCache.set(key, makeSprite(PERSON_SPRITE, { H: hair, S: "#f2c79a", C: shirt, P: "#3b4766" }));
   return spriteCache.get(key);
 }
-(function drawLogo() {
-  const g = document.getElementById("logo").getContext("2d");
-  g.drawImage(robotSprite("#59a5ff", "NORMAL", false, false), 0, 0);
-})();
+document.getElementById("logo").getContext("2d").drawImage(robotSprite("#59a5ff", "NORMAL", false, false), 0, 0);
 
 /* =====================================================================
    Isometric office renderer
+   Room of 13 x 13 tiles. The 10 x 10 m arena of the simulator is the open
+   floor (tiles 2..12); around it, glass rooms for each part of the system.
    ===================================================================== */
 const canvas = document.getElementById("office");
 const ctx = canvas.getContext("2d");
-const W = 880, H = 630, N = 13, TW = 64, TH = 32, WH = 128, OX = W / 2, OY = 168, ARENA_OFF = 2, PS = 3;
+const W = 880, H = 640, N = 13, TW = 64, TH = 32, WH = 118, OX = W / 2, OY = 176, A0 = 2, A1 = 12, PS = 3;
 let viewScale = 1;
 const iso = (x, y, z = 0) => [OX + (x - y) * TW / 2, OY + (x + y) * TH / 2 - z];
 
@@ -389,234 +357,279 @@ function resizeCanvas() {
 }
 window.addEventListener("resize", resizeCanvas);
 
-function poly(points, fill, stroke) {
+function poly(points, fill, stroke, width = 1) {
   ctx.beginPath();
   points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
   ctx.closePath();
   if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = width; ctx.stroke(); ctx.lineWidth = 1; }
 }
 function box(x, y, w, d, h, top, left, right, z = 0) {
-  poly([iso(x, y + d, z), iso(x + w, y + d, z), iso(x + w, y + d, z + h), iso(x, y + d, z + h)], left, "rgba(0,0,0,.25)");
-  poly([iso(x + w, y, z), iso(x + w, y + d, z), iso(x + w, y + d, z + h), iso(x + w, y, z + h)], right, "rgba(0,0,0,.25)");
-  poly([iso(x, y, z + h), iso(x + w, y, z + h), iso(x + w, y + d, z + h), iso(x, y + d, z + h)], top, "rgba(0,0,0,.2)");
+  poly([iso(x, y + d, z), iso(x + w, y + d, z), iso(x + w, y + d, z + h), iso(x, y + d, z + h)], left);
+  poly([iso(x + w, y, z), iso(x + w, y + d, z), iso(x + w, y + d, z + h), iso(x + w, y, z + h)], right);
+  poly([iso(x, y, z + h), iso(x + w, y, z + h), iso(x + w, y + d, z + h), iso(x, y + d, z + h)], top);
 }
-function pixelText(text, x, y, color, size = 8, align = "center") {
-  ctx.font = `${size}px Silkscreen, monospace`;
-  ctx.textAlign = align; ctx.textBaseline = "middle";
-  ctx.fillStyle = color; ctx.fillText(text, Math.round(x), Math.round(y));
+function text(t, x, y, color, font = "600 11px Inter, sans-serif", align = "center") {
+  ctx.font = font; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillStyle = color;
+  ctx.fillText(t, Math.round(x), Math.round(y));
 }
-function tag(x, y, lines) { // Habbo-like name plate; lines: [{text, color, bg}]
-  ctx.font = "8px Silkscreen, monospace";
-  const w = Math.max(...lines.map((l) => ctx.measureText(l.text).width)) + 10;
-  const h = lines.length * 11 + 4;
-  const left = Math.round(x - w / 2), top = Math.round(y - h);
-  ctx.fillStyle = "rgba(8,12,22,.88)"; ctx.fillRect(left, top, w, h);
-  ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.strokeRect(left + .5, top + .5, w - 1, h - 1);
-  lines.forEach((l, i) => {
-    const ly = top + 2 + i * 11;
-    if (l.bg) {
-      const lw = ctx.measureText(l.text).width + 6;
-      ctx.fillStyle = l.bg; ctx.fillRect(Math.round(x - lw / 2), ly + 1, Math.round(lw), 10);
-    }
-    pixelText(l.text, x, ly + 6, l.color);
-  });
+// Text painted on the floor. Along x: baseline runs to +x. Along y: it runs to -y
+// (front to back) so that it is never mirrored.
+function floorText(t, x, y, axis = "x", size = 12, color = "rgba(100,110,135,.42)") {
+  const [sx, sy] = iso(x, y);
+  ctx.save();
+  if (axis === "x") ctx.transform(1, 0.5, -1, 0.5, sx, sy); else ctx.transform(1, -0.5, 1, 0.5, sx, sy);
+  ctx.font = `700 ${size}px Inter, sans-serif`; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillStyle = color;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "4px";
+  ctx.fillText(t, 0, 0);
+  ctx.restore();
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+function pillTag(x, y, dotColor, main, sub, subColor) { // white name badge with a status dot
+  ctx.font = "600 11px Inter, sans-serif";
+  const mw = ctx.measureText(main).width;
+  ctx.font = "500 10px Inter, sans-serif";
+  const sw = sub ? ctx.measureText(sub).width + 8 : 0;
+  const w = Math.round(mw + sw + 28), h = 20, left = Math.round(x - w / 2), top = Math.round(y - h);
+  ctx.save(); ctx.shadowColor = "rgba(30,40,80,.18)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+  roundRect(left, top, w, h, 10); ctx.fillStyle = "#fff"; ctx.fill(); ctx.restore();
+  roundRect(left + .5, top + .5, w - 1, h - 1, 10); ctx.strokeStyle = "#e3e6ef"; ctx.stroke();
+  ctx.fillStyle = dotColor; ctx.beginPath(); ctx.arc(left + 12, top + h / 2, 3.5, 0, Math.PI * 2); ctx.fill();
+  text(main, left + 20, top + h / 2 + .5, "#1d2433", "600 11px Inter, sans-serif", "left");
+  if (sub) text(sub, left + 20 + mw + 8, top + h / 2 + .5, subColor || "#6b7387", "500 10px Inter, sans-serif", "left");
   return { left, top, w, h };
 }
-function bubble(x, y, text) {
-  ctx.font = "8px Silkscreen, monospace";
-  const w = Math.min(170, ctx.measureText(text).width + 12), h = 16;
-  const left = Math.round(x - w / 2), top = Math.round(y - h - 6);
-  ctx.fillStyle = "#fff"; ctx.fillRect(left, top, w, h);
-  ctx.strokeStyle = "#161b29"; ctx.lineWidth = 2; ctx.strokeRect(left, top, w, h); ctx.lineWidth = 1;
-  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(x - 4, top + h - 1); ctx.lineTo(x + 4, top + h - 1); ctx.lineTo(x, top + h + 5); ctx.fill();
-  ctx.save(); ctx.beginPath(); ctx.rect(left + 3, top, w - 6, h); ctx.clip();
-  pixelText(text, x, top + h / 2 + 1, "#161b29"); ctx.restore();
+function bubble(x, y, t) {
+  ctx.font = "500 11px Inter, sans-serif";
+  const w = Math.min(190, ctx.measureText(t).width + 16), h = 22, left = Math.round(x - w / 2), top = Math.round(y - h - 8);
+  ctx.save(); ctx.shadowColor = "rgba(30,40,80,.16)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 2;
+  roundRect(left, top, w, h, 8); ctx.fillStyle = "#1d2433"; ctx.fill(); ctx.restore();
+  ctx.fillStyle = "#1d2433"; ctx.beginPath(); ctx.moveTo(x - 5, top + h - 1); ctx.lineTo(x + 5, top + h - 1); ctx.lineTo(x, top + h + 5); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.rect(left + 6, top, w - 12, h); ctx.clip();
+  text(t, x, top + h / 2 + .5, "#ffffff", "500 11px Inter, sans-serif"); ctx.restore();
 }
 
-/* ----- static room ----- */
+/* ----- floor, outer glass walls, wall screen ----- */
 function drawRoom(t) {
+  // slab edges: the office as a floating platform
+  poly([iso(0, N), iso(N, N), iso(N, N, -12), iso(0, N, -12)], "#d5d9e4");
+  poly([iso(N, 0), iso(N, N), iso(N, N, -12), iso(N, 0, -12)], "#c7ccd9");
   const hb = state.summary?.coverage?.heatmap;
   const hmax = hb ? Math.max(1, ...hb.flat()) : 1;
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-    const arena = i >= ARENA_OFF && i < ARENA_OFF + 10 && j >= ARENA_OFF && j < ARENA_OFF + 10;
-    let fill = arena ? ((i + j) % 2 ? "#4f5f86" : "#56678f") : ((i + j) % 2 ? "#cfc6b4" : "#c5bba8");
-    poly([iso(i, j), iso(i + 1, j), iso(i + 1, j + 1), iso(i, j + 1)], fill, arena ? "rgba(20,30,55,.45)" : "rgba(120,105,85,.35)");
+    const arena = i >= A0 && i < A1 && j >= A0 && j < A1;
+    const fill = arena ? ((i + j) % 2 ? "#fafbfd" : "#f4f6fa") : "#eceef4";
+    const tile = [iso(i, j), iso(i + 1, j), iso(i + 1, j + 1), iso(i, j + 1)];
+    poly(tile, fill, arena ? "rgba(160,170,195,.22)" : "rgba(160,170,195,.14)");
     if (arena && state.toggles.heat && hb) {
-      const v = hb[j - ARENA_OFF][i - ARENA_OFF];
-      if (v > 0) {
-        const a = 0.18 + 0.5 * Math.log1p(v) / Math.log1p(hmax);
-        poly([iso(i, j), iso(i + 1, j), iso(i + 1, j + 1), iso(i, j + 1)], `rgba(94,242,181,${a.toFixed(3)})`);
-      }
+      const v = hb[j - A0][i - A0];
+      if (v > 0) poly(tile, `rgba(16,185,129,${(0.07 + 0.3 * Math.log1p(v) / Math.log1p(hmax)).toFixed(3)})`);
     }
   }
-  // arena border + label
-  const A0 = ARENA_OFF, A1 = ARENA_OFF + 10;
-  ctx.setLineDash([6, 4]);
-  poly([iso(A0, A0), iso(A1, A0), iso(A1, A1), iso(A0, A1)], null, "rgba(94,242,181,.75)");
-  ctx.setLineDash([]);
-  const [lx, ly] = iso(A1, A1);
-  pixelText("ARENA 10 x 10 m", lx, ly + 12, "rgba(232,237,247,.75)");
-
-  // walls
-  poly([iso(0, N), iso(0, 0), iso(0, 0, WH), iso(0, N, WH)], "#c3cad8");
-  poly([iso(0, 0), iso(N, 0), iso(N, 0, WH), iso(0, 0, WH)], "#dde3ec");
-  poly([iso(0, N, WH), iso(0, 0, WH), iso(-0.25, -0.25, WH), iso(-0.25, N, WH)], "#8892a8");
-  poly([iso(0, 0, WH), iso(N, 0, WH), iso(N, -0.25, WH), iso(-0.25, -0.25, WH)], "#9aa3b7");
-  poly([iso(0, N), iso(0, 0), iso(0, 0, 8), iso(0, N, 8)], "#8d97ab");
-  poly([iso(0, 0), iso(N, 0), iso(N, 0, 8), iso(0, 0, 8)], "#a7b0c2");
-
-  // right wall decorations (windows, clock, poster)
-  ctx.save(); ctx.transform(1, 0.5, 0, 1, OX, OY);
-  for (const u of [70, 250]) {
-    ctx.fillStyle = "#6b7590"; ctx.fillRect(u - 3, -103, 96, 66);
-    const g = ctx.createLinearGradient(0, -100, 0, -40); g.addColorStop(0, "#8fd3ff"); g.addColorStop(1, "#cdeeff");
-    ctx.fillStyle = g; ctx.fillRect(u, -100, 90, 60);
-    ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillRect(u + 8, -94, 6, 46); ctx.fillRect(u + 18, -94, 3, 46);
-    ctx.fillStyle = "#6b7590"; ctx.fillRect(u + 43, -100, 4, 60); ctx.fillRect(u, -72, 90, 4);
+  // charging pads in the left strip
+  for (const y of [8.4, 10.3]) {
+    poly([iso(0.55, y), iso(1.6, y), iso(1.6, y + 1.3), iso(0.55, y + 1.3)], "rgba(34,211,238,.16)", "rgba(8,145,178,.55)", 1.5);
+    const [cx, cy] = iso(1.08, y + 0.65); text("⚡", cx, cy, "rgba(8,145,178,.85)", "700 13px Inter, sans-serif");
   }
-  ctx.fillStyle = "#26314d"; ctx.fillRect(176, -108, 58, 24);
-  pixelText(state.fleet ? uptime(state.fleet.metrics.uptime_seconds + (performance.now() - state.fleetAt) / 1000) : "--:--:--", 205, -96, "#5ef2b5");
-  pixelText("UPTIME", 205, -78, "#4b5674");
-  ctx.fillStyle = "#24304f"; ctx.fillRect(360, -112, 46, 60);
-  pixelText("ACI", 383, -96, "#ffc857", 10); pixelText("606", 383, -82, "#ffc857", 10); pixelText("CLOUD", 383, -64, "#59c8ff");
-  ctx.restore();
+  // zone names painted on the floor
+  floorText("PLANTA DE OPERACIONES · 10 × 10 m", A0 + 0.3, A1 - 0.4, "x", 12);
+  floorText("CENTRO DE MISIONES", 2.4, 1.75, "x", 11);
+  floorText("SALA DE SERVIDORES", 1.75, 7.9, "y", 11);
+  floorText("ZONA DE CARGA", 1.75, 12.7, "y", 11);
 
-  // left wall: neon sign + whiteboard
-  const [bx, by] = iso(0, N);
-  ctx.save(); ctx.transform(1, -0.5, 0, 1, bx, by);
-  ctx.fillStyle = "#f4f6fa"; ctx.fillRect(150, -104, 120, 62);
-  ctx.strokeStyle = "#7c869c"; ctx.lineWidth = 3; ctx.strokeRect(150, -104, 120, 62); ctx.lineWidth = 1;
-  const m = state.summary?.model;
-  pixelText(m ? `MODELO ${m.model_version}` : "MODELO", 210, -92, "#26314d");
-  pixelText(m ? `F1 MACRO ${m.test_f1_macro.toFixed(3)}` : "F1 MACRO --", 210, -78, "#c2185b");
-  pixelText(m ? `BASE ${m.baseline_f1_macro.toFixed(3)}` : "", 210, -64, "#5b6784");
-  ctx.fillStyle = "#59c8ff"; ctx.fillRect(160, -52, 30, 3); ctx.fillStyle = "#ff5d6c"; ctx.fillRect(196, -52, 18, 3);
+  // outer glass walls
+  glassWall([iso(0, N), iso(0, 0), iso(0, 0, WH), iso(0, N, WH)], (k) => [iso(0, N - k), iso(0, N - k, WH)]);
+  glassWall([iso(0, 0), iso(N, 0), iso(N, 0, WH), iso(0, 0, WH)], (k) => [iso(k, 0), iso(k, 0, WH)]);
+  drawWallScreen(t);
+}
+function glassWall(face, mullion) {
+  const g = ctx.createLinearGradient(0, OY - WH, 0, OY + 220);
+  g.addColorStop(0, "rgba(207,232,252,.6)"); g.addColorStop(1, "rgba(226,240,252,.35)");
+  poly(face, g);
+  ctx.strokeStyle = "rgba(100,116,139,.32)";
+  for (let k = 0; k <= N + 0.01; k += 1.625) { const [[x0, y0], [x1, y1]] = mullion(k); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); }
+  ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(...face[3]); ctx.lineTo(...face[2]); ctx.stroke();
+  ctx.strokeStyle = "rgba(100,116,139,.45)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(...face[0]); ctx.lineTo(...face[1]); ctx.stroke(); ctx.lineWidth = 1;
+}
+function drawWallScreen(t) {
+  // Large live screen on the back-right wall (mission center)
+  ctx.save(); ctx.transform(1, 0.5, 0, 1, OX, OY);
+  const u0 = 112, u1 = 352, v0 = -110, v1 = -52, w = u1 - u0;
+  ctx.fillStyle = "#0b1530"; ctx.fillRect(u0, v0, w, v1 - v0);
+  ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 1.5; ctx.strokeRect(u0, v0, w, v1 - v0); ctx.lineWidth = 1;
+  const m = state.fleet?.metrics, s = state.summary;
+  text("CENTRO DE MISIONES · EN VIVO", u0 + 8, v0 + 8, "#67e8f9", "600 7px 'JetBrains Mono', monospace", "left");
+  const lines = [
+    ["telemetría/min", m ? m.telemetry_per_minute : "—"],
+    ["predicciones", m ? m.prediction_requests : "—"],
+    ["p95 /predict", m && m.p95_prediction_latency_ms !== null ? `${fmt(m.p95_prediction_latency_ms, 1)} ms` : "—"],
+    ["errores 4xx/5xx", m ? `${m.errors_4xx}/${m.errors_5xx}` : "—"],
+  ];
+  lines.forEach(([k, v], i) => {
+    text(k, u0 + 8, v0 + 20 + i * 9, "#94a3b8", "400 7px 'JetBrains Mono', monospace", "left");
+    text(String(v), u0 + 108, v0 + 20 + i * 9, "#e2e8f0", "500 7px 'JetBrains Mono', monospace", "right");
+  });
+  const tr = s?.trend || [];
+  const maxT = Math.max(1, ...tr.map((b) => b.total));
+  text("muestras / min", u0 + 128, v0 + 8, "#67e8f9", "400 7px 'JetBrains Mono', monospace", "left");
+  tr.forEach((b, i) => {
+    const bw = 100 / Math.max(1, tr.length), x = u0 + 128 + i * bw, hgt = b.total / maxT * 34;
+    ctx.fillStyle = b.CRITICAL > b.total / 2 ? "rgba(239,68,68,.85)" : "rgba(34,211,238,.8)";
+    ctx.fillRect(x, v1 - 6 - hgt, bw - 1.5, hgt);
+  });
+  const cursor = Math.floor(t / 500) % 2 ? "_" : " ";
+  text(`$ fleet --status ${state.apiOk ? "ok" : "..."}${cursor}`, u0 + 8, v1 - 7, "#22d3ee", "400 7px 'JetBrains Mono', monospace", "left");
   ctx.restore();
 }
 
-/* ----- furniture: returns drawables with depth ----- */
-function furniture(t) {
+/* ----- furniture of the rooms around the arena (always behind its glass) ----- */
+function plant(x, y) {
+  box(x, y, 0.5, 0.5, 14, "#e2e8f0", "#cbd5e1", "#dbe2ea");
+  const [px, py] = iso(x + 0.25, y + 0.25, 14);
+  poly([[px, py - 34], [px + 11, py - 12], [px, py - 2], [px - 11, py - 12]], "#22c55e");
+  poly([[px, py - 34], [px + 11, py - 12], [px, py - 2]], "#16a34a");
+}
+function perimeter(t) {
   const items = [];
   const add = (depth, draw, label) => items.push({ depth, draw, label });
   const stations = [
-    { x: 2.6, label: "API · FASTAPI", screen: "#59c8ff", shirt: "#3d5a99", hair: "#2b1d14" },
-    { x: 5.6, label: "MODELO ML", screen: "#c38bff", shirt: "#7a3e6f", hair: "#5a3a22" },
-    { x: 8.6, label: "MÉTRICAS", screen: "#5ef2b5", shirt: "#2f6b57", hair: "#1c1c1c" },
+    { x: 2.7, label: "API · FastAPI", screen: "#38bdf8", shirt: "#3b82f6", hair: "#2b1d14" },
+    { x: 5.9, label: "Modelo ML", screen: "#a78bfa", shirt: "#db2777", hair: "#5a3a22" },
+    { x: 9.1, label: "Métricas", screen: "#34d399", shirt: "#0d9488", hair: "#1c1c1c" },
   ];
   for (const s of stations) {
-    add(s.x + 0.4, () => {
-      box(s.x, 0.25, 2.1, 0.95, 20, "#b98a5e", "#8c6440", "#a07250");
-      box(s.x + 0.6, 0.3, 0.9, 0.18, 26, "#2a3148", "#1d2335", "#252c42", 20);
-      const [sx, sy] = iso(s.x + 0.66, 0.48, 41);
-      const [ex, ey] = iso(s.x + 1.44, 0.48, 41);
-      ctx.fillStyle = s.screen; ctx.globalAlpha = .85;
-      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.lineTo(ex, ey + 18); ctx.lineTo(sx, sy + 18); ctx.fill();
-      ctx.globalAlpha = 1; ctx.fillStyle = "rgba(8,12,22,.55)";
-      for (let k = 0; k < 4; k++) { const off = (Math.floor(t / 300) + k * 3) % 13; ctx.fillRect(sx + 4 + (k % 2) * 6, sy + 3 + off + k * 0.5, 10 + (k * 7) % 12, 1.5); }
-      box(s.x + 1.7, 0.4, 0.3, 0.3, 4, "#d9dde4", "#aab1bf", "#c3c9d4", 20);
-    }, { text: s.label, at: [s.x + 1.05, 0.7, 64] });
-    add(s.x + 1.9, () => { // operator in the chair, seen from behind
-      box(s.x + 0.75, 1.3, 0.6, 0.5, 12, "#2f3a56", "#232c43", "#29334c");
-      const [px, py] = iso(s.x + 1.05, 1.55, 12);
+    add(s.x + 0.6, () => {
+      box(s.x, 0.35, 2.0, 0.85, 18, "#ffffff", "#e2e5ee", "#d3d7e2");
+      for (const off of [0.25, 1.05]) {
+        box(s.x + off, 0.42, 0.75, 0.12, 22, "#1f2433", "#151a26", "#1b2030", 18);
+        const [sx, sy] = iso(s.x + off + 0.05, 0.54, 37), [ex, ey] = iso(s.x + off + 0.7, 0.54, 37);
+        ctx.fillStyle = s.screen; ctx.globalAlpha = .9;
+        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.lineTo(ex, ey + 15); ctx.lineTo(sx, sy + 15); ctx.fill(); ctx.globalAlpha = 1;
+        ctx.fillStyle = "rgba(255,255,255,.75)";
+        for (let k = 0; k < 3; k++) { const o = (Math.floor(t / 400) + k * 4 + off * 10) % 11; ctx.fillRect(sx + 3, sy + 2 + o, 8 + (k * 5) % 9, 1); }
+      }
+    }, { text: s.label, at: [s.x + 1.0, 0.75, 62] });
+    add(s.x + 1.9, () => { // chair + operator
+      box(s.x + 0.75, 1.3, 0.55, 0.45, 12, "#c7d2fe", "#818cf8", "#a5b4fc");
+      box(s.x + 0.75, 1.62, 0.55, 0.12, 22, "#c7d2fe", "#818cf8", "#a5b4fc", 12);
+      const [px, py] = iso(s.x + 1.02, 1.5, 12);
       ctx.drawImage(personSprite(s.shirt, s.hair), Math.round(px - 9), Math.round(py - 22 + Math.sin(t / 700 + s.x)), 18, 20);
     });
   }
-  // server rack (database)
-  const dbOk = state.fleet && state.apiOk;
-  add(0.3 + 2.4, () => {
-    box(0.25, 2.3, 1.05, 1.3, 96, "#3b4563", "#262e45", "#2f3854");
-    for (let r = 0; r < 7; r++) for (let c = 0; c < 3; c++) {
-      const on = Math.sin(t / 180 + r * 1.7 + c * 2.3) > -0.2;
-      const [x, y] = iso(1.3, 2.55 + c * 0.35, 84 - r * 11);
-      ctx.fillStyle = on ? (dbOk ? "#5ef2b5" : "#ff5d6c") : "#14301f"; ctx.fillRect(Math.round(x), Math.round(y), 4, 2);
-    }
-  }, { text: state.fleet?.storage?.backend === "POSTGRESQL" ? "BASE DE DATOS · NEON" : "BASE DE DATOS · SQLITE", at: [0.8, 2.95, 112] });
-  // backup cabinet
-  add(0.3 + 5, () => {
-    box(0.3, 4.6, 0.95, 1.5, 54, "#9aa3b5", "#6f7891", "#848da3");
-    for (let r = 0; r < 3; r++) { const [x, y] = iso(1.25, 5.35, 44 - r * 16); ctx.fillStyle = "#4b5674"; ctx.fillRect(Math.round(x) - 1, Math.round(y), 3, 2); }
-    const ok = state.summary?.backups?.logical?.last?.status === "OK";
-    const [x, y] = iso(0.8, 5.35, 62); ctx.fillStyle = ok ? "#5ef2b5" : "#ffc857"; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 3, 6, 6);
-  }, { text: "RESPALDOS", at: [0.8, 5.35, 80] });
-  // charging dock
-  add(0.3 + 8.5, () => {
-    poly([iso(0.3, 7.8), iso(1.6, 7.8), iso(1.6, 9.2), iso(0.3, 9.2)], "#3a3f52", "#ffc857");
-    for (let k = 0; k < 4; k++) poly([iso(0.35 + k * 0.32, 7.85), iso(0.5 + k * 0.32, 7.85), iso(0.5 + k * 0.32, 9.15), iso(0.35 + k * 0.32, 9.15)], "rgba(255,200,87,.45)");
-    box(0.3, 8.3, 0.35, 0.4, 46, "#ffc857", "#c79a33", "#e0ae40");
-    const [x, y] = iso(0.65, 8.5, 36); pixelText("⚡", x + 3, y, "#161b29", 10);
-  }, { text: "ESTACIÓN DE CARGA", at: [0.95, 8.5, 64] });
-  // plants
-  for (const [x, y] of [[0.4, 0.4], [12.1, 0.6], [0.5, 11.6]]) {
-    add(x + y + 0.6, () => {
-      box(x, y, 0.5, 0.5, 14, "#c96f4a", "#9c5236", "#b15f3f");
-      const [px, py] = iso(x + 0.25, y + 0.25, 14);
-      ctx.fillStyle = "#2f8f5b"; ctx.fillRect(px - 9, py - 18, 18, 14); ctx.fillStyle = "#3fbf74"; ctx.fillRect(px - 6, py - 26, 12, 12); ctx.fillRect(px - 12, py - 12, 6, 6);
-    });
+  // server room: database racks + backup rack
+  const dbOk = !!(state.fleet && state.apiOk);
+  for (let k = 0; k < 3; k++) {
+    const y = 2.5 + k * 1.1;
+    add(0.9 + y, () => {
+      box(0.35, y, 0.9, 0.9, 84, "#334155", "#111827", "#1f2937");
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 2; c++) {
+        const on = Math.sin(t / 170 + r * 1.9 + c * 2.7 + k) > -0.3;
+        const [x, yy] = iso(1.25, y + 0.25 + c * 0.4, 74 - r * 8.5);
+        ctx.fillStyle = on ? (dbOk ? "#22d3ee" : "#ef4444") : "#0f2a33"; ctx.fillRect(Math.round(x), Math.round(yy), 4, 2);
+      }
+    }, k === 1 ? { text: state.fleet?.storage?.backend === "POSTGRESQL" ? "Base de datos · Neon" : "Base de datos · SQLite", at: [0.8, y + 0.45, 104] } : null);
   }
+  const yb = 6.0;
+  add(0.9 + yb, () => {
+    box(0.35, yb, 0.9, 1.4, 56, "#f1f5f9", "#94a3b8", "#cbd5e1");
+    for (let r = 0; r < 3; r++) { const [x, y] = iso(1.25, yb + 0.7, 46 - r * 16); ctx.fillStyle = "#64748b"; ctx.fillRect(Math.round(x) - 1, Math.round(y), 3, 2); }
+    const ok = state.summary?.backups?.logical?.last?.status === "OK";
+    const [x, y] = iso(0.8, yb + 0.7, 62); ctx.fillStyle = ok ? "#10b981" : "#f59e0b";
+    ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+  }, { text: "Respaldos", at: [0.8, yb + 0.7, 80] });
+  // chargers
+  for (const y of [8.4, 10.3]) add(0.9 + y, () => {
+    box(0.25, y + 0.45, 0.25, 0.4, 40, "#ecfeff", "#67e8f9", "#a5f3fc");
+    const [x, yy] = iso(0.37, y + 0.65, 30); ctx.fillStyle = "#0891b2"; ctx.fillRect(Math.round(x) - 2, Math.round(yy), 4, 6);
+  }, y === 8.4 ? { text: "Estación de carga", at: [1.0, 9.4, 56] } : null);
+  for (const [x, y] of [[0.35, 0.35], [12.1, 0.45], [0.4, 12.2]]) add(x + y + 0.6, () => plant(x, y));
   return items;
 }
 
+/* ----- glass partitions between the arena and the rooms ----- */
+function partitions() {
+  const h = 40, g = "rgba(186,230,253,.28)";
+  poly([iso(A0, A0), iso(N, A0), iso(N, A0, h), iso(A0, A0, h)], g);
+  poly([iso(A0, N), iso(A0, A0), iso(A0, A0, h), iso(A0, N, h)], g);
+  ctx.strokeStyle = "rgba(100,116,139,.3)";
+  for (let k = A0; k <= N + 0.01; k += 1.5) {
+    for (const [a, b] of [[iso(k, A0), iso(k, A0, h)], [iso(A0, k), iso(A0, k, h)]]) { ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
+  }
+  ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(...iso(N, A0, h)); ctx.lineTo(...iso(A0, A0, h)); ctx.lineTo(...iso(A0, N, h)); ctx.stroke(); ctx.lineWidth = 1;
+}
+
 /* ----- robots ----- */
+function robotPosition(r, now) {
+  const k = Math.min(1, (now - r.t0) / r.dur);
+  r.px = r.from.x + (r.to.x - r.from.x) * k;   // constant speed: continuous walk between samples
+  r.py = r.from.y + (r.to.y - r.from.y) * k;
+  return k < 1;
+}
 function robotDrawables(t) {
   const items = [];
   const now = performance.now();
   for (const r of state.robots.values()) {
-    const k = Math.min(1, (now - r.t0) / r.dur);
-    r.px = r.from.x + (r.to.x - r.from.x) * k;
-    r.py = r.from.y + (r.to.y - r.from.y) * k;
-    const wx = ARENA_OFF + r.px, wy = ARENA_OFF + r.py;
-    const moving = k < 1 && r.connected;
-    items.push({
-      depth: wx + wy, robot: r,
-      draw: () => {
-        const [sx, sy] = iso(wx, wy);
-        const status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
-        if (state.selected === r.id) {
-          const p = 0.6 + 0.4 * Math.sin(t / 200);
-          ctx.globalAlpha = p; poly([iso(wx - .5, wy), iso(wx, wy - .5), iso(wx + .5, wy), iso(wx, wy + .5)], null, "#5ef2b5");
-          ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1; ctx.globalAlpha = 1;
-        }
-        ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.beginPath(); ctx.ellipse(sx, sy, 15, 6, 0, 0, Math.PI * 2); ctx.fill();
-        if (status === "CRITICAL" && r.connected) {
-          ctx.fillStyle = `rgba(255,93,108,${0.18 + 0.12 * Math.sin(t / 150)})`;
-          ctx.beginPath(); ctx.ellipse(sx, sy, 22, 9, 0, 0, Math.PI * 2); ctx.fill();
-        }
-        const blink = (Math.floor(t / 120) + r.seed) % 37 === 0;
-        const sprite = robotSprite(r.color, status, blink, !r.connected);
-        const bob = moving && Math.floor(t / 180) % 2 ? -PS : 0;
-        const dx = Math.round(sx - sprite.width * PS / 2), dy = Math.round(sy - sprite.height * PS + 4 + bob);
-        ctx.drawImage(sprite, dx, dy, sprite.width * PS, sprite.height * PS);
-        r.hit = { x: dx, y: dy, w: sprite.width * PS, h: sprite.height * PS };
-        r.head = [sx, dy - 4];
-      },
+    const moving = robotPosition(r, now) && r.connected;
+    // The simulator's arena is a torus (x %= 10): leaving through one edge means
+    // entering through the opposite one. While crossing, the robot fades out on
+    // one side and fades in on the other instead of jumping.
+    const outside = Math.max(0, -r.px, r.px - 10, -r.py, r.py - 10);
+    const fade = Math.min(1, outside / 0.8);
+    const copies = [{ x: r.px, y: r.py, a: 1 - fade }];
+    if (outside > 0) copies.push({ x: wrap10(r.px), y: wrap10(r.py), a: fade });
+    const primaryIdx = copies.length > 1 && copies[1].a > copies[0].a ? 1 : 0;
+    copies.forEach((c, idx) => {
+      if (c.a <= 0.02) return;
+      const wx = A0 + c.x, wy = A0 + c.y;
+      items.push({ depth: wx + wy, robot: idx === primaryIdx ? r : null, draw: () => drawRobot(r, wx, wy, c.a, moving, idx === primaryIdx, t) });
     });
   }
   return items;
+}
+function drawRobot(r, wx, wy, alpha, moving, primary, t) {
+  const [sx, sy] = iso(wx, wy);
+  const status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
+  ctx.save(); ctx.globalAlpha = alpha;
+  if (state.selected === r.id) {
+    ctx.fillStyle = COLORS[status] + "26"; ctx.strokeStyle = COLORS[status]; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(sx, sy, 20 + 2 * Math.sin(t / 250), 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.lineWidth = 1;
+  } else if (status === "CRITICAL") {
+    ctx.fillStyle = `rgba(239,68,68,${0.12 + 0.08 * Math.sin(t / 150)})`;
+    ctx.beginPath(); ctx.ellipse(sx, sy, 20, 9, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = "rgba(30,40,80,.16)"; ctx.beginPath(); ctx.ellipse(sx, sy, 14, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+  const blink = (Math.floor(t / 120) + r.seed) % 37 === 0;
+  const sprite = robotSprite(r.color, status, blink, !r.connected);
+  const bob = moving && Math.floor(t / 180) % 2 ? -PS : 0;
+  const dx = Math.round(sx - sprite.width * PS / 2), dy = Math.round(sy - sprite.height * PS + 4 + bob);
+  ctx.drawImage(sprite, dx, dy, sprite.width * PS, sprite.height * PS);
+  ctx.restore();
+  if (primary) { r.hit = { x: dx, y: dy, w: sprite.width * PS, h: sprite.height * PS }; r.head = [sx, dy - 6]; r.alpha = alpha; }
 }
 
 function drawTargets() {
   const cov = state.summary?.coverage;
   if (!state.toggles.targets || !cov) return;
-  const A0 = ARENA_OFF, A1 = ARENA_OFF + 10;
   ctx.save();
   ctx.beginPath(); [iso(A0, A0), iso(A1, A0), iso(A1, A1), iso(A0, A1)].forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.clip();
   for (const a of cov.assignment) {
     const r = state.robots.get(a.robot_id);
     if (!r || !r.connected) continue;
-    let dx = a.target_x - r.px, dy = a.target_y - r.py; // shortest way on the torus
+    const px = wrap10(r.px), py = wrap10(r.py);
+    let dx = a.target_x - px, dy = a.target_y - py; // shortest way on the torus
     if (dx > 5) dx -= 10; if (dx < -5) dx += 10; if (dy > 5) dy -= 10; if (dy < -5) dy += 10;
-    const [x0, y0] = iso(A0 + r.px, A0 + r.py), [x1, y1] = iso(A0 + r.px + dx, A0 + r.py + dy);
-    ctx.setLineDash([4, 4]); ctx.strokeStyle = r.color; ctx.globalAlpha = .8; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1; ctx.globalAlpha = 1;
+    const [x0, y0] = iso(A0 + px, A0 + py), [x1, y1] = iso(A0 + px + dx, A0 + py + dy);
+    ctx.setLineDash([4, 5]); ctx.strokeStyle = r.color; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
   }
   for (const a of cov.assignment) {
     const r = state.robots.get(a.robot_id);
-    const col = r ? r.color : "#fff";
+    const col = r ? r.color : "#64748b";
     const [x, y] = iso(A0 + a.target_x, A0 + a.target_y);
-    poly([[x, y - 6], [x + 11, y], [x, y + 6], [x - 11, y]], "rgba(8,12,22,.55)", col);
-    ctx.fillStyle = "#e8edf7"; ctx.fillRect(x - 1, y - 20, 2, 20);
-    ctx.fillStyle = col; ctx.fillRect(x + 1, y - 20, 9, 6);
+    ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, 9, 4.5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = "#475569"; ctx.fillRect(x - 1, y - 18, 2, 18);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x + 1, y - 18); ctx.lineTo(x + 11, y - 14); ctx.lineTo(x + 1, y - 10); ctx.fill();
   }
   ctx.restore();
 }
@@ -624,59 +637,64 @@ function drawTargets() {
 function render(t) {
   ctx.clearRect(0, 0, W, H);
   drawRoom(t);
+  const back = perimeter(t).sort((a, b) => a.depth - b.depth);
+  back.forEach((it) => it.draw());
+  partitions();
   drawTargets();
-  const items = [...furniture(t), ...robotDrawables(t)].sort((a, b) => a.depth - b.depth);
-  items.forEach((it) => it.draw());
+  const front = [...robotDrawables(t), { depth: 12.1 + 12.0 + 0.6, draw: () => plant(12.1, 12.0) }].sort((a, b) => a.depth - b.depth);
+  front.forEach((it) => it.draw());
   if (state.toggles.tags) {
-    for (const it of items) if (it.label) { const [x, y] = iso(...it.label.at); tag(x, y, [{ text: it.label.text, color: "#5ef2b5" }]); }
-    const robots = items.filter((it) => it.robot).map((it) => it.robot);
-    for (const r of robots) {
-      if (!r.head) continue;
+    for (const it of back) if (it.label) { const [x, y] = iso(...it.label.at); pillTag(x, y, "#22d3ee", it.label.text); }
+    for (const it of front) {
+      const r = it.robot;
+      if (!r || !r.head) continue;
       const status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
-      const plate = tag(r.head[0], r.head[1], [
-        { text: `${r.name} · ${r.id}`.toUpperCase(), color: "#e8edf7" },
-        { text: LABEL[status].toUpperCase(), color: "#08111f", bg: COLORS[status] },
-      ]);
+      ctx.save(); ctx.globalAlpha = Math.max(.35, r.alpha ?? 1);
+      const plate = pillTag(r.head[0], r.head[1], COLORS[status], r.name, LABEL[status], status === "NONE" || status === "OFF" ? "#6b7387" : COLORS[status]);
       const batt = Math.max(0, Math.min(100, r.data.battery));
-      ctx.fillStyle = "#26314d"; ctx.fillRect(plate.left + 3, plate.top + plate.h - 3, plate.w - 6, 2);
-      ctx.fillStyle = batt < 20 ? "#ff5d6c" : batt < 50 ? "#ffc857" : "#5ef2b5";
-      ctx.fillRect(plate.left + 3, plate.top + plate.h - 3, (plate.w - 6) * batt / 100, 2);
+      ctx.fillStyle = "#e6e8ef"; ctx.fillRect(plate.left + 10, plate.top + plate.h + 2, plate.w - 20, 3);
+      ctx.fillStyle = batt < 20 ? COLORS.CRITICAL : batt < 50 ? COLORS.WARNING : COLORS.NORMAL;
+      ctx.fillRect(plate.left + 10, plate.top + plate.h + 2, (plate.w - 20) * batt / 100, 3);
       if (r.bubble && performance.now() < r.bubble.until) bubble(r.head[0], plate.top, r.bubble.text);
+      ctx.restore();
     }
   }
   requestAnimationFrame(render);
 }
 
-canvas.addEventListener("click", (e) => {
+function robotAt(e) {
   const rect = canvas.getBoundingClientRect();
   const x = (e.clientX - rect.left) / viewScale, y = (e.clientY - rect.top) / viewScale;
   const hits = [...state.robots.values()].filter((r) => r.hit && x >= r.hit.x && x <= r.hit.x + r.hit.w && y >= r.hit.y && y <= r.hit.y + r.hit.h);
-  if (hits.length) select(hits.sort((a, b) => (b.px + b.py) - (a.px + a.py))[0].id);
-});
-canvas.addEventListener("mousemove", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left) / viewScale, y = (e.clientY - rect.top) / viewScale;
-  canvas.style.cursor = [...state.robots.values()].some((r) => r.hit && x >= r.hit.x && x <= r.hit.x + r.hit.w && y >= r.hit.y && y <= r.hit.y + r.hit.h) ? "pointer" : "default";
-});
+  return hits.sort((a, b) => (wrap10(b.px) + wrap10(b.py)) - (wrap10(a.px) + wrap10(a.py)))[0];
+}
+canvas.addEventListener("click", (e) => { const r = robotAt(e); if (r) select(r.id); });
+canvas.addEventListener("mousemove", (e) => { canvas.style.cursor = robotAt(e) ? "pointer" : "default"; });
 
 /* =====================================================================
-   Chat + speech bubbles
+   Activity feed + speech bubbles
    ===================================================================== */
-function say(r, text, ms = 4500) { r.bubble = { text, until: performance.now() + ms }; }
-function chat(html, color) {
-  const time = new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  state.chat.push(`<div><span class="t">${time}</span><b style="color:${color || "#9fb6ff"}">Director API:</b> ${html}</div>`);
-  state.chat = state.chat.slice(-40);
-  const log = document.getElementById("chat");
-  log.innerHTML = state.chat.join("");
-  log.scrollTop = log.scrollHeight;
-  document.getElementById("chat-count").textContent = state.chat.length;
+function say(r, t, ms = 4500) { r.bubble = { text: t, until: performance.now() + ms }; }
+const ICONS = { ok: ["✓", COLORS.NORMAL], warn: ["!", COLORS.WARNING], bad: ["▲", COLORS.CRITICAL], info: ["•", "#0891b2"], off: ["○", COLORS.OFF] };
+function log(html, kind = "info", robotId = null) {
+  const entry = { time: clock(), html, icon: ICONS[kind] };
+  state.feed.push(entry); state.feed = state.feed.slice(-60);
+  if (robotId) { const list = state.events.get(robotId) || []; list.push(entry); state.events.set(robotId, list.slice(-20)); }
+  const el = document.getElementById("feed-log");
+  el.innerHTML = state.feed.map((e) => `<div><span class="t">${e.time}</span><span class="i" style="color:${e.icon[1]}">${e.icon[0]}</span><span>${e.html}</span></div>`).join("");
+  el.scrollTop = el.scrollHeight;
+  document.getElementById("feed-count").textContent = state.feed.length;
+  if (robotId && robotId === state.selected && state.tab === "actividad") renderProfile();
 }
+document.getElementById("feed-toggle").addEventListener("click", (e) => {
+  const open = document.getElementById("feed").classList.toggle("open");
+  e.target.textContent = open ? "Ver menos" : "Ver todo";
+});
 function symptom(d) {
-  if (d.vibration > 1.2) return `Vibración ${fmt(d.vibration, 2)}`;
-  if (d.motor_temp > 65) return `Motor a ${fmt(d.motor_temp, 0)} °C`;
-  if (d.motor_current > 5.5) return `Corriente ${fmt(d.motor_current, 1)} A`;
-  return "Necesito revisión";
+  if (d.vibration > 1.2) return `vibración ${fmt(d.vibration, 2)}`;
+  if (d.motor_temp > 65) return `motor a ${fmt(d.motor_temp, 0)} °C`;
+  if (d.motor_current > 5.5) return `corriente ${fmt(d.motor_current, 1)} A`;
+  return "necesita revisión";
 }
 function chatter(r) {
   const a = state.summary?.coverage?.assignment?.find((x) => x.robot_id === r.id);
@@ -701,75 +719,80 @@ async function getJSON(url, timeout = 5000) {
     return await res.json();
   } finally { clearTimeout(timer); }
 }
-
 function setApi(ok) {
   if (state.apiOk === ok) return;
-  if (state.apiOk !== null) chat(ok ? "la API volvió a responder." : "la API no responde, reintentando…", ok ? COLORS.NORMAL : COLORS.CRITICAL);
+  if (state.apiOk !== null) log(ok ? "La API volvió a responder." : "La API no responde, reintentando…", ok ? "ok" : "bad");
   state.apiOk = ok;
   document.getElementById("stage").classList.toggle("api-down", !ok);
   const pill = document.getElementById("pill-api");
   pill.className = `pill ${ok ? "ok" : "bad"}`;
   pill.lastElementChild.textContent = ok ? "API en línea" : "API caída";
 }
-
+const POLL_MS = 1500;
+const who = (r) => `<b>${esc(r.name)}</b> <span class="mono" style="color:var(--faint)">${esc(r.id)}</span>`;
 function ingestRobots(list) {
   const now = performance.now();
   const seen = new Set();
   for (const d of list) {
     seen.add(d.robot_id);
     let r = state.robots.get(d.robot_id);
-    const x = ((d.x % 10) + 10) % 10, y = ((d.y % 10) + 10) % 10;
+    const x = wrap10(d.x), y = wrap10(d.y);
     if (!r) {
-      const id = identity(d.robot_id);
-      r = { id: d.robot_id, ...id, seed: hashIndex(d.robot_id) % 37, from: { x, y }, to: { x, y }, t0: now, dur: 1, px: x, py: y, data: d, connected: d.connected, lastTs: d.timestamp };
+      r = { id: d.robot_id, ...identity(d.robot_id), seed: hashIndex(d.robot_id) % 37, from: { x, y }, to: { x, y }, t0: now, dur: 1,
+            px: x, py: y, data: d, connected: d.connected, lastTs: d.timestamp };
       state.robots.set(d.robot_id, r);
-      if (state.fleet) chat(`<b>${esc(r.name)}</b> (${esc(r.id)}) se unió a la oficina como ${esc(r.role.rol.toLowerCase())}.`, r.color);
+      if (state.fleet) log(`${who(r)} se unió a la oficina como ${esc(r.role.rol.toLowerCase())}.`, "info", r.id);
       say(r, "¡Hola! Me reporto");
     } else if (d.timestamp !== r.lastTs) {
-      const jump = Math.abs(x - r.px) > 5 || Math.abs(y - r.py) > 5; // wrapped around the arena edge
-      r.from = jump ? { x, y } : { x: r.px, y: r.py };
-      r.to = { x, y }; r.t0 = now; r.dur = 1400; r.lastTs = d.timestamp;
+      // Walk from exactly where the robot is drawn along the shortest path on
+      // the torus (|dx|, |dy| <= 5), which may go a little beyond the arena
+      // edge. Only once it has fully crossed (fade complete) is its coordinate
+      // folded back into [0, 10), which looks identical on screen.
+      let fx = r.px, fy = r.py;
+      if (Math.max(0, -fx, fx - 10, -fy, fy - 10) >= 0.8) { fx = wrap10(fx); fy = wrap10(fy); }
+      let dx = x - wrap10(fx), dy = y - wrap10(fy);
+      if (dx > 5) dx -= 10; if (dx < -5) dx += 10; if (dy > 5) dy -= 10; if (dy < -5) dy += 10;
+      r.from = { x: fx, y: fy }; r.to = { x: fx + dx, y: fy + dy }; r.px = fx; r.py = fy;
+      r.t0 = now; r.dur = POLL_MS; r.lastTs = d.timestamp;
     }
     const prev = r.data.predicted_status;
     if (prev && d.predicted_status && prev !== d.predicted_status && d.connected) {
-      const name = `<b>${esc(r.name)}</b> (${esc(r.id)})`;
-      if (d.predicted_status === "CRITICAL") { say(r, `¡${symptom(d)}!`); chat(`${name} pasó a CRÍTICO · ${esc(symptom(d))} · conf. ${fmt(d.confidence * 100, 0)}%`, COLORS.CRITICAL); }
-      else if (d.predicted_status === "WARNING") { say(r, "Algo no anda bien…"); chat(`${name} en ALERTA · temp. ${fmt(d.motor_temp, 0)} °C`, COLORS.WARNING); }
-      else { say(r, "¡De vuelta al trabajo!"); chat(`${name} volvió a estado normal.`, COLORS.NORMAL); }
+      if (d.predicted_status === "CRITICAL") { say(r, `¡${symptom(d)}!`); log(`${who(r)} pasó a <b style="color:${COLORS.CRITICAL}">crítico</b> · ${esc(symptom(d))} · conf. ${fmt(d.confidence * 100, 0)}%`, "bad", r.id); }
+      else if (d.predicted_status === "WARNING") { say(r, "Algo no anda bien…"); log(`${who(r)} en <b style="color:${COLORS.WARNING}">alerta</b> · temp. ${fmt(d.motor_temp, 0)} °C`, "warn", r.id); }
+      else { say(r, "¡De vuelta al trabajo!"); log(`${who(r)} volvió a estado normal.`, "ok", r.id); }
     }
-    if (r.connected && !d.connected) { chat(`<b>${esc(r.name)}</b> (${esc(r.id)}) perdió la señal.`, COLORS.OFF); say(r, "Zzz… sin señal", 6000); }
-    if (d.battery < 15 && r.data.battery >= 15) say(r, `Batería baja: ${fmt(d.battery, 0)}%`);
+    if (r.connected && !d.connected) { log(`${who(r)} perdió la señal.`, "off", r.id); say(r, "Zzz… sin señal", 6000); }
+    if (d.battery < 15 && r.data.battery >= 15) { say(r, `Batería baja: ${fmt(d.battery, 0)}%`); log(`${who(r)} con batería baja (${fmt(d.battery, 0)}%).`, "warn", r.id); }
     r.data = d; r.connected = d.connected;
     if (r.connected && Math.random() < 0.015 && !(r.bubble && now < r.bubble.until)) chatter(r);
   }
   for (const id of [...state.robots.keys()]) if (!seen.has(id)) state.robots.delete(id);
 }
-
 async function pollFleet() {
   try {
     const fleet = await getJSON("/fleet");
-    state.fleet = fleet; state.fleetAt = performance.now();
+    state.fleet = fleet;
     setApi(true);
     ingestRobots(fleet.robots);
     renderPanels();
   } catch (err) { setApi(false); }
-  setTimeout(pollFleet, 1500);
+  setTimeout(pollFleet, POLL_MS);
 }
 async function pollSummary() {
   try {
     state.summary = await getJSON("/fleet/summary", 8000);
     const last = state.summary.backups?.logical?.last;
     if (last && state.lastBackup !== null && last.finished_at !== state.lastBackup)
-      chat(`respaldo lógico completado: ${Number(last.rows || 0).toLocaleString("es-CL")} filas.`, COLORS.NORMAL);
+      log(`Respaldo lógico completado: ${Number(last.rows || 0).toLocaleString("es-CL")} filas.`, "ok");
     state.lastBackup = last ? last.finished_at : 0;
     renderSummary();
-  } catch (err) { /* status shown by pollFleet */ }
+  } catch (err) { /* status is shown by pollFleet */ }
   setTimeout(pollSummary, 5000);
 }
 async function pollHistory() {
   if (state.selected) {
-    try { state.history = await getJSON(`/robots/${encodeURIComponent(state.selected)}/history?limit=60&details=true`); renderDetail(); }
-    catch (err) { /* keep last */ }
+    try { state.history = await getJSON(`/robots/${encodeURIComponent(state.selected)}/history?limit=60&details=true`); renderProfile(); }
+    catch (err) { /* keep the last one */ }
   }
   setTimeout(pollHistory, 3000);
 }
@@ -780,9 +803,10 @@ async function pollHistory() {
 const $ = (id) => document.getElementById(id);
 function select(id) {
   state.selected = id; state.history = [];
-  renderPanels(); renderDetail();
-  getJSON(`/robots/${encodeURIComponent(id)}/history?limit=60&details=true`).then((h) => { state.history = h; renderDetail(); }).catch(() => {});
+  renderPanels(); renderProfile();
+  getJSON(`/robots/${encodeURIComponent(id)}/history?limit=60&details=true`).then((h) => { state.history = h; renderProfile(); }).catch(() => {});
 }
+function closeProfile() { state.selected = null; renderProfile(); renderPanels(); }
 
 function renderPanels() {
   const f = state.fleet; if (!f) return;
@@ -790,28 +814,27 @@ function renderPanels() {
   $("k-active").textContent = `${f.connected}/${f.robots.length}`;
   $("k-active-sub").textContent = `${f.robots.length - f.connected} sin señal`;
   $("k-tpm").textContent = m.telemetry_per_minute;
-  $("k-rows").textContent = `${Number(f.storage.telemetry_rows).toLocaleString("es-CL")} registros guardados`;
+  $("k-rows").textContent = `${Number(f.storage.telemetry_rows).toLocaleString("es-CL")} registros`;
   $("k-pred").textContent = m.prediction_requests;
   $("k-pred-sub").textContent = m.avg_inference_ms !== null ? `modelo ${fmt(m.avg_inference_ms, 2)} ms prom.` : "POST /predict";
   $("k-lat").textContent = m.p95_prediction_latency_ms !== null ? `${fmt(m.p95_prediction_latency_ms, 1)} ms` : "—";
   $("k-lat-sub").textContent = m.avg_prediction_latency_ms !== null ? `prom. ${fmt(m.avg_prediction_latency_ms, 1)} · p50 ${fmt(m.p50_prediction_latency_ms, 1)}` : "sin predicciones aún";
   $("k-err").textContent = m.errors_total;
-  $("k-err").style.color = m.errors_5xx > 0 ? "var(--red)" : m.errors_total > 0 ? "var(--amber)" : "var(--mint)";
+  $("k-err").style.color = m.errors_5xx > 0 ? COLORS.CRITICAL : m.errors_total > 0 ? COLORS.WARNING : "";
   $("k-err-sub").textContent = `${m.errors_4xx} 4xx · ${m.errors_5xx} 5xx`;
   const crit = f.status_counts.CRITICAL;
-  $("k-state").innerHTML = state.apiOk ? (crit ? `<span style="color:var(--amber)">Operativo · ${crit} crítico(s)</span>` : `<span style="color:var(--mint)">Operativo</span>`) : `<span style="color:var(--red)">Sin conexión</span>`;
-  $("last-update").textContent = new Date().toLocaleTimeString("es-CL");
-  $("pill-uptime").lastElementChild.textContent = `Uptime ${uptime(m.uptime_seconds)}`;
-  const dbPill = $("pill-db");
-  dbPill.className = "pill ok";
+  $("k-state").innerHTML = state.apiOk
+    ? `<span class="badge ${crit ? "b-WARNING" : "b-NORMAL"}"><i class="dot" style="background:${crit ? COLORS.WARNING : COLORS.NORMAL}"></i>${crit ? `Operativo · ${crit} crítico(s)` : "Operativo"}</span>`
+    : `<span class="badge b-CRITICAL">Sin conexión</span>`;
+  $("last-update").textContent = clock();
+  $("pill-uptime").lastElementChild.textContent = `uptime ${uptime(m.uptime_seconds)}`;
+  const dbPill = $("pill-db"); dbPill.className = "pill ok";
   dbPill.lastElementChild.textContent = f.storage.backend === "POSTGRESQL" ? "Neon PostgreSQL" : "SQLite local";
 
-  // fleet stack
   const total = Math.max(1, f.connected);
   $("stack").innerHTML = ["NORMAL", "WARNING", "CRITICAL"].map((s) => `<div title="${LABEL[s]}" style="width:${100 * f.status_counts[s] / total}%;background:${COLORS[s]}"></div>`).join("");
-  $("stack-legend").innerHTML = ["NORMAL", "WARNING", "CRITICAL"].map((s) => `<span style="color:${COLORS[s]}">${LABEL[s]} ${f.status_counts[s]}</span>`).join("");
+  $("stack-legend").innerHTML = ["NORMAL", "WARNING", "CRITICAL"].map((s) => `<span><i class="dot" style="background:${COLORS[s]}"></i>${LABEL[s]} <b>${f.status_counts[s]}</b></span>`).join("");
 
-  // roster
   const robots = [...state.robots.values()].sort((a, b) => a.id.localeCompare(b.id));
   $("roster").innerHTML = robots.length ? robots.map((r) => {
     const d = r.data, status = r.connected ? (d.predicted_status || "NONE") : "OFF";
@@ -819,53 +842,76 @@ function renderPanels() {
     return `<button class="agent ${state.selected === r.id ? "sel" : ""} ${r.connected ? "" : "off"}" data-id="${esc(r.id)}">
       <div class="agent-top"><span class="agent-name">${esc(r.name)}<small>${esc(r.id)}</small></span><span class="badge b-${status}">${LABEL[status]}</span></div>
       <div class="agent-role">${esc(r.role.rol)} · conf. ${d.confidence != null ? fmt(d.confidence * 100, 0) + "%" : "—"}</div>
-      <div class="bar" title="Batería ${fmt(batt, 1)}%"><div style="width:${batt}%;background:${batt < 20 ? "var(--red)" : batt < 50 ? "var(--amber)" : "var(--mint)"}"></div></div>
-      <div class="agent-stats"><span>🔋 ${fmt(batt, 0)}%</span><span>${fmt(d.motor_temp, 0)} °C</span><span>vib ${fmt(d.vibration, 2)}</span></div>
+      <div class="bar" title="Batería ${fmt(batt, 1)}%"><div style="width:${batt}%;background:${batt < 20 ? COLORS.CRITICAL : batt < 50 ? COLORS.WARNING : COLORS.NORMAL}"></div></div>
+      <div class="agent-stats"><span>Batería ${fmt(batt, 0)}%</span><span>${fmt(d.motor_temp, 0)} °C</span><span>vib ${fmt(d.vibration, 2)}</span></div>
     </button>`;
   }).join("") : `<div class="empty">Ejecuta el simulador para que lleguen agentes a la oficina.</div>`;
-  if (state.selected && !state.history.length) renderDetail();
+  if (state.selected && state.tab === "telemetria") renderProfile();
 }
 $("roster").addEventListener("click", (e) => { const b = e.target.closest(".agent"); if (b) select(b.dataset.id); });
 
-function sparkline(values, color, min, max) {
+function sparkline(values, color) {
   if (values.length < 2) return "";
-  const lo = min ?? Math.min(...values), hi = max ?? Math.max(...values), span = hi - lo || 1;
-  const pts = values.map((v, i) => `${(i / (values.length - 1) * 300).toFixed(1)},${(36 - (v - lo) / span * 32).toFixed(1)}`).join(" ");
-  return `<svg viewBox="0 0 300 38" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+  const lo = Math.min(...values), hi = Math.max(...values), span = hi - lo || 1;
+  const pts = values.map((v, i) => `${(i / (values.length - 1) * 300).toFixed(1)},${(31 - (v - lo) / span * 28).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 300 34" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
 }
-function renderDetail() {
+function renderProfile() {
+  const el = $("profile");
   const r = state.selected && state.robots.get(state.selected);
-  if (!r) { $("detail").innerHTML = `<p class="hint">Selecciona un agente en la oficina o en la lista.</p>`; return; }
+  if (!r) { el.classList.remove("show"); el.innerHTML = ""; return; }
   const d = r.data, status = r.connected ? (d.predicted_status || "NONE") : "OFF";
   const a = state.summary?.coverage?.assignment?.find((x) => x.robot_id === r.id);
   const h = state.history;
-  $("detail").innerHTML = `
-    <div class="detail-top"><canvas id="avatar" width="13" height="18"></canvas>
-      <div><div class="detail-name">${esc(r.name)}</div>
-      <div class="detail-role">${esc(r.role.rol)} · ${esc(r.id)}</div>
-      <div style="margin-top:6px"><span class="badge b-${status}">${LABEL[status]}</span>
-      <span class="hint"> conf. ${d.confidence != null ? fmt(d.confidence * 100, 1) + "%" : "—"}</span></div></div></div>
-    <p class="hint" style="margin:10px 0 0">${esc(r.role.fn)}</p>
-    <div class="grid2">
-      <div><span>Batería</span><span>${fmt(d.battery, 1)} %</span></div>
-      <div><span>Velocidad</span><span>${fmt(d.speed, 2)} m/s</span></div>
-      <div><span>Temp. motor</span><span>${fmt(d.motor_temp, 1)} °C</span></div>
-      <div><span>Vibración</span><span>${fmt(d.vibration, 2)}</span></div>
-      <div><span>Corriente</span><span>${fmt(d.motor_current, 2)} A</span></div>
-      <div><span>Obstáculo</span><span>${fmt(d.obstacle_distance, 2)} m</span></div>
-      <div><span>Posición</span><span>${fmt(d.x, 1)}, ${fmt(d.y, 1)}</span></div>
-      <div><span>Última señal</span><span>${ago(d.age_s)}</span></div>
-      <div><span>Punto óptimo</span><span>${a ? `${fmt(a.target_x, 1)}, ${fmt(a.target_y, 1)}` : "—"}</span></div>
-      <div><span>Distancia · ETA</span><span>${a ? `${fmt(a.distance_m, 1)} m · ${fmt(a.eta_s, 0)} s` : "—"}</span></div>
-    </div>
-    ${h.length > 1 ? `
-    <div class="spark"><p class="subhead"><span>Batería · últimas ${h.length} muestras</span><span>${fmt(h[h.length - 1].battery, 1)}%</span></p>${sparkline(h.map((s) => s.battery), "#5ef2b5")}</div>
-    <div class="spark"><p class="subhead"><span>Temperatura del motor</span><span>${fmt(h[h.length - 1].motor_temp, 1)} °C</span></p>${sparkline(h.map((s) => s.motor_temp), "#ffc857")}</div>
-    <div class="spark"><p class="subhead"><span>Estado predicho</span><span>${h.length} muestras</span></p>
-      <div class="timeline">${h.map((s) => `<i style="background:${COLORS[s.predicted_status] || "#3a4560"}" title="${s.predicted_status || "—"}"></i>`).join("")}</div></div>` : `<p class="hint">Cargando historial…</p>`}`;
-  const g = $("avatar").getContext("2d");
-  g.drawImage(robotSprite(r.color, status, false, !r.connected), 0, 0);
+  const tabs = [["telemetria", "Telemetría"], ["perfil", "Perfil"], ["actividad", "Actividad"]];
+  let body;
+  if (state.tab === "perfil") {
+    body = `<div class="label">Responsabilidades</div><ul>${r.role.resp.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+      <div class="label">Herramientas</div><div class="chips">${r.role.tools.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</div>
+      <div class="label">Autonomía</div><div class="hint">Nivel ${esc(r.role.nivel)}. Escala al director (la API) cuando el modelo predice alerta o crítico.</div>
+      <div class="label">Punto óptimo de cobertura</div>
+      <div class="hint">${a ? `Asignado a (${fmt(a.target_x, 1)}, ${fmt(a.target_y, 1)}) · ${fmt(a.distance_m, 1)} m · ETA ${fmt(a.eta_s, 0)} s` : "Sin asignación (desconectado)."}</div>`;
+  } else if (state.tab === "actividad") {
+    const ev = (state.events.get(r.id) || []).slice().reverse();
+    body = ev.length ? `<div class="activity">${ev.map((e) => `<div><span class="t">${e.time}</span><span style="color:${e.icon[1]};font-weight:700">${e.icon[0]}</span> ${e.html}</div>`).join("")}</div>`
+      : `<p class="hint" style="margin:0">Sin eventos desde que abriste el panel.</p>`;
+  } else {
+    body = `<div class="grid2">
+        <div><span>Batería</span><span>${fmt(d.battery, 1)} %</span></div>
+        <div><span>Velocidad</span><span>${fmt(d.speed, 2)} m/s</span></div>
+        <div><span>Temp. motor</span><span>${fmt(d.motor_temp, 1)} °C</span></div>
+        <div><span>Vibración</span><span>${fmt(d.vibration, 2)}</span></div>
+        <div><span>Corriente</span><span>${fmt(d.motor_current, 2)} A</span></div>
+        <div><span>Obstáculo</span><span>${fmt(d.obstacle_distance, 2)} m</span></div>
+        <div><span>Posición</span><span>${fmt(d.x, 1)}, ${fmt(d.y, 1)}</span></div>
+        <div><span>Última señal</span><span>${ago(d.age_s)}</span></div>
+      </div>
+      ${h.length > 1 ? `
+      <div class="spark"><p class="subhead"><span>Batería · ${h.length} muestras</span><span>${fmt(h[h.length - 1].battery, 1)}%</span></p>${sparkline(h.map((s) => s.battery), COLORS.NORMAL)}</div>
+      <div class="spark"><p class="subhead"><span>Temperatura del motor</span><span>${fmt(h[h.length - 1].motor_temp, 1)} °C</span></p>${sparkline(h.map((s) => s.motor_temp), COLORS.WARNING)}</div>
+      <p class="subhead"><span>Estado predicho (historial)</span><span>${h.length} muestras</span></p>
+      <div class="timeline">${h.map((s) => `<i style="background:${COLORS[s.predicted_status] || "#e2e8f0"}" title="${s.predicted_status || "—"}"></i>`).join("")}</div>` : `<p class="hint">Cargando historial…</p>`}`;
+  }
+  const scroll = el.scrollTop;
+  el.innerHTML = `
+    <div class="p-head"><canvas id="avatar" width="13" height="18"></canvas>
+      <div><div class="p-name">${esc(r.name)} <span class="mono hint">${esc(r.id)}</span></div>
+        <div class="p-role">${esc(r.role.rol)} · ${esc(r.role.depto)}</div>
+        <div class="p-status"><i class="dot" style="background:${COLORS[status]}"></i>${LABEL[status]} · conf. ${d.confidence != null ? fmt(d.confidence * 100, 1) + "%" : "—"}</div></div>
+      <button class="close" aria-label="Cerrar ficha" type="button">×</button></div>
+    <p class="p-bio">${esc(r.role.bio)}</p>
+    <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab" role="tab" type="button" data-tab="${k}" aria-selected="${state.tab === k}">${l}</button>`).join("")}</div>
+    <div class="p-body">${body}</div>`;
+  el.classList.add("show");
+  el.scrollTop = scroll;
+  $("avatar").getContext("2d").drawImage(robotSprite(r.color, status, false, !r.connected), 0, 0);
 }
+$("profile").addEventListener("click", (e) => {
+  if (e.target.closest(".close")) return closeProfile();
+  const tab = e.target.closest(".tab");
+  if (tab) { state.tab = tab.dataset.tab; renderProfile(); }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && state.selected) closeProfile(); });
 
 function renderSummary() {
   const s = state.summary; if (!s) return;
@@ -873,48 +919,44 @@ function renderSummary() {
   $("k-cov").textContent = `${fmt(c.coverage_pct, 0)}%`;
   $("k-cov-sub").textContent = c.coverage_radius_m != null ? `radio óptimo ${fmt(c.coverage_radius_m, 2)} m` : "sin robots conectados";
 
-  // trend: stacked columns per minute
   const tr = s.trend, maxT = Math.max(1, ...tr.map((b) => b.total)), bw = 300 / tr.length;
   $("trend").innerHTML = tr.map((b, i) => {
-    let y = 72; const parts = [];
+    let y = 68; const parts = [];
     for (const st of ["NORMAL", "WARNING", "CRITICAL"]) {
-      const hgt = b[st] / maxT * 68; y -= hgt;
-      if (hgt > 0) parts.push(`<rect x="${(i * bw + 1).toFixed(1)}" y="${y.toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${hgt.toFixed(1)}" fill="${COLORS[st]}"><title>${new Date(b.minute * 1000).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} · ${LABEL[st]} ${b[st]}</title></rect>`);
+      const hgt = b[st] / maxT * 64; y -= hgt;
+      if (hgt > 0) parts.push(`<rect x="${(i * bw + 1.5).toFixed(1)}" y="${y.toFixed(1)}" width="${(bw - 3).toFixed(1)}" height="${hgt.toFixed(1)}" fill="${COLORS[st]}"><title>${new Date(b.minute * 1000).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} · ${LABEL[st]} ${b[st]}</title></rect>`);
     }
     return parts.join("");
-  }).join("") + `<line x1="0" y1="72.5" x2="300" y2="72.5" stroke="#2a3654"/>`;
+  }).join("") + `<line x1="0" y1="68.5" x2="300" y2="68.5" stroke="#e3e6ef"/>`;
   $("trend-total").textContent = `${tr.reduce((n, b) => n + b.total, 0).toLocaleString("es-CL")} total`;
 
-  // backups
   const b = s.backups, now = Date.now() / 1000;
   const row = (title, info, extra) => {
     const last = info.last;
-    const when = last ? ago(now - last.finished_at) : "nunca";
-    const next = info.next_due_at ? inTime(info.next_due_at - now) : "manual";
-    const ok = last ? (last.status === "OK" ? "var(--mint)" : last.status === "MANAGED" ? "var(--cyan)" : "var(--red)") : "var(--muted)";
-    return `<div class="row"><div><strong>${title}</strong><div class="hint">${every(info.every_minutes)} · próximo ${next}</div>${extra || ""}</div>
-      <div style="text-align:right"><span style="color:${ok}">${last ? last.status : "—"}</span><div class="hint">${when}</div></div></div>`;
+    const cls = last ? (last.status === "OK" ? "b-NORMAL" : last.status === "MANAGED" ? "b-NONE" : "b-CRITICAL") : "b-NONE";
+    return `<div class="row"><div><strong>${title}</strong><div class="hint">${every(info.every_minutes)} · próximo ${info.next_due_at ? inTime(info.next_due_at - now) : "manual"}</div>${extra || ""}</div>
+      <div style="text-align:right"><span class="badge ${cls}">${last ? last.status : "—"}</span><div class="hint">${last ? ago(now - last.finished_at) : "nunca"}</div></div></div>`;
   };
   const lg = b.logical.last, ph = b.physical.last;
   $("backups").innerHTML =
     row("Lógico · CSV", b.logical, `<div class="hint">${lg ? `${Number(lg.rows || 0).toLocaleString("es-CL")} filas · ${fmt((lg.size_bytes || 0) / 1024, 1)} KB` : "exporta las filas de telemetría"}</div>`) +
-    row("Físico · copia de la base", b.physical, `<div class="hint">${ph ? (ph.status === "MANAGED" ? "gestionado por Neon (PITR)" : `${fmt((ph.size_bytes || 0) / 1024, 1)} KB · offsite ${ph.offsite_copy ? "✓" : "—"}`) : "copia binaria completa"}</div>`) +
+    row("Físico · copia de la base", b.physical, `<div class="hint">${ph ? (ph.status === "MANAGED" ? "gestionado por Neon (PITR)" : `${fmt((ph.size_bytes || 0) / 1024, 1)} KB · copia offsite ${ph.offsite_copy ? "sí" : "no configurada"}`) : "copia binaria completa"}</div>`) +
     `<p class="hint" style="margin:8px 0 0">Retención: últimos ${b.retention_files} archivos · programado por ${esc(b.scheduler || "—")}</p>`;
 
-  // model
   const m = s.model, pill = $("pill-model");
   if (m) {
     pill.className = "pill ok"; pill.lastElementChild.textContent = `Modelo ${m.model_version} · F1 ${m.test_f1_macro.toFixed(3)}`;
     $("model").innerHTML = `
       <div class="row"><div><strong>${esc(m.model.replace(/_/g, " "))}</strong><div class="hint">versión ${esc(m.model_version)} · scikit-learn ${esc(m.sklearn_version)}</div></div>
-        <div style="text-align:right"><strong style="color:var(--mint)">${m.test_f1_macro.toFixed(3)}</strong><div class="hint">F1 macro</div></div></div>
+        <div style="text-align:right"><strong style="color:${COLORS.NORMAL};font-size:18px">${m.test_f1_macro.toFixed(3)}</strong><div class="hint">F1 macro</div></div></div>
       <div class="row"><span class="hint">Línea base (clase mayoritaria)</span><span>${m.baseline_f1_macro.toFixed(3)}</span></div>
       <div class="row"><span class="hint">Validación</span><span>flotas no vistas</span></div>
-      <div class="chips">${m.features.map((f) => `<span class="chip">${esc(f)}</span>`).join("")}</div>`;
+      <div class="chips" style="margin-top:8px">${m.features.map((f) => `<span class="chip">${esc(f)}</span>`).join("")}</div>`;
   } else {
     pill.className = "pill bad"; pill.lastElementChild.textContent = "Modelo no cargado";
     $("model").innerHTML = `<p class="hint">Ejecuta <code>python ml/train_model.py</code>.</p>`;
   }
+  if (state.selected && state.tab === "perfil") renderProfile();
 }
 
 document.querySelectorAll(".toggle").forEach((b) => b.addEventListener("click", () => {
@@ -926,8 +968,8 @@ document.querySelectorAll(".toggle").forEach((b) => b.addEventListener("click", 
    Boot
    ===================================================================== */
 resizeCanvas();
-(document.fonts ? document.fonts.load("8px Silkscreen") : Promise.resolve()).catch(() => {}).finally(() => requestAnimationFrame(render));
-chat("bienvenidos a la oficina. Conectando con la flota…");
+(document.fonts ? document.fonts.ready : Promise.resolve()).finally(() => requestAnimationFrame(render));
+log("Bienvenido a la oficina. Conectando con la flota…");
 pollFleet(); pollSummary(); pollHistory();
 </script>
 </body>

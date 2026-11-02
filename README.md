@@ -191,15 +191,20 @@ La arena del simulador mide 10 × 10 m y es un toro: si un robot sale por un bor
 
 ## Panel: Fleet Office
 
-Es una oficina isométrica en pixel art. La arena es la alfombra central y los robots caminan según su posición real.
+Es una oficina isométrica clara con paredes de vidrio y robots en pixel art.
 
+- **Planta de operaciones:** es la arena de 10 × 10 m del simulador. Los robots caminan según su x/y real, con movimiento continuo entre muestras.
+- **Salas de vidrio alrededor:** cada una representa una pieza de la arquitectura:
+  - **Centro de misiones:** puestos de API, Modelo ML y Métricas, con una pantalla en vivo de telemetría/min, predicciones, p95 y errores.
+  - **Sala de servidores:** base de datos y respaldos.
+  - **Zona de carga.**
+- **Bordes de la arena:** el simulador hace que los robots salgan por un borde y entren por el opuesto, como en Pac-Man (`x %= 10`). El panel lo dibuja como un cruce: el robot se desvanece en un borde y aparece entrando por el otro, sin saltos.
 - **Robots:** cada uno tiene nombre, rol y función. Su placa muestra el estado predicho (Trabajando, Alerta, Crítico o Sin señal) y la batería, y habla con globos de diálogo.
-- **Mobiliario:** cada mueble representa una pieza de la arquitectura: base de datos, API, modelo, métricas, respaldos y estación de carga.
-- **Canal del director:** narra los eventos (cambios de estado, conexiones, respaldos, caídas de la API).
+- **Ficha del agente** (clic en un robot): pestañas Telemetría (valores, historial de batería, temperatura y estados), Perfil (responsabilidades, herramientas y punto óptimo) y Actividad.
+- **Actividad en vivo:** narra los eventos (cambios de estado, conexiones, respaldos, caídas de la API).
 - **Panel lateral:**
   - Tablero de control: agentes activos, telemetría por minuto, predicciones, latencia p95, errores y cobertura.
   - Estado de la flota, con la distribución actual y la tendencia de 15 minutos.
-  - Ficha del agente, con el historial de batería, temperatura y estados.
   - Respaldos y modelo.
 
 ## Despliegue: Vercel + Neon
