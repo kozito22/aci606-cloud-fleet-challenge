@@ -12,7 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import backups, db, metrics, model
+from app import backups, coverage, db, metrics, model
 
 
 @asynccontextmanager
@@ -146,6 +146,15 @@ def get_metrics() -> dict:
         data["model"] = {key: meta.get(key) for key in ("model_version", "model", "features", "test_f1_macro",
                                                          "baseline_f1_macro", "trained_at")}
     return data
+
+
+@app.get("/coverage")
+def get_coverage(
+    window_s: float = Query(300, gt=0, le=86_400),
+    connected_s: float = Query(30, gt=0, le=3_600),
+) -> dict:
+    """Area covered by the fleet and optimal target point for each robot."""
+    return coverage.compute(window_s, connected_s)
 
 
 @app.get("/backups")
