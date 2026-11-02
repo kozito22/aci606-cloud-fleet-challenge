@@ -29,7 +29,10 @@ def load() -> None:
     with _lock:
         if _pipeline is None:
             _meta = json.loads(META_PATH.read_text(encoding="utf-8")) if META_PATH.exists() else {}
-            _pipeline = joblib.load(MODEL_PATH)
+            pipeline = joblib.load(MODEL_PATH)
+            # One dummy prediction warms up sklearn's internal validation path.
+            pipeline.predict_proba(np.zeros((1, len(_meta.get("features", [])) or pipeline.n_features_in_)))
+            _pipeline = pipeline
 
 
 def available() -> bool:
