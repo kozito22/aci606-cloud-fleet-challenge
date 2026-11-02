@@ -3,60 +3,932 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ACI606 Cloud Fleet Dashboard</title>
+  <title>Fleet Office · ACI606</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 18' shape-rendering='crispEdges'%3E%3Crect x='2' y='2' width='9' height='7' fill='%23161b29'/%3E%3Crect x='3' y='3' width='7' height='5' fill='%2359a5ff'/%3E%3Crect x='4' y='4' width='5' height='3' fill='%2313203b'/%3E%3Crect x='5' y='5' width='1' height='1' fill='%235ef2b5'/%3E%3Crect x='7' y='5' width='1' height='1' fill='%235ef2b5'/%3E%3Crect x='1' y='10' width='11' height='6' fill='%23161b29'/%3E%3Crect x='2' y='11' width='9' height='4' fill='%2359a5ff'/%3E%3Crect x='6' y='0' width='1' height='2' fill='%235ef2b5'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    :root { font-family: Inter, system-ui, sans-serif; color-scheme: dark; }
-    body { margin: 0; background:#0d1117; color:#e6edf3; }
-    header { padding:22px 28px; border-bottom:1px solid #30363d; display:flex; justify-content:space-between; }
-    h1 { margin:0; font-size:22px; }
-    .tag { color:#8b949e; }
-    main { padding:28px; }
-    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
-    .card { border:1px solid #30363d; border-radius:14px; padding:18px; background:#161b22; }
-    .robot { font-size:20px; font-weight:700; margin-bottom:12px; }
-    .row { display:flex; justify-content:space-between; padding:5px 0; color:#c9d1d9; }
-    .bar { height:8px; background:#30363d; border-radius:99px; overflow:hidden; margin-top:7px; }
-    .fill { height:100%; background:#58a6ff; }
-    .empty { padding:40px; text-align:center; color:#8b949e; border:1px dashed #30363d; border-radius:14px; }
+    :root {
+      --bg: #0d1220;
+      --panel: #151c2e;
+      --panel-2: #1b2438;
+      --line: #2a3654;
+      --shadow: #070a12;
+      --text: #e8edf7;
+      --muted: #8d9ab5;
+      --mint: #5ef2b5;
+      --cyan: #59c8ff;
+      --amber: #ffc857;
+      --red: #ff5d6c;
+      --gray: #7d879c;
+      --pixel: "Pixelify Sans", "Silkscreen", ui-monospace, monospace;
+      --tiny: "Silkscreen", ui-monospace, monospace;
+      --body: "Inter", system-ui, sans-serif;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--body); }
+    body::before { /* subtle scanline/pixel texture */
+      content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+      background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px); background-size: 4px 4px;
+    }
+
+    /* ---------- top bar ---------- */
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      padding: 14px 24px; border-bottom: 2px solid var(--line); background: #10172a; position: sticky; top: 0; z-index: 5; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand canvas { width: 40px; height: 52px; image-rendering: pixelated; }
+    .brand h1 { margin: 0; font: 700 24px/1 var(--pixel); letter-spacing: 1px; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font: 11px var(--tiny); text-transform: uppercase; }
+    .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; font: 11px var(--tiny);
+      text-transform: uppercase; background: var(--panel); border: 2px solid var(--line); box-shadow: 3px 3px 0 var(--shadow); white-space: nowrap; }
+    .dot { width: 8px; height: 8px; background: var(--gray); box-shadow: 0 0 0 2px rgba(0,0,0,.35); }
+    .ok .dot { background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+    .bad .dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    .warn .dot { background: var(--amber); }
+
+    /* ---------- layout ---------- */
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 18px; padding: 18px 24px 28px; max-width: 1640px; margin: 0 auto; }
+    .main-col { display: grid; gap: 18px; min-width: 0; }
+    .side { display: grid; gap: 18px; align-content: start; }
+    .card { background: var(--panel); border: 2px solid var(--line); box-shadow: 5px 5px 0 var(--shadow); min-width: 0; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+      padding: 10px 14px; border-bottom: 2px solid var(--line); background: var(--panel-2); }
+    .card-head h2 { margin: 0; font: 600 15px var(--pixel); letter-spacing: .5px; text-transform: uppercase; color: var(--mint); }
+    .card-body { padding: 14px; }
+    .hint { color: var(--muted); font-size: 12px; }
+
+    /* ---------- office ---------- */
+    .toggles { display: flex; gap: 6px; flex-wrap: wrap; }
+    .toggle { font: 11px var(--tiny); text-transform: uppercase; color: var(--muted); background: var(--panel); cursor: pointer;
+      border: 2px solid var(--line); padding: 5px 9px; box-shadow: 2px 2px 0 var(--shadow); }
+    .toggle[aria-pressed="true"] { color: #08111f; background: var(--mint); border-color: var(--mint); }
+    .toggle:focus-visible, .agent:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .stage { position: relative; background: linear-gradient(#18213a, #0f1628); overflow: hidden; }
+    #office { display: block; width: 100%; height: auto; image-rendering: pixelated; cursor: default; }
+    .chat { position: absolute; left: 12px; bottom: 12px; width: min(330px, 46%); background: rgba(16, 24, 44, .92);
+      border: 2px solid #3a4a72; box-shadow: 3px 3px 0 var(--shadow); font-size: 12px; }
+    .chat-head { display: flex; justify-content: space-between; padding: 4px 8px; background: #22335c; font: 10px var(--tiny); text-transform: uppercase; color: #bcd0ff; }
+    .chat-log { max-height: 112px; overflow-y: auto; padding: 6px 8px; display: grid; gap: 3px; }
+    .chat-log div { line-height: 1.35; }
+    .chat-log b { font-weight: 600; }
+    .chat-log .t { color: var(--muted); font: 10px var(--tiny); margin-right: 4px; }
+    .legend { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
+      background: rgba(16, 24, 44, .9); border: 2px solid #3a4a72; padding: 6px 9px; font: 10px var(--tiny); text-transform: uppercase; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .sw { width: 9px; height: 9px; display: inline-block; }
+    .offline-banner { position: absolute; inset: 0; display: none; place-items: center; background: rgba(8, 10, 18, .65);
+      font: 700 20px var(--pixel); color: var(--red); text-transform: uppercase; letter-spacing: 1px; }
+    .api-down .offline-banner { display: grid; }
+
+    /* ---------- KPIs ---------- */
+    .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi { background: #0f1526; border: 2px solid var(--line); padding: 8px 10px; }
+    .kpi .label { font: 10px var(--tiny); text-transform: uppercase; color: var(--muted); }
+    .kpi .value { font: 700 22px/1.15 var(--pixel); color: var(--mint); font-variant-numeric: tabular-nums; }
+    .kpi .sub { font-size: 11px; color: var(--muted); }
+    .state-line { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; padding: 8px 10px;
+      border: 2px dashed var(--line); font: 12px var(--tiny); text-transform: uppercase; }
+
+    /* ---------- fleet status ---------- */
+    .stack { display: flex; height: 16px; border: 2px solid var(--line); background: #0f1526; }
+    .stack div { height: 100%; transition: width .4s; }
+    .stack-legend { display: flex; justify-content: space-between; margin-top: 6px; font: 10px var(--tiny); text-transform: uppercase; }
+    .trend { margin-top: 14px; }
+    .trend svg { width: 100%; height: 74px; display: block; }
+    .subhead { font: 10px var(--tiny); text-transform: uppercase; color: var(--muted); margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+
+    /* ---------- detail ---------- */
+    .detail-top { display: flex; gap: 12px; align-items: center; }
+    .detail-top canvas { width: 52px; height: 72px; image-rendering: pixelated; background: #0f1526; border: 2px solid var(--line); padding: 4px; }
+    .detail-name { font: 700 20px/1.1 var(--pixel); }
+    .detail-role { color: var(--muted); font-size: 12px; }
+    .badge { display: inline-block; font: 10px var(--tiny); text-transform: uppercase; padding: 3px 6px; color: #08111f; }
+    .b-NORMAL { background: var(--mint); } .b-WARNING { background: var(--amber); } .b-CRITICAL { background: var(--red); color: #fff; }
+    .b-OFF { background: var(--gray); color: #fff; } .b-NONE { background: #4b5674; color: #fff; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-top: 12px; font-size: 12px; }
+    .grid2 div { display: flex; justify-content: space-between; border-bottom: 1px dashed #26314d; padding: 3px 0; }
+    .grid2 span:first-child { color: var(--muted); }
+    .grid2 span:last-child { font-variant-numeric: tabular-nums; }
+    .spark { margin-top: 12px; }
+    .spark svg { width: 100%; height: 38px; display: block; background: #0f1526; border: 2px solid var(--line); }
+    .timeline { display: flex; height: 10px; margin-top: 4px; gap: 1px; }
+    .timeline i { flex: 1; }
+
+    /* ---------- backups & model ---------- */
+    .row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed #26314d; font-size: 12px; }
+    .row:last-child { border-bottom: 0; }
+    .row strong { font: 600 13px var(--pixel); }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .chip { font: 10px var(--tiny); text-transform: uppercase; padding: 3px 6px; border: 2px solid var(--line); color: var(--cyan); }
+
+    /* ---------- roster ---------- */
+    .roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+    .agent { text-align: left; color: inherit; font: inherit; cursor: pointer; background: #0f1526; border: 2px solid var(--line);
+      padding: 10px; display: grid; gap: 6px; box-shadow: 3px 3px 0 var(--shadow); transition: transform .12s, border-color .12s; }
+    .agent:hover { transform: translate(-1px, -1px); border-color: #3b4c78; }
+    .agent.sel { border-color: var(--mint); }
+    .agent.off { opacity: .55; }
+    .agent-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .agent-name { font: 600 15px var(--pixel); }
+    .agent-name small { font: 10px var(--tiny); color: var(--muted); margin-left: 4px; }
+    .agent-role { font-size: 11px; color: var(--muted); }
+    .bar { height: 8px; background: #26314d; }
+    .bar div { height: 100%; }
+    .agent-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .empty { padding: 24px; text-align: center; color: var(--muted); border: 2px dashed var(--line); grid-column: 1 / -1; }
+
+    @media (max-width: 1150px) { .layout { grid-template-columns: 1fr; } .side { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+    @media (max-width: 640px) {
+      .topbar, .layout { padding-left: 16px; padding-right: 16px; }
+      .chat { position: static; width: auto; border-width: 0 0 2px; box-shadow: none; }
+      .legend { position: static; justify-content: flex-start; border-width: 2px 0 0; }
+      .kpi .value { font-size: 19px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .agent, .stack div { transition: none; } }
   </style>
 </head>
 <body>
-<header>
-  <div><h1>Cloud Fleet Dashboard</h1><div class="tag">ACI606 · starter</div></div>
-  <div id="status" class="tag">esperando telemetría...</div>
+<header class="topbar">
+  <div class="brand">
+    <canvas id="logo" width="13" height="18" aria-hidden="true"></canvas>
+    <div><h1>FLEET OFFICE</h1><p>ACI606 · Cloud Fleet Challenge</p></div>
+  </div>
+  <div class="pills" aria-live="polite">
+    <span id="pill-api" class="pill"><i class="dot"></i><span>API conectando…</span></span>
+    <span id="pill-db" class="pill"><i class="dot"></i><span>Base de datos</span></span>
+    <span id="pill-model" class="pill"><i class="dot"></i><span>Modelo</span></span>
+    <span id="pill-uptime" class="pill"><span>Uptime —</span></span>
+  </div>
 </header>
-<main>
-  <div id="cards" class="cards"></div>
-</main>
-<script>
-const cards = document.getElementById('cards');
-const statusEl = document.getElementById('status');
 
-function card(r) {
-  const battery = Math.max(0, Math.min(100, Number(r.battery)));
-  return `<div class="card">
-    <div class="robot">${r.robot_id}</div>
-    <div class="row"><span>Battery</span><span>${battery.toFixed(1)} %</span></div>
-    <div class="bar"><div class="fill" style="width:${battery}%"></div></div>
-    <div class="row"><span>Speed</span><span>${Number(r.speed).toFixed(2)}</span></div>
-    <div class="row"><span>Motor temp.</span><span>${Number(r.motor_temp).toFixed(1)} °C</span></div>
-    <div class="row"><span>Vibration</span><span>${Number(r.vibration).toFixed(2)}</span></div>
-    <div class="row"><span>Obstacle</span><span>${Number(r.obstacle_distance).toFixed(2)} m</span></div>
-  </div>`;
+<main class="layout">
+  <div class="main-col">
+    <section class="card" aria-labelledby="office-title">
+      <div class="card-head">
+        <h2 id="office-title">Oficina de operaciones</h2>
+        <div class="toggles">
+          <button class="toggle" data-toggle="heat" aria-pressed="true">Cobertura</button>
+          <button class="toggle" data-toggle="targets" aria-pressed="true">Puntos óptimos</button>
+          <button class="toggle" data-toggle="tags" aria-pressed="true">Etiquetas</button>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="office" width="880" height="630" aria-label="Vista isométrica de la flota de robots"></canvas>
+        <div class="chat" aria-live="polite">
+          <div class="chat-head"><span>Canal del director · API</span><span id="chat-count">0</span></div>
+          <div class="chat-log" id="chat"></div>
+        </div>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--mint)"></i>Trabajando</span>
+          <span><i class="sw" style="background:var(--amber)"></i>Alerta</span>
+          <span><i class="sw" style="background:var(--red)"></i>Crítico</span>
+          <span><i class="sw" style="background:var(--gray)"></i>Sin señal</span>
+        </div>
+        <div class="offline-banner">API no disponible · reintentando</div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="roster-title">
+      <div class="card-head"><h2 id="roster-title">Agentes</h2><span class="hint" id="roster-hint">Haz clic en un agente para ver su ficha</span></div>
+      <div class="card-body"><div class="roster" id="roster"><div class="empty">Ejecuta el simulador para que lleguen agentes a la oficina.</div></div></div>
+    </section>
+  </div>
+
+  <aside class="side">
+    <section class="card" aria-labelledby="control-title">
+      <div class="card-head"><h2 id="control-title">Tablero de control</h2><span class="hint" id="last-update">—</span></div>
+      <div class="card-body">
+        <div class="kpis">
+          <div class="kpi"><div class="label">Agentes activos</div><div class="value" id="k-active">—</div><div class="sub" id="k-active-sub">&nbsp;</div></div>
+          <div class="kpi"><div class="label">Telemetría / min</div><div class="value" id="k-tpm">—</div><div class="sub" id="k-rows">&nbsp;</div></div>
+          <div class="kpi"><div class="label">Predicciones</div><div class="value" id="k-pred">—</div><div class="sub" id="k-pred-sub">POST /predict</div></div>
+          <div class="kpi"><div class="label">Latencia p95</div><div class="value" id="k-lat">—</div><div class="sub" id="k-lat-sub">&nbsp;</div></div>
+          <div class="kpi"><div class="label">Errores</div><div class="value" id="k-err">—</div><div class="sub" id="k-err-sub">&nbsp;</div></div>
+          <div class="kpi"><div class="label">Cobertura 60 s</div><div class="value" id="k-cov">—</div><div class="sub" id="k-cov-sub">&nbsp;</div></div>
+        </div>
+        <div class="state-line"><span>Estado</span><span id="k-state">—</span></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="detail-title">
+      <div class="card-head"><h2 id="detail-title">Ficha del agente</h2></div>
+      <div class="card-body" id="detail"><p class="hint">Selecciona un agente en la oficina o en la lista.</p></div>
+    </section>
+
+    <section class="card" aria-labelledby="fleet-title">
+      <div class="card-head"><h2 id="fleet-title">Estado de la flota</h2></div>
+      <div class="card-body">
+        <div class="stack" id="stack"></div>
+        <div class="stack-legend" id="stack-legend"></div>
+        <div class="trend">
+          <p class="subhead"><span>Estados por minuto · 15 min</span><span id="trend-total"></span></p>
+          <svg id="trend" viewBox="0 0 300 74" preserveAspectRatio="none" role="img" aria-label="Tendencia de estados por minuto"></svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="backup-title">
+      <div class="card-head"><h2 id="backup-title">Respaldos</h2></div>
+      <div class="card-body" id="backups"><p class="hint">Cargando política de respaldos…</p></div>
+    </section>
+
+    <section class="card" aria-labelledby="model-title">
+      <div class="card-head"><h2 id="model-title">Modelo de ML</h2></div>
+      <div class="card-body" id="model"><p class="hint">Cargando modelo…</p></div>
+    </section>
+  </aside>
+</main>
+
+<script>
+"use strict";
+/* =====================================================================
+   Data + identity
+   ===================================================================== */
+const COLORS = { NORMAL: "#5ef2b5", WARNING: "#ffc857", CRITICAL: "#ff5d6c", OFF: "#7d879c", NONE: "#9aa6c2" };
+const LABEL = { NORMAL: "Trabajando", WARNING: "Alerta", CRITICAL: "Crítico", OFF: "Sin señal", NONE: "Sin modelo" };
+const NAMES = ["Nano", "Atlas", "Bolt", "Chispa", "Pixel", "Tuerca", "Radar", "Volt", "Kiro", "Lumen", "Orbit", "Rayo", "Cobre", "Sonda", "Zeta", "Brío"];
+const ROLES = [
+  { rol: "Explorador", fn: "Recorre zonas sin cubrir y amplía el mapa de la planta." },
+  { rol: "Inspector", fn: "Revisa motores y sensores del resto de la flota." },
+  { rol: "Logística", fn: "Traslada materiales entre las estaciones de trabajo." },
+  { rol: "Vigilancia", fn: "Patrulla el perímetro y detecta obstáculos." },
+  { rol: "Cartógrafo", fn: "Mantiene actualizado el mapa de cobertura." },
+  { rol: "Mantenimiento", fn: "Asiste a los robots que reportan fallas." },
+];
+const BODY = ["#59a5ff", "#ff8fb1", "#ffd166", "#3ddc97", "#c38bff", "#ff9f43", "#7be0f5", "#f25f7a", "#a5b8ff", "#b8e986", "#e0a96d", "#8de1c3"];
+
+function hashIndex(id) { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
+function identity(id) {
+  const m = /(\d+)$/.exec(id);
+  const n = m ? parseInt(m[1], 10) - 1 : hashIndex(id);
+  const k = Math.max(0, n);
+  return { name: NAMES[k % NAMES.length], role: ROLES[k % ROLES.length], color: BODY[k % BODY.length] };
+}
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (v, d = 1) => (v === null || v === undefined || Number.isNaN(v) ? "—" : Number(v).toFixed(d));
+function ago(seconds) {
+  if (seconds === null || seconds === undefined) return "nunca";
+  if (seconds < 60) return `hace ${Math.round(seconds)} s`;
+  if (seconds < 3600) return `hace ${Math.round(seconds / 60)} min`;
+  return `hace ${(seconds / 3600).toFixed(1)} h`;
+}
+function inTime(seconds) {
+  if (seconds <= 0) return "en curso";
+  if (seconds < 60) return `en ${Math.round(seconds)} s`;
+  if (seconds < 3600) return `en ${Math.round(seconds / 60)} min`;
+  return `en ${(seconds / 3600).toFixed(1)} h`;
+}
+function every(min) { return min >= 60 ? `cada ${+(min / 60).toFixed(1)} h` : `cada ${+min.toFixed(1)} min`; }
+function uptime(s) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
-async function refresh() {
+const state = {
+  robots: new Map(),       // id -> robot view model
+  fleet: null, summary: null, apiOk: null,
+  selected: null, history: [],
+  toggles: { heat: true, targets: true, tags: true },
+  lastBackup: null, chat: [],
+};
+
+/* =====================================================================
+   Pixel sprites
+   ===================================================================== */
+const ROBOT_SPRITE = [
+  "......L......",
+  "......A......",
+  "...KKKKKKK...",
+  "..KHHHHHHBK..",
+  "..KHVVVVVBK..",
+  "..KHVEVEVBK..",
+  "..KHVVVVVBK..",
+  "..KBBBBBBbK..",
+  "...KKKKKKK...",
+  "....KGGGK....",
+  ".KKKKKKKKKKK.",
+  ".KHBBBBBBBbK.",
+  ".KHBBLLLBBbK.",
+  ".KHBBBBBBBbK.",
+  ".KbbbbbbbbbK.",
+  "..KKKKKKKKK..",
+  "..KWWK.KWWK..",
+  "..KKKK.KKKK..",
+];
+const PERSON_SPRITE = [
+  "..HHHHH..",
+  ".HHHHHHH.",
+  ".HHHHHHH.",
+  "..HSSSH..",
+  "...SSS...",
+  ".CCCCCCC.",
+  "CCCCCCCCC",
+  "CCCCCCCCC",
+  "SCCCCCCCS",
+  ".PPPPPPP.",
+];
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (v) => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f)));
+  return "#" + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => ch(v).toString(16).padStart(2, "0")).join("");
+}
+const spriteCache = new Map();
+function makeSprite(rows, palette) {
+  const c = document.createElement("canvas");
+  c.width = rows[0].length; c.height = rows.length;
+  const g = c.getContext("2d");
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    const col = palette[ch];
+    if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); }
+  }));
+  return c;
+}
+function robotSprite(body, status, blink, off) {
+  const key = `${body}|${status}|${blink}|${off}`;
+  if (!spriteCache.has(key)) {
+    const base = off ? "#8b93a7" : body;
+    const glow = off ? "#4b5263" : COLORS[status] || COLORS.NONE;
+    spriteCache.set(key, makeSprite(ROBOT_SPRITE, {
+      K: "#161b29", B: base, b: shade(base, -0.28), H: shade(base, 0.35), V: "#13203b",
+      E: blink ? "#13203b" : glow, A: "#9aa3b5", L: glow, G: "#c4cad8", W: "#2c3145",
+    }));
+  }
+  return spriteCache.get(key);
+}
+function personSprite(shirt, hair) {
+  const key = `p|${shirt}|${hair}`;
+  if (!spriteCache.has(key)) spriteCache.set(key, makeSprite(PERSON_SPRITE, { H: hair, S: "#f2c79a", C: shirt, P: "#2f3a56" }));
+  return spriteCache.get(key);
+}
+(function drawLogo() {
+  const g = document.getElementById("logo").getContext("2d");
+  g.drawImage(robotSprite("#59a5ff", "NORMAL", false, false), 0, 0);
+})();
+
+/* =====================================================================
+   Isometric office renderer
+   ===================================================================== */
+const canvas = document.getElementById("office");
+const ctx = canvas.getContext("2d");
+const W = 880, H = 630, N = 13, TW = 64, TH = 32, WH = 128, OX = W / 2, OY = 168, ARENA_OFF = 2, PS = 3;
+let viewScale = 1;
+const iso = (x, y, z = 0) => [OX + (x - y) * TW / 2, OY + (x + y) * TH / 2 - z];
+
+function resizeCanvas() {
+  const width = canvas.parentElement.clientWidth;
+  const dpr = window.devicePixelRatio || 1;
+  viewScale = width / W;
+  canvas.width = Math.round(W * viewScale * dpr);
+  canvas.height = Math.round(H * viewScale * dpr);
+  canvas.style.height = `${H * viewScale}px`;
+  ctx.setTransform(viewScale * dpr, 0, 0, viewScale * dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
+window.addEventListener("resize", resizeCanvas);
+
+function poly(points, fill, stroke) {
+  ctx.beginPath();
+  points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+function box(x, y, w, d, h, top, left, right, z = 0) {
+  poly([iso(x, y + d, z), iso(x + w, y + d, z), iso(x + w, y + d, z + h), iso(x, y + d, z + h)], left, "rgba(0,0,0,.25)");
+  poly([iso(x + w, y, z), iso(x + w, y + d, z), iso(x + w, y + d, z + h), iso(x + w, y, z + h)], right, "rgba(0,0,0,.25)");
+  poly([iso(x, y, z + h), iso(x + w, y, z + h), iso(x + w, y + d, z + h), iso(x, y + d, z + h)], top, "rgba(0,0,0,.2)");
+}
+function pixelText(text, x, y, color, size = 8, align = "center") {
+  ctx.font = `${size}px Silkscreen, monospace`;
+  ctx.textAlign = align; ctx.textBaseline = "middle";
+  ctx.fillStyle = color; ctx.fillText(text, Math.round(x), Math.round(y));
+}
+function tag(x, y, lines) { // Habbo-like name plate; lines: [{text, color, bg}]
+  ctx.font = "8px Silkscreen, monospace";
+  const w = Math.max(...lines.map((l) => ctx.measureText(l.text).width)) + 10;
+  const h = lines.length * 11 + 4;
+  const left = Math.round(x - w / 2), top = Math.round(y - h);
+  ctx.fillStyle = "rgba(8,12,22,.88)"; ctx.fillRect(left, top, w, h);
+  ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.strokeRect(left + .5, top + .5, w - 1, h - 1);
+  lines.forEach((l, i) => {
+    const ly = top + 2 + i * 11;
+    if (l.bg) {
+      const lw = ctx.measureText(l.text).width + 6;
+      ctx.fillStyle = l.bg; ctx.fillRect(Math.round(x - lw / 2), ly + 1, Math.round(lw), 10);
+    }
+    pixelText(l.text, x, ly + 6, l.color);
+  });
+  return { left, top, w, h };
+}
+function bubble(x, y, text) {
+  ctx.font = "8px Silkscreen, monospace";
+  const w = Math.min(170, ctx.measureText(text).width + 12), h = 16;
+  const left = Math.round(x - w / 2), top = Math.round(y - h - 6);
+  ctx.fillStyle = "#fff"; ctx.fillRect(left, top, w, h);
+  ctx.strokeStyle = "#161b29"; ctx.lineWidth = 2; ctx.strokeRect(left, top, w, h); ctx.lineWidth = 1;
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(x - 4, top + h - 1); ctx.lineTo(x + 4, top + h - 1); ctx.lineTo(x, top + h + 5); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.rect(left + 3, top, w - 6, h); ctx.clip();
+  pixelText(text, x, top + h / 2 + 1, "#161b29"); ctx.restore();
+}
+
+/* ----- static room ----- */
+function drawRoom(t) {
+  const hb = state.summary?.coverage?.heatmap;
+  const hmax = hb ? Math.max(1, ...hb.flat()) : 1;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const arena = i >= ARENA_OFF && i < ARENA_OFF + 10 && j >= ARENA_OFF && j < ARENA_OFF + 10;
+    let fill = arena ? ((i + j) % 2 ? "#4f5f86" : "#56678f") : ((i + j) % 2 ? "#cfc6b4" : "#c5bba8");
+    poly([iso(i, j), iso(i + 1, j), iso(i + 1, j + 1), iso(i, j + 1)], fill, arena ? "rgba(20,30,55,.45)" : "rgba(120,105,85,.35)");
+    if (arena && state.toggles.heat && hb) {
+      const v = hb[j - ARENA_OFF][i - ARENA_OFF];
+      if (v > 0) {
+        const a = 0.18 + 0.5 * Math.log1p(v) / Math.log1p(hmax);
+        poly([iso(i, j), iso(i + 1, j), iso(i + 1, j + 1), iso(i, j + 1)], `rgba(94,242,181,${a.toFixed(3)})`);
+      }
+    }
+  }
+  // arena border + label
+  const A0 = ARENA_OFF, A1 = ARENA_OFF + 10;
+  ctx.setLineDash([6, 4]);
+  poly([iso(A0, A0), iso(A1, A0), iso(A1, A1), iso(A0, A1)], null, "rgba(94,242,181,.75)");
+  ctx.setLineDash([]);
+  const [lx, ly] = iso(A1, A1);
+  pixelText("ARENA 10 x 10 m", lx, ly + 12, "rgba(232,237,247,.75)");
+
+  // walls
+  poly([iso(0, N), iso(0, 0), iso(0, 0, WH), iso(0, N, WH)], "#c3cad8");
+  poly([iso(0, 0), iso(N, 0), iso(N, 0, WH), iso(0, 0, WH)], "#dde3ec");
+  poly([iso(0, N, WH), iso(0, 0, WH), iso(-0.25, -0.25, WH), iso(-0.25, N, WH)], "#8892a8");
+  poly([iso(0, 0, WH), iso(N, 0, WH), iso(N, -0.25, WH), iso(-0.25, -0.25, WH)], "#9aa3b7");
+  poly([iso(0, N), iso(0, 0), iso(0, 0, 8), iso(0, N, 8)], "#8d97ab");
+  poly([iso(0, 0), iso(N, 0), iso(N, 0, 8), iso(0, 0, 8)], "#a7b0c2");
+
+  // right wall decorations (windows, clock, poster)
+  ctx.save(); ctx.transform(1, 0.5, 0, 1, OX, OY);
+  for (const u of [70, 250]) {
+    ctx.fillStyle = "#6b7590"; ctx.fillRect(u - 3, -103, 96, 66);
+    const g = ctx.createLinearGradient(0, -100, 0, -40); g.addColorStop(0, "#8fd3ff"); g.addColorStop(1, "#cdeeff");
+    ctx.fillStyle = g; ctx.fillRect(u, -100, 90, 60);
+    ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fillRect(u + 8, -94, 6, 46); ctx.fillRect(u + 18, -94, 3, 46);
+    ctx.fillStyle = "#6b7590"; ctx.fillRect(u + 43, -100, 4, 60); ctx.fillRect(u, -72, 90, 4);
+  }
+  ctx.fillStyle = "#26314d"; ctx.fillRect(176, -108, 58, 24);
+  pixelText(state.fleet ? uptime(state.fleet.metrics.uptime_seconds + (performance.now() - state.fleetAt) / 1000) : "--:--:--", 205, -96, "#5ef2b5");
+  pixelText("UPTIME", 205, -78, "#4b5674");
+  ctx.fillStyle = "#24304f"; ctx.fillRect(360, -112, 46, 60);
+  pixelText("ACI", 383, -96, "#ffc857", 10); pixelText("606", 383, -82, "#ffc857", 10); pixelText("CLOUD", 383, -64, "#59c8ff");
+  ctx.restore();
+
+  // left wall: neon sign + whiteboard
+  const [bx, by] = iso(0, N);
+  ctx.save(); ctx.transform(1, -0.5, 0, 1, bx, by);
+  ctx.fillStyle = "#f4f6fa"; ctx.fillRect(150, -104, 120, 62);
+  ctx.strokeStyle = "#7c869c"; ctx.lineWidth = 3; ctx.strokeRect(150, -104, 120, 62); ctx.lineWidth = 1;
+  const m = state.summary?.model;
+  pixelText(m ? `MODELO ${m.model_version}` : "MODELO", 210, -92, "#26314d");
+  pixelText(m ? `F1 MACRO ${m.test_f1_macro.toFixed(3)}` : "F1 MACRO --", 210, -78, "#c2185b");
+  pixelText(m ? `BASE ${m.baseline_f1_macro.toFixed(3)}` : "", 210, -64, "#5b6784");
+  ctx.fillStyle = "#59c8ff"; ctx.fillRect(160, -52, 30, 3); ctx.fillStyle = "#ff5d6c"; ctx.fillRect(196, -52, 18, 3);
+  ctx.restore();
+}
+
+/* ----- furniture: returns drawables with depth ----- */
+function furniture(t) {
+  const items = [];
+  const add = (depth, draw, label) => items.push({ depth, draw, label });
+  const stations = [
+    { x: 2.6, label: "API · FASTAPI", screen: "#59c8ff", shirt: "#3d5a99", hair: "#2b1d14" },
+    { x: 5.6, label: "MODELO ML", screen: "#c38bff", shirt: "#7a3e6f", hair: "#5a3a22" },
+    { x: 8.6, label: "MÉTRICAS", screen: "#5ef2b5", shirt: "#2f6b57", hair: "#1c1c1c" },
+  ];
+  for (const s of stations) {
+    add(s.x + 0.4, () => {
+      box(s.x, 0.25, 2.1, 0.95, 20, "#b98a5e", "#8c6440", "#a07250");
+      box(s.x + 0.6, 0.3, 0.9, 0.18, 26, "#2a3148", "#1d2335", "#252c42", 20);
+      const [sx, sy] = iso(s.x + 0.66, 0.48, 41);
+      const [ex, ey] = iso(s.x + 1.44, 0.48, 41);
+      ctx.fillStyle = s.screen; ctx.globalAlpha = .85;
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.lineTo(ex, ey + 18); ctx.lineTo(sx, sy + 18); ctx.fill();
+      ctx.globalAlpha = 1; ctx.fillStyle = "rgba(8,12,22,.55)";
+      for (let k = 0; k < 4; k++) { const off = (Math.floor(t / 300) + k * 3) % 13; ctx.fillRect(sx + 4 + (k % 2) * 6, sy + 3 + off + k * 0.5, 10 + (k * 7) % 12, 1.5); }
+      box(s.x + 1.7, 0.4, 0.3, 0.3, 4, "#d9dde4", "#aab1bf", "#c3c9d4", 20);
+    }, { text: s.label, at: [s.x + 1.05, 0.7, 64] });
+    add(s.x + 1.9, () => { // operator in the chair, seen from behind
+      box(s.x + 0.75, 1.3, 0.6, 0.5, 12, "#2f3a56", "#232c43", "#29334c");
+      const [px, py] = iso(s.x + 1.05, 1.55, 12);
+      ctx.drawImage(personSprite(s.shirt, s.hair), Math.round(px - 9), Math.round(py - 22 + Math.sin(t / 700 + s.x)), 18, 20);
+    });
+  }
+  // server rack (database)
+  const dbOk = state.fleet && state.apiOk;
+  add(0.3 + 2.4, () => {
+    box(0.25, 2.3, 1.05, 1.3, 96, "#3b4563", "#262e45", "#2f3854");
+    for (let r = 0; r < 7; r++) for (let c = 0; c < 3; c++) {
+      const on = Math.sin(t / 180 + r * 1.7 + c * 2.3) > -0.2;
+      const [x, y] = iso(1.3, 2.55 + c * 0.35, 84 - r * 11);
+      ctx.fillStyle = on ? (dbOk ? "#5ef2b5" : "#ff5d6c") : "#14301f"; ctx.fillRect(Math.round(x), Math.round(y), 4, 2);
+    }
+  }, { text: state.fleet?.storage?.backend === "POSTGRESQL" ? "BASE DE DATOS · NEON" : "BASE DE DATOS · SQLITE", at: [0.8, 2.95, 112] });
+  // backup cabinet
+  add(0.3 + 5, () => {
+    box(0.3, 4.6, 0.95, 1.5, 54, "#9aa3b5", "#6f7891", "#848da3");
+    for (let r = 0; r < 3; r++) { const [x, y] = iso(1.25, 5.35, 44 - r * 16); ctx.fillStyle = "#4b5674"; ctx.fillRect(Math.round(x) - 1, Math.round(y), 3, 2); }
+    const ok = state.summary?.backups?.logical?.last?.status === "OK";
+    const [x, y] = iso(0.8, 5.35, 62); ctx.fillStyle = ok ? "#5ef2b5" : "#ffc857"; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 3, 6, 6);
+  }, { text: "RESPALDOS", at: [0.8, 5.35, 80] });
+  // charging dock
+  add(0.3 + 8.5, () => {
+    poly([iso(0.3, 7.8), iso(1.6, 7.8), iso(1.6, 9.2), iso(0.3, 9.2)], "#3a3f52", "#ffc857");
+    for (let k = 0; k < 4; k++) poly([iso(0.35 + k * 0.32, 7.85), iso(0.5 + k * 0.32, 7.85), iso(0.5 + k * 0.32, 9.15), iso(0.35 + k * 0.32, 9.15)], "rgba(255,200,87,.45)");
+    box(0.3, 8.3, 0.35, 0.4, 46, "#ffc857", "#c79a33", "#e0ae40");
+    const [x, y] = iso(0.65, 8.5, 36); pixelText("⚡", x + 3, y, "#161b29", 10);
+  }, { text: "ESTACIÓN DE CARGA", at: [0.95, 8.5, 64] });
+  // plants
+  for (const [x, y] of [[0.4, 0.4], [12.1, 0.6], [0.5, 11.6]]) {
+    add(x + y + 0.6, () => {
+      box(x, y, 0.5, 0.5, 14, "#c96f4a", "#9c5236", "#b15f3f");
+      const [px, py] = iso(x + 0.25, y + 0.25, 14);
+      ctx.fillStyle = "#2f8f5b"; ctx.fillRect(px - 9, py - 18, 18, 14); ctx.fillStyle = "#3fbf74"; ctx.fillRect(px - 6, py - 26, 12, 12); ctx.fillRect(px - 12, py - 12, 6, 6);
+    });
+  }
+  return items;
+}
+
+/* ----- robots ----- */
+function robotDrawables(t) {
+  const items = [];
+  const now = performance.now();
+  for (const r of state.robots.values()) {
+    const k = Math.min(1, (now - r.t0) / r.dur);
+    r.px = r.from.x + (r.to.x - r.from.x) * k;
+    r.py = r.from.y + (r.to.y - r.from.y) * k;
+    const wx = ARENA_OFF + r.px, wy = ARENA_OFF + r.py;
+    const moving = k < 1 && r.connected;
+    items.push({
+      depth: wx + wy, robot: r,
+      draw: () => {
+        const [sx, sy] = iso(wx, wy);
+        const status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
+        if (state.selected === r.id) {
+          const p = 0.6 + 0.4 * Math.sin(t / 200);
+          ctx.globalAlpha = p; poly([iso(wx - .5, wy), iso(wx, wy - .5), iso(wx + .5, wy), iso(wx, wy + .5)], null, "#5ef2b5");
+          ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1; ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.beginPath(); ctx.ellipse(sx, sy, 15, 6, 0, 0, Math.PI * 2); ctx.fill();
+        if (status === "CRITICAL" && r.connected) {
+          ctx.fillStyle = `rgba(255,93,108,${0.18 + 0.12 * Math.sin(t / 150)})`;
+          ctx.beginPath(); ctx.ellipse(sx, sy, 22, 9, 0, 0, Math.PI * 2); ctx.fill();
+        }
+        const blink = (Math.floor(t / 120) + r.seed) % 37 === 0;
+        const sprite = robotSprite(r.color, status, blink, !r.connected);
+        const bob = moving && Math.floor(t / 180) % 2 ? -PS : 0;
+        const dx = Math.round(sx - sprite.width * PS / 2), dy = Math.round(sy - sprite.height * PS + 4 + bob);
+        ctx.drawImage(sprite, dx, dy, sprite.width * PS, sprite.height * PS);
+        r.hit = { x: dx, y: dy, w: sprite.width * PS, h: sprite.height * PS };
+        r.head = [sx, dy - 4];
+      },
+    });
+  }
+  return items;
+}
+
+function drawTargets() {
+  const cov = state.summary?.coverage;
+  if (!state.toggles.targets || !cov) return;
+  const A0 = ARENA_OFF, A1 = ARENA_OFF + 10;
+  ctx.save();
+  ctx.beginPath(); [iso(A0, A0), iso(A1, A0), iso(A1, A1), iso(A0, A1)].forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.clip();
+  for (const a of cov.assignment) {
+    const r = state.robots.get(a.robot_id);
+    if (!r || !r.connected) continue;
+    let dx = a.target_x - r.px, dy = a.target_y - r.py; // shortest way on the torus
+    if (dx > 5) dx -= 10; if (dx < -5) dx += 10; if (dy > 5) dy -= 10; if (dy < -5) dy += 10;
+    const [x0, y0] = iso(A0 + r.px, A0 + r.py), [x1, y1] = iso(A0 + r.px + dx, A0 + r.py + dy);
+    ctx.setLineDash([4, 4]); ctx.strokeStyle = r.color; ctx.globalAlpha = .8; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1; ctx.globalAlpha = 1;
+  }
+  for (const a of cov.assignment) {
+    const r = state.robots.get(a.robot_id);
+    const col = r ? r.color : "#fff";
+    const [x, y] = iso(A0 + a.target_x, A0 + a.target_y);
+    poly([[x, y - 6], [x + 11, y], [x, y + 6], [x - 11, y]], "rgba(8,12,22,.55)", col);
+    ctx.fillStyle = "#e8edf7"; ctx.fillRect(x - 1, y - 20, 2, 20);
+    ctx.fillStyle = col; ctx.fillRect(x + 1, y - 20, 9, 6);
+  }
+  ctx.restore();
+}
+
+function render(t) {
+  ctx.clearRect(0, 0, W, H);
+  drawRoom(t);
+  drawTargets();
+  const items = [...furniture(t), ...robotDrawables(t)].sort((a, b) => a.depth - b.depth);
+  items.forEach((it) => it.draw());
+  if (state.toggles.tags) {
+    for (const it of items) if (it.label) { const [x, y] = iso(...it.label.at); tag(x, y, [{ text: it.label.text, color: "#5ef2b5" }]); }
+    const robots = items.filter((it) => it.robot).map((it) => it.robot);
+    for (const r of robots) {
+      if (!r.head) continue;
+      const status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
+      const plate = tag(r.head[0], r.head[1], [
+        { text: `${r.name} · ${r.id}`.toUpperCase(), color: "#e8edf7" },
+        { text: LABEL[status].toUpperCase(), color: "#08111f", bg: COLORS[status] },
+      ]);
+      const batt = Math.max(0, Math.min(100, r.data.battery));
+      ctx.fillStyle = "#26314d"; ctx.fillRect(plate.left + 3, plate.top + plate.h - 3, plate.w - 6, 2);
+      ctx.fillStyle = batt < 20 ? "#ff5d6c" : batt < 50 ? "#ffc857" : "#5ef2b5";
+      ctx.fillRect(plate.left + 3, plate.top + plate.h - 3, (plate.w - 6) * batt / 100, 2);
+      if (r.bubble && performance.now() < r.bubble.until) bubble(r.head[0], plate.top, r.bubble.text);
+    }
+  }
+  requestAnimationFrame(render);
+}
+
+canvas.addEventListener("click", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / viewScale, y = (e.clientY - rect.top) / viewScale;
+  const hits = [...state.robots.values()].filter((r) => r.hit && x >= r.hit.x && x <= r.hit.x + r.hit.w && y >= r.hit.y && y <= r.hit.y + r.hit.h);
+  if (hits.length) select(hits.sort((a, b) => (b.px + b.py) - (a.px + a.py))[0].id);
+});
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / viewScale, y = (e.clientY - rect.top) / viewScale;
+  canvas.style.cursor = [...state.robots.values()].some((r) => r.hit && x >= r.hit.x && x <= r.hit.x + r.hit.w && y >= r.hit.y && y <= r.hit.y + r.hit.h) ? "pointer" : "default";
+});
+
+/* =====================================================================
+   Chat + speech bubbles
+   ===================================================================== */
+function say(r, text, ms = 4500) { r.bubble = { text, until: performance.now() + ms }; }
+function chat(html, color) {
+  const time = new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  state.chat.push(`<div><span class="t">${time}</span><b style="color:${color || "#9fb6ff"}">Director API:</b> ${html}</div>`);
+  state.chat = state.chat.slice(-40);
+  const log = document.getElementById("chat");
+  log.innerHTML = state.chat.join("");
+  log.scrollTop = log.scrollHeight;
+  document.getElementById("chat-count").textContent = state.chat.length;
+}
+function symptom(d) {
+  if (d.vibration > 1.2) return `Vibración ${fmt(d.vibration, 2)}`;
+  if (d.motor_temp > 65) return `Motor a ${fmt(d.motor_temp, 0)} °C`;
+  if (d.motor_current > 5.5) return `Corriente ${fmt(d.motor_current, 1)} A`;
+  return "Necesito revisión";
+}
+function chatter(r) {
+  const a = state.summary?.coverage?.assignment?.find((x) => x.robot_id === r.id);
+  const lines = [
+    a ? `Rumbo a mi punto · ETA ${fmt(a.eta_s, 0)} s` : "Cubriendo mi zona",
+    `Batería ${fmt(r.data.battery, 0)}%`,
+    r.role.rol === "Vigilancia" ? "Perímetro despejado" : "Enviando telemetría…",
+    r.data.obstacle_distance < 0.4 ? "¡Obstáculo cerca!" : `Velocidad ${fmt(r.data.speed, 2)} m/s`,
+  ];
+  say(r, lines[Math.floor(Math.random() * lines.length)], 3500);
+}
+
+/* =====================================================================
+   Data polling
+   ===================================================================== */
+async function getJSON(url, timeout = 5000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeout);
   try {
-    const res = await fetch('/robots');
-    const robots = await res.json();
-    statusEl.textContent = `${robots.length} robot(s) conectados`;
-    cards.innerHTML = robots.length ? robots.map(card).join('') : '<div class="empty">Ejecuta el simulador para comenzar a recibir robots.</div>';
-  } catch (err) {
-    statusEl.textContent = 'API no disponible';
+    const res = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally { clearTimeout(timer); }
+}
+
+function setApi(ok) {
+  if (state.apiOk === ok) return;
+  if (state.apiOk !== null) chat(ok ? "la API volvió a responder." : "la API no responde, reintentando…", ok ? COLORS.NORMAL : COLORS.CRITICAL);
+  state.apiOk = ok;
+  document.getElementById("stage").classList.toggle("api-down", !ok);
+  const pill = document.getElementById("pill-api");
+  pill.className = `pill ${ok ? "ok" : "bad"}`;
+  pill.lastElementChild.textContent = ok ? "API en línea" : "API caída";
+}
+
+function ingestRobots(list) {
+  const now = performance.now();
+  const seen = new Set();
+  for (const d of list) {
+    seen.add(d.robot_id);
+    let r = state.robots.get(d.robot_id);
+    const x = ((d.x % 10) + 10) % 10, y = ((d.y % 10) + 10) % 10;
+    if (!r) {
+      const id = identity(d.robot_id);
+      r = { id: d.robot_id, ...id, seed: hashIndex(d.robot_id) % 37, from: { x, y }, to: { x, y }, t0: now, dur: 1, px: x, py: y, data: d, connected: d.connected, lastTs: d.timestamp };
+      state.robots.set(d.robot_id, r);
+      if (state.fleet) chat(`<b>${esc(r.name)}</b> (${esc(r.id)}) se unió a la oficina como ${esc(r.role.rol.toLowerCase())}.`, r.color);
+      say(r, "¡Hola! Me reporto");
+    } else if (d.timestamp !== r.lastTs) {
+      const jump = Math.abs(x - r.px) > 5 || Math.abs(y - r.py) > 5; // wrapped around the arena edge
+      r.from = jump ? { x, y } : { x: r.px, y: r.py };
+      r.to = { x, y }; r.t0 = now; r.dur = 1400; r.lastTs = d.timestamp;
+    }
+    const prev = r.data.predicted_status;
+    if (prev && d.predicted_status && prev !== d.predicted_status && d.connected) {
+      const name = `<b>${esc(r.name)}</b> (${esc(r.id)})`;
+      if (d.predicted_status === "CRITICAL") { say(r, `¡${symptom(d)}!`); chat(`${name} pasó a CRÍTICO · ${esc(symptom(d))} · conf. ${fmt(d.confidence * 100, 0)}%`, COLORS.CRITICAL); }
+      else if (d.predicted_status === "WARNING") { say(r, "Algo no anda bien…"); chat(`${name} en ALERTA · temp. ${fmt(d.motor_temp, 0)} °C`, COLORS.WARNING); }
+      else { say(r, "¡De vuelta al trabajo!"); chat(`${name} volvió a estado normal.`, COLORS.NORMAL); }
+    }
+    if (r.connected && !d.connected) { chat(`<b>${esc(r.name)}</b> (${esc(r.id)}) perdió la señal.`, COLORS.OFF); say(r, "Zzz… sin señal", 6000); }
+    if (d.battery < 15 && r.data.battery >= 15) say(r, `Batería baja: ${fmt(d.battery, 0)}%`);
+    r.data = d; r.connected = d.connected;
+    if (r.connected && Math.random() < 0.015 && !(r.bubble && now < r.bubble.until)) chatter(r);
+  }
+  for (const id of [...state.robots.keys()]) if (!seen.has(id)) state.robots.delete(id);
+}
+
+async function pollFleet() {
+  try {
+    const fleet = await getJSON("/fleet");
+    state.fleet = fleet; state.fleetAt = performance.now();
+    setApi(true);
+    ingestRobots(fleet.robots);
+    renderPanels();
+  } catch (err) { setApi(false); }
+  setTimeout(pollFleet, 1500);
+}
+async function pollSummary() {
+  try {
+    state.summary = await getJSON("/fleet/summary", 8000);
+    const last = state.summary.backups?.logical?.last;
+    if (last && state.lastBackup !== null && last.finished_at !== state.lastBackup)
+      chat(`respaldo lógico completado: ${Number(last.rows || 0).toLocaleString("es-CL")} filas.`, COLORS.NORMAL);
+    state.lastBackup = last ? last.finished_at : 0;
+    renderSummary();
+  } catch (err) { /* status shown by pollFleet */ }
+  setTimeout(pollSummary, 5000);
+}
+async function pollHistory() {
+  if (state.selected) {
+    try { state.history = await getJSON(`/robots/${encodeURIComponent(state.selected)}/history?limit=60&details=true`); renderDetail(); }
+    catch (err) { /* keep last */ }
+  }
+  setTimeout(pollHistory, 3000);
+}
+
+/* =====================================================================
+   Panels
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+function select(id) {
+  state.selected = id; state.history = [];
+  renderPanels(); renderDetail();
+  getJSON(`/robots/${encodeURIComponent(id)}/history?limit=60&details=true`).then((h) => { state.history = h; renderDetail(); }).catch(() => {});
+}
+
+function renderPanels() {
+  const f = state.fleet; if (!f) return;
+  const m = f.metrics;
+  $("k-active").textContent = `${f.connected}/${f.robots.length}`;
+  $("k-active-sub").textContent = `${f.robots.length - f.connected} sin señal`;
+  $("k-tpm").textContent = m.telemetry_per_minute;
+  $("k-rows").textContent = `${Number(f.storage.telemetry_rows).toLocaleString("es-CL")} registros guardados`;
+  $("k-pred").textContent = m.prediction_requests;
+  $("k-pred-sub").textContent = m.avg_inference_ms !== null ? `modelo ${fmt(m.avg_inference_ms, 2)} ms prom.` : "POST /predict";
+  $("k-lat").textContent = m.p95_prediction_latency_ms !== null ? `${fmt(m.p95_prediction_latency_ms, 1)} ms` : "—";
+  $("k-lat-sub").textContent = m.avg_prediction_latency_ms !== null ? `prom. ${fmt(m.avg_prediction_latency_ms, 1)} · p50 ${fmt(m.p50_prediction_latency_ms, 1)}` : "sin predicciones aún";
+  $("k-err").textContent = m.errors_total;
+  $("k-err").style.color = m.errors_5xx > 0 ? "var(--red)" : m.errors_total > 0 ? "var(--amber)" : "var(--mint)";
+  $("k-err-sub").textContent = `${m.errors_4xx} 4xx · ${m.errors_5xx} 5xx`;
+  const crit = f.status_counts.CRITICAL;
+  $("k-state").innerHTML = state.apiOk ? (crit ? `<span style="color:var(--amber)">Operativo · ${crit} crítico(s)</span>` : `<span style="color:var(--mint)">Operativo</span>`) : `<span style="color:var(--red)">Sin conexión</span>`;
+  $("last-update").textContent = new Date().toLocaleTimeString("es-CL");
+  $("pill-uptime").lastElementChild.textContent = `Uptime ${uptime(m.uptime_seconds)}`;
+  const dbPill = $("pill-db");
+  dbPill.className = "pill ok";
+  dbPill.lastElementChild.textContent = f.storage.backend === "POSTGRESQL" ? "Neon PostgreSQL" : "SQLite local";
+
+  // fleet stack
+  const total = Math.max(1, f.connected);
+  $("stack").innerHTML = ["NORMAL", "WARNING", "CRITICAL"].map((s) => `<div title="${LABEL[s]}" style="width:${100 * f.status_counts[s] / total}%;background:${COLORS[s]}"></div>`).join("");
+  $("stack-legend").innerHTML = ["NORMAL", "WARNING", "CRITICAL"].map((s) => `<span style="color:${COLORS[s]}">${LABEL[s]} ${f.status_counts[s]}</span>`).join("");
+
+  // roster
+  const robots = [...state.robots.values()].sort((a, b) => a.id.localeCompare(b.id));
+  $("roster").innerHTML = robots.length ? robots.map((r) => {
+    const d = r.data, status = r.connected ? (d.predicted_status || "NONE") : "OFF";
+    const batt = Math.max(0, Math.min(100, d.battery));
+    return `<button class="agent ${state.selected === r.id ? "sel" : ""} ${r.connected ? "" : "off"}" data-id="${esc(r.id)}">
+      <div class="agent-top"><span class="agent-name">${esc(r.name)}<small>${esc(r.id)}</small></span><span class="badge b-${status}">${LABEL[status]}</span></div>
+      <div class="agent-role">${esc(r.role.rol)} · conf. ${d.confidence != null ? fmt(d.confidence * 100, 0) + "%" : "—"}</div>
+      <div class="bar" title="Batería ${fmt(batt, 1)}%"><div style="width:${batt}%;background:${batt < 20 ? "var(--red)" : batt < 50 ? "var(--amber)" : "var(--mint)"}"></div></div>
+      <div class="agent-stats"><span>🔋 ${fmt(batt, 0)}%</span><span>${fmt(d.motor_temp, 0)} °C</span><span>vib ${fmt(d.vibration, 2)}</span></div>
+    </button>`;
+  }).join("") : `<div class="empty">Ejecuta el simulador para que lleguen agentes a la oficina.</div>`;
+  if (state.selected && !state.history.length) renderDetail();
+}
+$("roster").addEventListener("click", (e) => { const b = e.target.closest(".agent"); if (b) select(b.dataset.id); });
+
+function sparkline(values, color, min, max) {
+  if (values.length < 2) return "";
+  const lo = min ?? Math.min(...values), hi = max ?? Math.max(...values), span = hi - lo || 1;
+  const pts = values.map((v, i) => `${(i / (values.length - 1) * 300).toFixed(1)},${(36 - (v - lo) / span * 32).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 300 38" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function renderDetail() {
+  const r = state.selected && state.robots.get(state.selected);
+  if (!r) { $("detail").innerHTML = `<p class="hint">Selecciona un agente en la oficina o en la lista.</p>`; return; }
+  const d = r.data, status = r.connected ? (d.predicted_status || "NONE") : "OFF";
+  const a = state.summary?.coverage?.assignment?.find((x) => x.robot_id === r.id);
+  const h = state.history;
+  $("detail").innerHTML = `
+    <div class="detail-top"><canvas id="avatar" width="13" height="18"></canvas>
+      <div><div class="detail-name">${esc(r.name)}</div>
+      <div class="detail-role">${esc(r.role.rol)} · ${esc(r.id)}</div>
+      <div style="margin-top:6px"><span class="badge b-${status}">${LABEL[status]}</span>
+      <span class="hint"> conf. ${d.confidence != null ? fmt(d.confidence * 100, 1) + "%" : "—"}</span></div></div></div>
+    <p class="hint" style="margin:10px 0 0">${esc(r.role.fn)}</p>
+    <div class="grid2">
+      <div><span>Batería</span><span>${fmt(d.battery, 1)} %</span></div>
+      <div><span>Velocidad</span><span>${fmt(d.speed, 2)} m/s</span></div>
+      <div><span>Temp. motor</span><span>${fmt(d.motor_temp, 1)} °C</span></div>
+      <div><span>Vibración</span><span>${fmt(d.vibration, 2)}</span></div>
+      <div><span>Corriente</span><span>${fmt(d.motor_current, 2)} A</span></div>
+      <div><span>Obstáculo</span><span>${fmt(d.obstacle_distance, 2)} m</span></div>
+      <div><span>Posición</span><span>${fmt(d.x, 1)}, ${fmt(d.y, 1)}</span></div>
+      <div><span>Última señal</span><span>${ago(d.age_s)}</span></div>
+      <div><span>Punto óptimo</span><span>${a ? `${fmt(a.target_x, 1)}, ${fmt(a.target_y, 1)}` : "—"}</span></div>
+      <div><span>Distancia · ETA</span><span>${a ? `${fmt(a.distance_m, 1)} m · ${fmt(a.eta_s, 0)} s` : "—"}</span></div>
+    </div>
+    ${h.length > 1 ? `
+    <div class="spark"><p class="subhead"><span>Batería · últimas ${h.length} muestras</span><span>${fmt(h[h.length - 1].battery, 1)}%</span></p>${sparkline(h.map((s) => s.battery), "#5ef2b5")}</div>
+    <div class="spark"><p class="subhead"><span>Temperatura del motor</span><span>${fmt(h[h.length - 1].motor_temp, 1)} °C</span></p>${sparkline(h.map((s) => s.motor_temp), "#ffc857")}</div>
+    <div class="spark"><p class="subhead"><span>Estado predicho</span><span>${h.length} muestras</span></p>
+      <div class="timeline">${h.map((s) => `<i style="background:${COLORS[s.predicted_status] || "#3a4560"}" title="${s.predicted_status || "—"}"></i>`).join("")}</div></div>` : `<p class="hint">Cargando historial…</p>`}`;
+  const g = $("avatar").getContext("2d");
+  g.drawImage(robotSprite(r.color, status, false, !r.connected), 0, 0);
+}
+
+function renderSummary() {
+  const s = state.summary; if (!s) return;
+  const c = s.coverage;
+  $("k-cov").textContent = `${fmt(c.coverage_pct, 0)}%`;
+  $("k-cov-sub").textContent = c.coverage_radius_m != null ? `radio óptimo ${fmt(c.coverage_radius_m, 2)} m` : "sin robots conectados";
+
+  // trend: stacked columns per minute
+  const tr = s.trend, maxT = Math.max(1, ...tr.map((b) => b.total)), bw = 300 / tr.length;
+  $("trend").innerHTML = tr.map((b, i) => {
+    let y = 72; const parts = [];
+    for (const st of ["NORMAL", "WARNING", "CRITICAL"]) {
+      const hgt = b[st] / maxT * 68; y -= hgt;
+      if (hgt > 0) parts.push(`<rect x="${(i * bw + 1).toFixed(1)}" y="${y.toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${hgt.toFixed(1)}" fill="${COLORS[st]}"><title>${new Date(b.minute * 1000).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} · ${LABEL[st]} ${b[st]}</title></rect>`);
+    }
+    return parts.join("");
+  }).join("") + `<line x1="0" y1="72.5" x2="300" y2="72.5" stroke="#2a3654"/>`;
+  $("trend-total").textContent = `${tr.reduce((n, b) => n + b.total, 0).toLocaleString("es-CL")} total`;
+
+  // backups
+  const b = s.backups, now = Date.now() / 1000;
+  const row = (title, info, extra) => {
+    const last = info.last;
+    const when = last ? ago(now - last.finished_at) : "nunca";
+    const next = info.next_due_at ? inTime(info.next_due_at - now) : "manual";
+    const ok = last ? (last.status === "OK" ? "var(--mint)" : last.status === "MANAGED" ? "var(--cyan)" : "var(--red)") : "var(--muted)";
+    return `<div class="row"><div><strong>${title}</strong><div class="hint">${every(info.every_minutes)} · próximo ${next}</div>${extra || ""}</div>
+      <div style="text-align:right"><span style="color:${ok}">${last ? last.status : "—"}</span><div class="hint">${when}</div></div></div>`;
+  };
+  const lg = b.logical.last, ph = b.physical.last;
+  $("backups").innerHTML =
+    row("Lógico · CSV", b.logical, `<div class="hint">${lg ? `${Number(lg.rows || 0).toLocaleString("es-CL")} filas · ${fmt((lg.size_bytes || 0) / 1024, 1)} KB` : "exporta las filas de telemetría"}</div>`) +
+    row("Físico · copia de la base", b.physical, `<div class="hint">${ph ? (ph.status === "MANAGED" ? "gestionado por Neon (PITR)" : `${fmt((ph.size_bytes || 0) / 1024, 1)} KB · offsite ${ph.offsite_copy ? "✓" : "—"}`) : "copia binaria completa"}</div>`) +
+    `<p class="hint" style="margin:8px 0 0">Retención: últimos ${b.retention_files} archivos · ${b.scheduler_enabled ? "programador activo" : "programador desactivado"}</p>`;
+
+  // model
+  const m = s.model, pill = $("pill-model");
+  if (m) {
+    pill.className = "pill ok"; pill.lastElementChild.textContent = `Modelo ${m.model_version} · F1 ${m.test_f1_macro.toFixed(3)}`;
+    $("model").innerHTML = `
+      <div class="row"><div><strong>${esc(m.model.replace(/_/g, " "))}</strong><div class="hint">versión ${esc(m.model_version)} · scikit-learn ${esc(m.sklearn_version)}</div></div>
+        <div style="text-align:right"><strong style="color:var(--mint)">${m.test_f1_macro.toFixed(3)}</strong><div class="hint">F1 macro</div></div></div>
+      <div class="row"><span class="hint">Línea base (clase mayoritaria)</span><span>${m.baseline_f1_macro.toFixed(3)}</span></div>
+      <div class="row"><span class="hint">Validación</span><span>flotas no vistas</span></div>
+      <div class="chips">${m.features.map((f) => `<span class="chip">${esc(f)}</span>`).join("")}</div>`;
+  } else {
+    pill.className = "pill bad"; pill.lastElementChild.textContent = "Modelo no cargado";
+    $("model").innerHTML = `<p class="hint">Ejecuta <code>python ml/train_model.py</code>.</p>`;
   }
 }
-refresh();
-setInterval(refresh, 1500);
+
+document.querySelectorAll(".toggle").forEach((b) => b.addEventListener("click", () => {
+  const k = b.dataset.toggle; state.toggles[k] = !state.toggles[k];
+  b.setAttribute("aria-pressed", String(state.toggles[k]));
+}));
+
+/* =====================================================================
+   Boot
+   ===================================================================== */
+resizeCanvas();
+(document.fonts ? document.fonts.load("8px Silkscreen") : Promise.resolve()).catch(() => {}).finally(() => requestAnimationFrame(render));
+chat("bienvenidos a la oficina. Conectando con la flota…");
+pollFleet(); pollSummary(); pollHistory();
 </script>
 </body>
 </html>
