@@ -25,3 +25,6 @@ data/*.csv
 # OS / editor
 .DS_Store
 .vscode/
+
+# Backups contain data, not code
+backups/

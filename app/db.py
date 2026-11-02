@@ -102,6 +102,22 @@ telemetry = Table(
     Index("ix_telemetry_robot_id_id", "robot_id", "id"),
 )
 
+# One row per backup run (logical/physical), used for scheduling and the dashboard.
+backup_log = Table(
+    "backup_log",
+    metadata,
+    Column("id", PK, primary_key=True, autoincrement=True),
+    Column("kind", String(10), nullable=False),
+    Column("status", String(10), nullable=False),
+    Column("started_at", Float, nullable=False),
+    Column("finished_at", Float),
+    Column("rows", BigInteger),
+    Column("size_bytes", BigInteger),
+    Column("location", String(500)),
+    Column("offsite_copy", String(500)),
+    Column("detail", String(500)),
+)
+
 _init_lock = threading.Lock()
 _initialized = False
 
