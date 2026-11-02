@@ -1,0 +1,28 @@
+# Scheduled logical backup of the Neon database (the serverless API has no
+# background threads). The CSV.gz is kept as a workflow artifact.
+name: logical-backup
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # every 6 hours (UTC)
+  workflow_dispatch:
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    if: ${{ vars.ENABLE_BACKUPS == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: pip install -r requirements.txt
+      - name: Logical backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_DIR: backups
+          BACKUPS_ENABLED: "0"
+        run: python -m app.backups logical
+      - uses: actions/upload-artifact@v4
+        with:
+          name: logical-backup-${{ github.run_id }}
+          path: backups/logical/*.csv.gz
+          retention-days: 30

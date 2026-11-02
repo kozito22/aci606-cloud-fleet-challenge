@@ -50,8 +50,11 @@ TELEMETRY_FIELDS = [
 def database_url() -> str:
     url = os.environ.get("DATABASE_URL", "").strip()
     if not url:
-        (ROOT / "data").mkdir(exist_ok=True)
-        return f"sqlite:///{(ROOT / 'data' / 'fleet.db').as_posix()}"
+        # Serverless file systems are read-only except /tmp (data there is
+        # temporary: production must always define DATABASE_URL).
+        folder = Path("/tmp") if os.environ.get("VERCEL") else ROOT / "data"
+        folder.mkdir(exist_ok=True)
+        return f"sqlite:///{(folder / 'fleet.db').as_posix()}"
     # Neon/Heroku style URLs -> SQLAlchemy driver for psycopg 3.
     if url.startswith("postgres://"):
         url = "postgresql://" + url[len("postgres://"):]
@@ -76,7 +79,10 @@ if IS_SQLITE:
 else:
     # pool_pre_ping: Neon suspends idle databases after ~5 min; the ping
     # detects dead connections and reconnects transparently.
-    engine = create_engine(URL, pool_pre_ping=True, pool_recycle=300, pool_size=5, max_overflow=5)
+    # prepare_threshold=None: Neon's pooled endpoint (PgBouncer, transaction
+    # mode) does not keep server-side prepared statements between requests.
+    engine = create_engine(URL, pool_pre_ping=True, pool_recycle=300, pool_size=5, max_overflow=5,
+                           connect_args={"prepare_threshold": None})
 
 # SQLite only autoincrements INTEGER PRIMARY KEY; PostgreSQL gets BIGSERIAL.
 PK = BigInteger().with_variant(Integer, "sqlite")

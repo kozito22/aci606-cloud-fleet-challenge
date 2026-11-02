@@ -1,0 +1,18 @@
+# Alternative deployment (reference architecture of the course): Render + Neon.
+services:
+  - type: web
+    name: aci606-cloud-fleet
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.14.0"
+      - key: DATABASE_URL
+        sync: false   # paste the Neon connection string in the Render dashboard
+      - key: MODEL_PATH
+        value: models/model.joblib
+      - key: BACKUP_TOKEN
+        generateValue: true
