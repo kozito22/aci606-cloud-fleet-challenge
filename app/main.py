@@ -1,17 +1,18 @@
 from __future__ import annotations
 
+import os
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import db, metrics, model
+from app import backups, db, metrics, model
 
 
 @asynccontextmanager
@@ -24,7 +25,10 @@ async def lifespan(_: FastAPI):
             warm_up()
         except Exception as exc:  # pragma: no cover - logged for the operator
             print(f"startup warning: {warm_up.__module__}: {exc}")
+    stop_backups = backups.start_scheduler()
     yield
+    if stop_backups:
+        stop_backups.set()
 
 
 app = FastAPI(
@@ -142,6 +146,26 @@ def get_metrics() -> dict:
         data["model"] = {key: meta.get(key) for key in ("model_version", "model", "features", "test_f1_macro",
                                                          "baseline_f1_macro", "trained_at")}
     return data
+
+
+@app.get("/backups")
+def backup_status() -> dict:
+    """Backup policy (how often each backup runs), last runs and next due time."""
+    return backups.status()
+
+
+@app.post("/backups/run")
+def run_backup(
+    kind: Literal["logical", "physical"] = Query("logical"),
+    x_backup_token: str | None = Header(None),
+) -> dict:
+    # On a public deployment only someone holding BACKUP_TOKEN may trigger it.
+    token = os.environ.get("BACKUP_TOKEN")
+    if token and x_backup_token != token:
+        raise HTTPException(status_code=403, detail="Invalid backup token")
+    if not token and not db.IS_SQLITE:
+        raise HTTPException(status_code=403, detail="Set BACKUP_TOKEN to enable remote backups")
+    return backups.run(kind)
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
