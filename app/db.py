@@ -24,7 +24,9 @@ from sqlalchemy import (
     create_engine,
     event,
     func,
+    inspect,
     select,
+    text,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -94,6 +96,9 @@ telemetry = Table(
     Column("motor_current", Float, nullable=False),
     Column("obstacle_distance", Float, nullable=False),
     Column("received_at", Float, nullable=False),
+    # Prediction computed by the API at ingestion time (dashboard/history).
+    Column("predicted_status", String(10)),
+    Column("confidence", Float),
     Index("ix_telemetry_robot_id_id", "robot_id", "id"),
 )
 
@@ -110,11 +115,30 @@ def init_db() -> None:
     with _init_lock:
         if not _initialized:
             metadata.create_all(engine)
+            _add_missing_columns()
             _initialized = True
+
+
+def _add_missing_columns() -> None:
+    """Minimal migration: add new nullable columns to an existing table."""
+    existing = {c["name"] for c in inspect(engine).get_columns("telemetry")}
+    with engine.begin() as conn:
+        for column in telemetry.columns:
+            if column.name not in existing and column.nullable:
+                ddl = column.type.compile(dialect=engine.dialect)
+                conn.execute(text(f'ALTER TABLE telemetry ADD COLUMN "{column.name}" {ddl}'))
 
 
 def _telemetry_dict(row) -> dict:
     return {field: row._mapping[field] for field in TELEMETRY_FIELDS}
+
+
+def _with_prediction(row) -> dict:
+    data = _telemetry_dict(row)
+    data["predicted_status"] = row._mapping["predicted_status"]
+    data["confidence"] = row._mapping["confidence"]
+    data["received_at"] = row._mapping["received_at"]
+    return data
 
 
 def insert_telemetry(sample: dict, received_at: float) -> None:
@@ -123,26 +147,28 @@ def insert_telemetry(sample: dict, received_at: float) -> None:
         conn.execute(telemetry.insert().values(**sample, received_at=received_at))
 
 
-def latest_per_robot() -> list[dict]:
+def latest_per_robot(with_prediction: bool = False) -> list[dict]:
     """Most recent sample of every robot (uses the (robot_id, id) index)."""
     init_db()
     last_ids = select(func.max(telemetry.c.id)).group_by(telemetry.c.robot_id)
     query = select(telemetry).where(telemetry.c.id.in_(last_ids)).order_by(telemetry.c.robot_id)
+    convert = _with_prediction if with_prediction else _telemetry_dict
     with engine.connect() as conn:
-        return [_telemetry_dict(r) for r in conn.execute(query)]
+        return [convert(r) for r in conn.execute(query)]
 
 
-def robot_history(robot_id: str, limit: int | None = None) -> list[dict] | None:
+def robot_history(robot_id: str, limit: int | None = None, with_prediction: bool = False) -> list[dict] | None:
     """Complete history in chronological order (None if the robot is unknown).
     `limit` optionally returns only the last N samples."""
     init_db()
+    convert = _with_prediction if with_prediction else _telemetry_dict
     query = select(telemetry).where(telemetry.c.robot_id == robot_id)
     if limit:
         query = query.order_by(telemetry.c.id.desc()).limit(limit)
     else:
         query = query.order_by(telemetry.c.id)
     with engine.connect() as conn:
-        rows = [_telemetry_dict(r) for r in conn.execute(query)]
+        rows = [convert(r) for r in conn.execute(query)]
     if not rows:
         return None
     return rows[::-1] if limit else rows

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
@@ -10,9 +11,24 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import db
+from app import db, model
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Warm-up: load the model and create tables before the first request so
+    # the first /predict does not pay the loading cost. Failures here are not
+    # fatal: /health reports them and each module retries lazily.
+    for warm_up in (model.load, db.init_db):
+        try:
+            warm_up()
+        except Exception as exc:  # pragma: no cover - logged for the operator
+            print(f"startup warning: {warm_up.__module__}: {exc}")
+    yield
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title="ACI606 Cloud Fleet Challenge",
     version="0.2.0",
     description="Cloud fleet service: persistent telemetry ingestion, ML inference, metrics and dashboard.",
@@ -69,7 +85,14 @@ def health() -> dict:
 def ingest_telemetry(sample: Telemetry) -> dict:
     global REQUEST_COUNT
     REQUEST_COUNT += 1
-    db.insert_telemetry(sample.model_dump(), received_at=time.time())
+    row = sample.model_dump()
+    # Classify at ingestion so the dashboard and history show the condition
+    # without extra calls. Ingestion must never fail because of the model.
+    try:
+        row["predicted_status"], row["confidence"] = model.predict(row)
+    except Exception:
+        row["predicted_status"], row["confidence"] = None, None
+    db.insert_telemetry(row, received_at=time.time())
     return {
         "accepted": True,
         "robot_id": sample.robot_id,
@@ -91,13 +114,20 @@ def robot_history(robot_id: str, limit: int | None = Query(None, ge=1, le=100_00
 
 
 @app.post("/predict")
-def predict(_: PredictionRequest) -> dict:
-    # TODO E4: load the trained model and return a real prediction.
-    # Required contract is documented in README.md and the student guide.
-    raise HTTPException(
-        status_code=501,
-        detail="/predict is part of the challenge. Train and integrate your model.",
-    )
+def predict(sample: PredictionRequest) -> dict:
+    if not model.available():
+        raise HTTPException(status_code=503, detail="Model not loaded. Run: python ml/train_model.py")
+    start = time.perf_counter()
+    status, confidence = model.predict(sample.model_dump())
+    inference_ms = (time.perf_counter() - start) * 1000
+    # Exact response contract required by the evaluator (do not rename fields).
+    return {
+        "robot_id": sample.robot_id,
+        "predicted_status": status,
+        "confidence": round(confidence, 4),
+        "model_version": model.version(),
+        "inference_ms": round(inference_ms, 3),
+    }
 
 
 @app.get("/metrics")
@@ -107,7 +137,7 @@ def metrics() -> dict:
         "requests_received": REQUEST_COUNT,
         **db.counts(),
         "persistence": db.backend_name(),
-        "prediction_service": "NOT_IMPLEMENTED",
+        "prediction_service": "READY" if model.available() else "MODEL_NOT_LOADED",
     }
 
 
