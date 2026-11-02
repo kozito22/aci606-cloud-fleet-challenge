@@ -98,7 +98,7 @@ python ml/train_model.py        # EDA, comparación, matriz de confusión, model
 
 | Ruta | Descripción |
 |---|---|
-| `GET /health` | Estado del servicio y de la base de datos |
+| `GET /health` | Estado del servicio, de la base de datos y commit desplegado |
 | `POST /telemetry` | Ingesta de una muestra; guarda también la predicción |
 | `GET /robots` | Última muestra de cada robot |
 | `GET /robots/{robot_id}/history` | Historial completo (`?limit=N` opcional, `?details=true` agrega la predicción) |
@@ -239,7 +239,7 @@ Abre `/dashboard` desde otro dispositivo y revisa `/metrics` y los logs de Verce
 | Contrato (`smoke_test.py --final`) | Todas las rutas 200, `/predict` con el contrato exacto, datos inválidos y `NaN` → 422, servicio activo después |
 | Base de datos | `/health` → `"database": "POSTGRESQL"` (Neon) |
 | Persistencia | 5 robots × 120 pasos: 119–120 registros por robot en Neon (2 de 600 envíos se perdieron por arranques en frío que superaron el *timeout* de 3 s del simulador) |
-| Reinicio | Redeploy en Vercel: mismo número de registros y misma huella (hash) del historial de cada robot |
+| Reinicio | Redeploy en Vercel (instancia nueva; `/health` → `commit` 88d7032): mismo número de registros y misma huella (hash) del historial de cada robot |
 | Carga (`load_test.py`, 300 solicitudes, 10 concurrentes) | 0 errores. Cliente: p50 238 ms, p95 325 ms (incluye la red Chile–Washington). Servidor: p50 2,1 ms, p95 2,9 ms; modelo 1 ms |
 Antes de la evaluación, llama a `GET /health` para despertar la base de Neon, que se suspende tras 5 minutos sin uso.
 
