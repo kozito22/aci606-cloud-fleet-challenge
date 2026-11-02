@@ -7,9 +7,9 @@ la flota en una **oficina isométrica estilo pixel art** (`/dashboard`).
 
 | | |
 |---|---|
-| **URL pública** | `https://<proyecto>.vercel.app` *(se completa al desplegar)* |
-| **Panel** | `https://<proyecto>.vercel.app/dashboard` |
-| **Documentación interactiva** | `https://<proyecto>.vercel.app/docs` |
+| **URL pública** | **https://aci606-cloud-fleet-challenge.vercel.app** |
+| **Panel** | `https://aci606-cloud-fleet-challenge.vercel.app/dashboard` |
+| **Documentación interactiva** | `https://aci606-cloud-fleet-challenge.vercel.app/docs` |
 | **Plataforma** | Vercel (PaaS, FastAPI serverless) + Neon (PostgreSQL gestionado). Alternativa: Render (`render.yaml`) |
 | **Datos** | Tabla `telemetry` en Neon (región AWS US East); `backup_log` registra cada respaldo |
 
@@ -224,10 +224,10 @@ Alternativa en Render (la arquitectura de referencia del curso): *New → Bluepr
 ### Verificación del despliegue
 
 ```bash
-python tests/smoke_test.py --api https://<proyecto>.vercel.app --final                       # 1. contrato
-python simulator/fleet_simulator.py --api https://<proyecto>.vercel.app --robots 5 --steps 120  # 2. persistencia: >100 por robot
+python tests/smoke_test.py --api https://aci606-cloud-fleet-challenge.vercel.app --final                       # 1. contrato
+python simulator/fleet_simulator.py --api https://aci606-cloud-fleet-challenge.vercel.app --robots 5 --steps 120  # 2. persistencia: >100 por robot
 #    Redeploy en Vercel (o restart en Render) y comprobar que /robots/R01/history conserva todo
-python tests/load_test.py --api https://<proyecto>.vercel.app --requests 300 --concurrency 10   # 3. latencia y carga
+python tests/load_test.py --api https://aci606-cloud-fleet-challenge.vercel.app --requests 300 --concurrency 10   # 3. latencia y carga
 ```
 
 Abre `/dashboard` desde otro dispositivo y revisa `/metrics` y los logs de Vercel.
