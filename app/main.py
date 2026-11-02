@@ -1,24 +1,30 @@
 from __future__ import annotations
 
-from collections import defaultdict, deque
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
+
+from app import db
 
 app = FastAPI(
     title="ACI606 Cloud Fleet Challenge",
-    version="0.1.0-starter",
-    description="Starter API for the ACI606 Cloud Fleet Challenge.",
+    version="0.2.0",
+    description="Cloud fleet service: persistent telemetry ingestion, ML inference, metrics and dashboard.",
 )
 
 Status = Literal["NORMAL", "WARNING", "CRITICAL"]
 
 
 class Telemetry(BaseModel):
+    # NaN/Infinity are rejected with 422 instead of reaching the database/model.
+    model_config = ConfigDict(allow_inf_nan=False)
+
     robot_id: str = Field(min_length=1, max_length=20)
     timestamp: float
     x: float
@@ -35,11 +41,16 @@ class PredictionRequest(Telemetry):
     pass
 
 
-# Starter storage: intentionally volatile.
-# Students must replace this with persistent storage for the final challenge.
-LATEST: dict[str, Telemetry] = {}
-HISTORY: dict[str, deque[Telemetry]] = defaultdict(lambda: deque(maxlen=100))
 REQUEST_COUNT = 0
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+    # The default handler echoes the invalid input; a NaN there cannot be
+    # serialised to JSON and would turn a 422 into a 500. Invalid data must
+    # always be a 4xx, so we return only location, message and type.
+    errors = [{"loc": list(e.get("loc", [])), "msg": e.get("msg"), "type": e.get("type")} for e in exc.errors()]
+    return JSONResponse(status_code=422, content={"detail": errors})
 
 
 @app.get("/health")
@@ -48,7 +59,8 @@ def health() -> dict:
         "status": "ok",
         "service": "aci606-cloud-fleet",
         "version": app.version,
-        "robots_in_memory": len(LATEST),
+        "database": db.backend_name(),
+        "database_ok": db.ping(),
         "utc": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -57,26 +69,25 @@ def health() -> dict:
 def ingest_telemetry(sample: Telemetry) -> dict:
     global REQUEST_COUNT
     REQUEST_COUNT += 1
-    LATEST[sample.robot_id] = sample
-    HISTORY[sample.robot_id].append(sample)
+    db.insert_telemetry(sample.model_dump(), received_at=time.time())
     return {
         "accepted": True,
         "robot_id": sample.robot_id,
         "server_time": datetime.now(timezone.utc).isoformat(),
-        "note": "Starter mode: data is stored only in RAM.",
     }
 
 
 @app.get("/robots")
 def list_robots() -> list[dict]:
-    return [sample.model_dump() for sample in LATEST.values()]
+    return db.latest_per_robot()
 
 
 @app.get("/robots/{robot_id}/history")
-def robot_history(robot_id: str) -> list[dict]:
-    if robot_id not in HISTORY:
+def robot_history(robot_id: str, limit: int | None = Query(None, ge=1, le=100_000)) -> list[dict]:
+    rows = db.robot_history(robot_id, limit)
+    if rows is None:
         raise HTTPException(status_code=404, detail="Robot not found")
-    return [sample.model_dump() for sample in HISTORY[robot_id]]
+    return rows
 
 
 @app.post("/predict")
@@ -94,8 +105,8 @@ def metrics() -> dict:
     # TODO E4: extend with latency, errors, throughput and model metrics.
     return {
         "requests_received": REQUEST_COUNT,
-        "robots_in_memory": len(LATEST),
-        "persistence": "RAM_ONLY",
+        **db.counts(),
+        "persistence": db.backend_name(),
         "prediction_service": "NOT_IMPLEMENTED",
     }
 
