@@ -1,6 +1,6 @@
 # Informe de entrenamiento (v1)
 
-Generado: 2026-11-02T12:53:27+00:00
+Generado: 2026-11-02T13:41:54+00:00
 
 ## 1. EDA
 
@@ -10,9 +10,9 @@ Filas: **48000**
 
 | clase | muestras | porcentaje |
 |---|---|---|
-| NORMAL | 4554.0 | 9.5 |
-| WARNING | 7085.0 | 14.8 |
-| CRITICAL | 36361.0 | 75.8 |
+| NORMAL | 4554 | 9.5 |
+| WARNING | 7085 | 14.8 |
+| CRITICAL | 36361 | 75.8 |
 
 El dataset esta desbalanceado: se usa `class_weight='balanced'` y la metrica principal es **F1 macro**, que da el mismo peso a cada clase.
 
@@ -50,11 +50,11 @@ Validacion cruzada GroupKFold (5) sobre las flotas de entrenamiento + evaluacion
 
 | modelo | cv_f1_macro | cv_std | test_f1_macro | latencia_ms |
 |---|---|---|---|---|
-| baseline_majority [4 features] | 0.2839 | 0.0151 | 0.2878 | 0.024 |
-| logistic_regression [4 features] | 0.9203 | 0.0137 | 0.9072 | 0.145 |
-| random_forest [4 features] | 0.9196 | 0.0115 | 0.9095 | 39.485 |
-| hist_gradient_boosting [4 features] | 0.9199 | 0.0107 | 0.9028 | 2.15 |
-| logistic_regression [6 features] | 0.9208 | 0.0126 | 0.9075 | 0.146 |
+| baseline_majority [4 features] | 0.2839 | 0.0151 | 0.2878 | 0.019 |
+| logistic_regression [4 features] | 0.9203 | 0.0137 | 0.9072 | 0.14 |
+| random_forest [4 features] | 0.9196 | 0.0115 | 0.9095 | 40.914 |
+| hist_gradient_boosting [4 features] | 0.9199 | 0.0107 | 0.9028 | 3.638 |
+| logistic_regression [6 features] | 0.9208 | 0.0126 | 0.9075 | 0.144 |
 
 ## 4. Modelo elegido: evidencia en flotas no vistas
 
