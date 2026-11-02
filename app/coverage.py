@@ -20,8 +20,6 @@ from functools import lru_cache
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from sklearn.cluster import KMeans
-from sqlalchemy import select
-
 from app import db
 
 ARENA = 10.0
@@ -47,18 +45,12 @@ def toroidal_distance(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 
 
 def compute(window_s: float = 300, connected_s: float = 30) -> dict:
-    db.init_db()
     now = time.time()
-    t = db.telemetry
-    with db.engine.connect() as conn:
-        points = conn.execute(select(t.c.x, t.c.y).where(t.c.received_at >= now - window_s)).all()
-
     heat = np.zeros((CELLS, CELLS), dtype=int)
-    if points:
-        xy = np.array(points, dtype=float) % ARENA
-        cols = np.minimum((xy[:, 0] / ARENA * CELLS).astype(int), CELLS - 1)
-        rows = np.minimum((xy[:, 1] / ARENA * CELLS).astype(int), CELLS - 1)
-        np.add.at(heat, (rows, cols), 1)
+    samples = 0
+    for col, row, n in db.visited_cells(now - window_s, ARENA / CELLS):
+        heat[min(max(row, 0), CELLS - 1), min(max(col, 0), CELLS - 1)] += n
+        samples += n
     covered = int((heat > 0).sum())
 
     latest = [r for r in db.latest_per_robot(with_prediction=True) if now - r["received_at"] <= connected_s]
@@ -85,7 +77,7 @@ def compute(window_s: float = 300, connected_s: float = 30) -> dict:
         "arena_m": ARENA,
         "cell_m": ARENA / CELLS,
         "window_s": window_s,
-        "samples_in_window": len(points),
+        "samples_in_window": samples,
         "coverage_pct": round(100 * covered / CELLS ** 2, 1),
         "cells_covered": covered,
         "cells_total": CELLS ** 2,

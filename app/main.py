@@ -9,7 +9,7 @@ from typing import Literal
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from app import backups, coverage, db, metrics, model
@@ -107,8 +107,12 @@ def list_robots() -> list[dict]:
 
 
 @app.get("/robots/{robot_id}/history")
-def robot_history(robot_id: str, limit: int | None = Query(None, ge=1, le=100_000)) -> list[dict]:
-    rows = db.robot_history(robot_id, limit)
+def robot_history(
+    robot_id: str,
+    limit: int | None = Query(None, ge=1, le=100_000),
+    details: bool = Query(False, description="include predicted_status, confidence and received_at"),
+) -> list[dict]:
+    rows = db.robot_history(robot_id, limit, with_prediction=details)
     if rows is None:
         raise HTTPException(status_code=404, detail="Robot not found")
     return rows
@@ -148,6 +152,41 @@ def get_metrics() -> dict:
     return data
 
 
+@app.get("/fleet")
+def fleet(connected_s: float = Query(30, gt=0, le=3_600)) -> dict:
+    """Snapshot for the dashboard: robots with their predicted condition,
+    fleet status counts and operational metrics, in a single call."""
+    now = time.time()
+    robots = db.latest_per_robot(with_prediction=True)
+    status_counts = {"NORMAL": 0, "WARNING": 0, "CRITICAL": 0}
+    for robot in robots:
+        robot["age_s"] = round(now - robot["received_at"], 1)
+        robot["connected"] = robot["age_s"] <= connected_s
+        if robot["connected"] and robot["predicted_status"] in status_counts:
+            status_counts[robot["predicted_status"]] += 1
+    return {
+        "server_time": now,
+        "robots": robots,
+        "connected": sum(r["connected"] for r in robots),
+        "status_counts": status_counts,
+        "metrics": metrics.snapshot(),
+        "storage": {"backend": db.backend_name(), **db.counts()},
+    }
+
+
+@app.get("/fleet/summary")
+def fleet_summary() -> dict:
+    """Slower-changing dashboard data: coverage, 15-minute trend, backups, model."""
+    backup_info = backups.status()
+    backup_info.pop("history", None)
+    return {
+        "coverage": coverage.compute(window_s=60),
+        "trend": db.trend(15),
+        "backups": backup_info,
+        "model": model.meta() if model.available() else None,
+    }
+
+
 @app.get("/coverage")
 def get_coverage(
     window_s: float = Query(300, gt=0, le=86_400),
@@ -175,6 +214,12 @@ def run_backup(
     if not token and not db.IS_SQLITE:
         raise HTTPException(status_code=403, detail="Set BACKUP_TOKEN to enable remote backups")
     return backups.run(kind)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon() -> Response:
+    # Browsers request it automatically; answering 204 keeps it out of the 4xx count.
+    return Response(status_code=204)
 
 
 @app.get("/dashboard", response_class=HTMLResponse)

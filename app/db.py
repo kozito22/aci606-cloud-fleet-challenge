@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import threading
+import time
 from pathlib import Path
 
 from sqlalchemy import (
@@ -21,6 +22,7 @@ from sqlalchemy import (
     MetaData,
     String,
     Table,
+    cast,
     create_engine,
     event,
     func,
@@ -188,6 +190,43 @@ def robot_history(robot_id: str, limit: int | None = None, with_prediction: bool
     if not rows:
         return None
     return rows[::-1] if limit else rows
+
+
+def _floor(expr):
+    """floor() that behaves the same on SQLite (truncating CAST, values >= 0)
+    and PostgreSQL (FLOOR)."""
+    return cast(expr, Integer) if IS_SQLITE else cast(func.floor(expr), Integer)
+
+
+def trend(minutes: int = 15, now: float | None = None) -> list[dict]:
+    """Samples per minute and predicted status for the last `minutes` minutes,
+    aggregated in SQL so only a few rows travel from the database."""
+    init_db()
+    now = now or time.time()
+    first = int(now // 60) - minutes + 1
+    bucket = _floor(telemetry.c.received_at / 60).label("bucket")
+    query = (select(bucket, telemetry.c.predicted_status, func.count())
+             .where(telemetry.c.received_at >= first * 60)
+             .group_by(bucket, telemetry.c.predicted_status))
+    buckets = {first + i: {"minute": (first + i) * 60, "total": 0, "NORMAL": 0, "WARNING": 0, "CRITICAL": 0}
+               for i in range(minutes)}
+    with engine.connect() as conn:
+        for b, status, n in conn.execute(query):
+            if b in buckets:
+                buckets[b]["total"] += n
+                if status in ("NORMAL", "WARNING", "CRITICAL"):
+                    buckets[b][status] += n
+    return list(buckets.values())
+
+
+def visited_cells(since: float, cell_m: float = 1.0) -> list[tuple[int, int, int]]:
+    """(col, row, samples) of every grid cell visited since `since`."""
+    init_db()
+    col = _floor(telemetry.c.x / cell_m).label("col")
+    row = _floor(telemetry.c.y / cell_m).label("row")
+    query = select(col, row, func.count()).where(telemetry.c.received_at >= since).group_by(col, row)
+    with engine.connect() as conn:
+        return [(int(c), int(r), int(n)) for c, r, n in conn.execute(query)]
 
 
 def counts() -> dict:
