@@ -48,9 +48,9 @@ TELEMETRY_FIELDS = [
 
 
 def database_url() -> str:
-    # DATABASE_URL is the name used by Neon's Vercel integration (and Render);
-    # POSTGRES_URL is the legacy Vercel Postgres name.
-    url = (os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or "").strip()
+    # DATABASE_URL is the standard name (Render, Neon). On Vercel the Neon
+    # integration may prefix it (STORAGE_URL) and legacy Postgres used POSTGRES_URL.
+    url = next((os.environ[k] for k in ("DATABASE_URL", "POSTGRES_URL", "STORAGE_URL") if os.environ.get(k)), "").strip()
     if not url:
         # Serverless file systems are read-only except /tmp (data there is
         # temporary: production must always define DATABASE_URL).
