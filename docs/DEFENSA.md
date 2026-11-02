@@ -94,6 +94,11 @@ Para *n* robots, los centroides de una teselación de Voronoi centroidal de la a
 El algoritmo húngaro asigna cada robot a un punto minimizando la distancia total, medida en un toro porque el simulador envuelve los bordes.
 El simulador no se modificó: la API calcula el plan y el panel lo muestra.
 
+**¿Por qué los robots salen por un borde y entran por el otro?**
+Así funciona el simulador: después de moverse, aplica `x %= 10` e `y %= 10`, de modo que la arena es un toro, como en Pac-Man. No es un error de la API.
+El panel dibuja la ruta más corta sobre el toro (`|dx| <= 5`) y muestra el cruce con un desvanecimiento, en vez de un salto.
+La misma distancia toroidal se usa para asignar los puntos óptimos.
+
 ## Demostración en vivo (checklist)
 
 1. `GET /health` para despertar el servicio.
