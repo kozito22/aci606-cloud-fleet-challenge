@@ -6,10 +6,14 @@ venv/
 .env
 
 # Models and generated data
-models/
+# The deployed model is versioned on purpose (the PaaS cannot train it).
+models/*
+!models/model.joblib
+!models/model_meta.json
 *.joblib
 *.keras
 *.h5
+!models/model.joblib
 data/*.csv
 !data/.gitkeep
 
