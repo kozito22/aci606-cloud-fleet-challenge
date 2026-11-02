@@ -38,13 +38,15 @@ from sqlalchemy import insert, select
 
 from app import db
 
-BACKUP_DIR = Path(os.environ.get("BACKUP_DIR", db.ROOT / "backups"))
+BACKUP_DIR = Path(os.environ.get("BACKUP_DIR", "/tmp/backups" if os.environ.get("VERCEL") else db.ROOT / "backups"))
 OFFSITE_DIR = os.environ.get("BACKUP_OFFSITE_DIR", "").strip()
 LOGICAL_MINUTES = float(os.environ.get("BACKUP_LOGICAL_MINUTES", "30"))
 PHYSICAL_MINUTES = float(os.environ.get("BACKUP_PHYSICAL_MINUTES", "360"))
 KEEP = int(os.environ.get("BACKUP_KEEP", "10"))
-# Serverless platforms (Vercel) have no persistent disk nor background threads.
+# Serverless platforms (Vercel) have no persistent disk nor background threads:
+# there the schedule runs outside the API (.github/workflows/backup.yml).
 SCHEDULER_ENABLED = os.environ.get("BACKUPS_ENABLED", "0" if os.environ.get("VERCEL") else "1") == "1"
+SCHEDULER = "API (hilo interno)" if SCHEDULER_ENABLED else os.environ.get("BACKUP_SCHEDULER", "GitHub Actions")
 
 _run_lock = threading.Lock()
 
@@ -140,7 +142,7 @@ def status() -> dict:
         summary[kind] = {
             "every_minutes": minutes,
             "last": last,
-            "next_due_at": next_due if SCHEDULER_ENABLED else None,
+            "next_due_at": next_due,
             "seconds_since_last": round(now - last["finished_at"], 1) if last else None,
         }
     with db.engine.connect() as conn:
@@ -148,6 +150,7 @@ def status() -> dict:
             select(db.backup_log).order_by(db.backup_log.c.id.desc()).limit(20))]
     return {
         "scheduler_enabled": SCHEDULER_ENABLED,
+        "scheduler": SCHEDULER,
         "retention_files": KEEP,
         "backup_dir": str(BACKUP_DIR),
         "offsite_dir": OFFSITE_DIR or None,

@@ -899,7 +899,7 @@ function renderSummary() {
   $("backups").innerHTML =
     row("Lógico · CSV", b.logical, `<div class="hint">${lg ? `${Number(lg.rows || 0).toLocaleString("es-CL")} filas · ${fmt((lg.size_bytes || 0) / 1024, 1)} KB` : "exporta las filas de telemetría"}</div>`) +
     row("Físico · copia de la base", b.physical, `<div class="hint">${ph ? (ph.status === "MANAGED" ? "gestionado por Neon (PITR)" : `${fmt((ph.size_bytes || 0) / 1024, 1)} KB · offsite ${ph.offsite_copy ? "✓" : "—"}`) : "copia binaria completa"}</div>`) +
-    `<p class="hint" style="margin:8px 0 0">Retención: últimos ${b.retention_files} archivos · ${b.scheduler_enabled ? "programador activo" : "programador desactivado"}</p>`;
+    `<p class="hint" style="margin:8px 0 0">Retención: últimos ${b.retention_files} archivos · programado por ${esc(b.scheduler || "—")}</p>`;
 
   // model
   const m = s.model, pill = $("pill-model");

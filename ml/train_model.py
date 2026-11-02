@@ -98,8 +98,8 @@ def latency_ms(pipeline: Pipeline, sample: np.ndarray, repeats: int = 200) -> fl
 def md_table(df: pd.DataFrame) -> str:
     cols = [str(c) for c in df.columns]
     lines = ["| " + " | ".join([df.index.name or ""] + cols) + " |", "|" + "---|" * (len(cols) + 1)]
-    for idx, row in df.iterrows():
-        lines.append("| " + " | ".join([str(idx)] + [str(v) for v in row.tolist()]) + " |")
+    for idx, *values in df.itertuples():  # itertuples keeps each column's dtype (no 7085.0)
+        lines.append("| " + " | ".join([str(idx)] + [str(v) for v in values]) + " |")
     return "\n".join(lines)
 
 

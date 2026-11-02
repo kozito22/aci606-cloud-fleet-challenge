@@ -1,0 +1,18 @@
+# Every push: start the API with SQLite and run the final smoke test.
+name: ci
+on: [push, pull_request]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: pip install -r requirements.txt
+      - name: Start API
+        run: |
+          uvicorn app.main:app --port 8000 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/health && break; sleep 1; done
+      - run: python simulator/fleet_simulator.py --robots 3 --steps 5 --interval 0.1
+      - run: python tests/smoke_test.py --final
