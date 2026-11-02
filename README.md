@@ -231,6 +231,16 @@ python tests/load_test.py --api https://aci606-cloud-fleet-challenge.vercel.app 
 ```
 
 Abre `/dashboard` desde otro dispositivo y revisa `/metrics` y los logs de Vercel.
+
+### Resultado de la verificación (2026-11-02, desde Chile contra Vercel `iad1` + Neon)
+
+| Verificación | Resultado |
+|---|---|
+| Contrato (`smoke_test.py --final`) | Todas las rutas 200, `/predict` con el contrato exacto, datos inválidos y `NaN` → 422, servicio activo después |
+| Base de datos | `/health` → `"database": "POSTGRESQL"` (Neon) |
+| Persistencia | 5 robots × 120 pasos: 119–120 registros por robot en Neon (2 de 600 envíos se perdieron por arranques en frío que superaron el *timeout* de 3 s del simulador) |
+| Reinicio | Redeploy en Vercel: mismo número de registros y misma huella (hash) del historial de cada robot |
+| Carga (`load_test.py`, 300 solicitudes, 10 concurrentes) | 0 errores. Cliente: p50 238 ms, p95 325 ms (incluye la red Chile–Washington). Servidor: p50 2,1 ms, p95 2,9 ms; modelo 1 ms |
 Antes de la evaluación, llama a `GET /health` para despertar la base de Neon, que se suspende tras 5 minutos sin uso.
 
 ## Restricciones de la plataforma y cómo se resolvieron
