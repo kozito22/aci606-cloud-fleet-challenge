@@ -11,7 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import db, model
+from app import db, metrics, model
 
 
 @asynccontextmanager
@@ -33,6 +33,7 @@ app = FastAPI(
     version="0.2.0",
     description="Cloud fleet service: persistent telemetry ingestion, ML inference, metrics and dashboard.",
 )
+app.add_middleware(metrics.MetricsMiddleware)
 
 Status = Literal["NORMAL", "WARNING", "CRITICAL"]
 
@@ -56,8 +57,6 @@ class Telemetry(BaseModel):
 class PredictionRequest(Telemetry):
     pass
 
-
-REQUEST_COUNT = 0
 
 
 @app.exception_handler(RequestValidationError)
@@ -83,8 +82,6 @@ def health() -> dict:
 
 @app.post("/telemetry")
 def ingest_telemetry(sample: Telemetry) -> dict:
-    global REQUEST_COUNT
-    REQUEST_COUNT += 1
     row = sample.model_dump()
     # Classify at ingestion so the dashboard and history show the condition
     # without extra calls. Ingestion must never fail because of the model.
@@ -120,6 +117,7 @@ def predict(sample: PredictionRequest) -> dict:
     start = time.perf_counter()
     status, confidence = model.predict(sample.model_dump())
     inference_ms = (time.perf_counter() - start) * 1000
+    metrics.record_prediction(status, inference_ms)
     # Exact response contract required by the evaluator (do not rename fields).
     return {
         "robot_id": sample.robot_id,
@@ -131,14 +129,19 @@ def predict(sample: PredictionRequest) -> dict:
 
 
 @app.get("/metrics")
-def metrics() -> dict:
-    # TODO E4: extend with latency, errors, throughput and model metrics.
-    return {
-        "requests_received": REQUEST_COUNT,
-        **db.counts(),
-        "persistence": db.backend_name(),
-        "prediction_service": "READY" if model.available() else "MODEL_NOT_LOADED",
-    }
+def get_metrics() -> dict:
+    data = metrics.snapshot()
+    data["persistence"] = db.backend_name()
+    try:
+        data.update(db.counts())
+    except Exception:
+        data["database_ok"] = False
+    data["prediction_service"] = "READY" if model.available() else "MODEL_NOT_LOADED"
+    if model.available():
+        meta = model.meta()
+        data["model"] = {key: meta.get(key) for key in ("model_version", "model", "features", "test_f1_macro",
+                                                         "baseline_f1_macro", "trained_at")}
+    return data
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
