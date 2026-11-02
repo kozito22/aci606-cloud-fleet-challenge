@@ -9,7 +9,7 @@ from typing import Literal
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from app import backups, coverage, db, metrics, model
@@ -214,6 +214,12 @@ def run_backup(
     if not token and not db.IS_SQLITE:
         raise HTTPException(status_code=403, detail="Set BACKUP_TOKEN to enable remote backups")
     return backups.run(kind)
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    # Opening the bare public URL lands on the operator dashboard.
+    return RedirectResponse("/dashboard")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
