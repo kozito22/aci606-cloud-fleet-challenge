@@ -207,6 +207,18 @@ Es una oficina isométrica clara con paredes de vidrio y robots en pixel art.
   - Estado de la flota, con la distribución actual y la tendencia de 15 minutos.
   - Respaldos y modelo.
 
+### Modo laboratorio
+
+El botón **Modo laboratorio** cambia la oficina por una **simulación local en el navegador**. No envía datos a la API, no se guarda en Neon y no afecta al modelo ni a las métricas. La flota real la sigue moviendo el simulador oficial, que no se modificó.
+
+- **Grilla variable:** de 8 × 8 a 24 × 24 celdas, con 2 a 12 robots y velocidad 1×, 2× o 4×.
+- **Herramientas:** dibujar o borrar obstáculos arrastrando el mouse (o el dedo), y agregar o quitar puertos de carga.
+- **Escenarios aleatorios:** "Obstáculos al azar" y "Nuevo escenario" usan una semilla, para que cada escenario sea distinto y reproducible. Los obstáculos al azar nunca dejan zonas aisladas.
+- **Rutas:** cada robot calcula el camino más corto con búsqueda en anchura (BFS) y lo recalcula si se le pone un obstáculo delante. Explora prefiriendo las celdas menos visitadas.
+- **Batería:** cada celda recorrida gasta batería. Antes de elegir un destino, el robot verifica que le alcanza para la ida y para volver al puerto más cercano. Si no, va a cargar; si el puerto está ocupado, espera en cola. Al completar la carga vuelve a explorar.
+
+Es un complemento visual. Los datos que se evalúan (telemetría, predicción, métricas y persistencia) son los de la flota real.
+
 ## Despliegue: Vercel + Neon
 
 1. **Neon:** crea un proyecto en <https://neon.tech> en la región AWS US East (N. Virginia), la misma región que la función de Vercel (`iad1`). Copia la cadena de conexión **pooled** (host `-pooler`).
