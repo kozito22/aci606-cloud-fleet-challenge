@@ -1474,6 +1474,7 @@ function setLab(on) {
   canvas.style.cursor = on ? "crosshair" : "default";
 }
 $("lab-toggle").addEventListener("click", () => setLab(!lab.on));
+if (location.hash === "#lab") setLab(true); // direct link: /dashboard#lab
 function labCell(e) {
   const rect = canvas.getBoundingClientRect(), gm = labGeom();
   const a = ((e.clientX - rect.left) / viewScale - gm.ox) / (gm.tw / 2), b = ((e.clientY - rect.top) / viewScale - gm.oy) / (gm.th / 2);

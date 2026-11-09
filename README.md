@@ -211,7 +211,7 @@ Es una oficina isométrica clara con paredes de vidrio y robots en pixel art.
 
 ### Modo laboratorio
 
-El botón **Modo laboratorio** cambia la oficina por una **simulación local en el navegador**. No envía datos a la API, no se guarda en Neon y no afecta al modelo ni a las métricas. La flota real la sigue moviendo el simulador oficial, que no se modificó.
+El botón **Modo laboratorio** (o el enlace directo `/dashboard#lab`) cambia la oficina por una **simulación local en el navegador**. No envía datos a la API, no se guarda en Neon y no afecta al modelo ni a las métricas. La flota real la sigue moviendo el simulador oficial, que no se modificó.
 
 - **Grilla variable:** de 8 × 8 a 24 × 24 celdas, con 2 a 12 robots y velocidad 1×, 2× o 4×.
 - **Herramientas:** dibujar o borrar obstáculos arrastrando el mouse (o el dedo), y agregar o quitar puertos de carga.
