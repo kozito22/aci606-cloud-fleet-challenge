@@ -404,37 +404,10 @@ const state = {
 /* =====================================================================
    Pixel sprites (robots and operators)
    ===================================================================== */
-const PERSON_SPRITE = [
-  "...HHHHH...",
-  "..HHHHHHH..",
-  "..HSSSSSH..",
-  "..SSKSKSS..",
-  "..SSSSSSS..",
-  "...SSmSS...",
-  "....SSS....",
-  "..CCcRcCC..",
-  ".CCCcCcCCC.",
-  ".CCCcCcCCC.",
-  ".SCCcCcCCS.",
-  "..CCCCCCC..",
-  "..PPPPPPP..",
-  "..PPP.PPP..",
-  "..PPP.PPP..",
-  "..OOO.OOO..",
-];
-const CHEF_HAT = ["...TTTTT...", "..TTTTTTT..", "..TTTTTTT..", "...ttttt..."];
 function shade(hex, f) {
   const n = parseInt(hex.slice(1), 16);
   const ch = (v) => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f)));
   return "#" + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => ch(v).toString(16).padStart(2, "0")).join("");
-}
-const spriteCache = new Map();
-function makeSprite(rows, palette) {
-  const c = document.createElement("canvas");
-  c.width = rows[0].length; c.height = rows.length;
-  const g = c.getContext("2d");
-  rows.forEach((row, y) => [...row].forEach((ch, x) => { if (palette[ch]) { g.fillStyle = palette[ch]; g.fillRect(x, y, 1, 1); } }));
-  return c;
 }
 // Cartoon robot drawn with smooth shapes (rounded head with a visor, glowing
 // eyes, chest screen with a heartbeat, swinging arms and small wheels). The
@@ -482,18 +455,55 @@ function drawBot(g, x, y, o) {
   g.beginPath(); g.arc(0, -59.2, 2.6, 0, Math.PI * 2); g.fillStyle = eye; g.fill(); g.strokeStyle = line; g.lineWidth = 1; g.stroke();
   g.restore();
 }
-// People: office operators, waiters (vest and tie) and the chef (hat).
-function personSprite(shirt, hair, opts = {}) {
-  const key = `p|${shirt}|${hair}|${opts.vest || ""}|${opts.tie || ""}|${opts.hat ? 1 : 0}`;
-  if (!spriteCache.has(key)) {
-    const vest = opts.vest || shade(shirt, -0.15);
-    const rows = opts.hat ? [...CHEF_HAT, ...PERSON_SPRITE.slice(1)] : PERSON_SPRITE;
-    spriteCache.set(key, makeSprite(rows, {
-      H: hair, S: "#f2c79a", K: "#1f2937", m: "#c2410c", C: shirt, c: vest, R: opts.tie || vest,
-      P: "#334155", O: "#111827", T: "#ffffff", t: "#e2e8f0",
-    }));
+// Cartoon person in the same smooth style as the robots: office operators,
+// waiters (vest and tie) and the chef (hat and apron). Feet at (x, y); about
+// 52 px tall at scale 1. With `carry`, the right hand is raised in front:
+// personHand() gives where to draw what they carry.
+function personHand(x, y, s = 1) { return [x + 20 * s, y - 25 * s]; }
+function drawPerson(g, x, y, o) {
+  const s = o.scale || 1, skin = o.skin || "#f2c79a", line = "#1b2133", shirt = o.shirt, t = o.t || 0;
+  const step = o.moving ? Math.sin(t / 120) : 0;
+  const rr = (x0, y0, w, h, r) => { g.beginPath(); if (g.roundRect) g.roundRect(x0, y0, w, h, r); else g.rect(x0, y0, w, h); };
+  g.save(); g.translate(x, y); g.scale(s, s);
+  g.lineJoin = "round"; g.lineWidth = 1.3; g.strokeStyle = line;
+  for (const side of [-1, 1]) { // legs and shoes, stepping while walking
+    const lift = Math.max(0, side * step) * 2.5;
+    rr(side * 3.8 - 2.6, -13 - lift, 5.2, 10, 2.4); g.fillStyle = o.pants || "#334155"; g.fill(); g.stroke();
+    g.beginPath(); g.ellipse(side * 4.2, -2.6 - lift, 3.8, 2.4, 0, 0, Math.PI * 2); g.fillStyle = "#111827"; g.fill();
   }
-  return spriteCache.get(key);
+  const sleeve = shade(shirt, -0.06);
+  const arm = (side, ang) => {
+    g.save(); g.translate(side * 8.5, -25); g.rotate(ang);
+    rr(-2.6, 0, 5.2, 11, 2.6); g.fillStyle = sleeve; g.fill(); g.stroke();
+    g.beginPath(); g.arc(0, 12, 2.7, 0, Math.PI * 2); g.fillStyle = skin; g.fill(); g.stroke();
+    g.restore();
+  };
+  arm(-1, o.moving ? step * 0.5 : 0.15);
+  const tg = g.createLinearGradient(-9, -28, 9, -11);
+  tg.addColorStop(0, shade(shirt, 0.25)); tg.addColorStop(1, shade(shirt, -0.18));
+  rr(-9, -28, 18, 17, 7); g.fillStyle = tg; g.fill(); g.stroke();
+  if (o.vest) { g.fillStyle = o.vest; rr(-9, -26, 6, 15, 3); g.fill(); rr(3, -26, 6, 15, 3); g.fill(); }
+  if (o.apron) { rr(-6.5, -22, 13, 12, 3); g.fillStyle = o.apron; g.fill(); g.stroke(); }
+  if (o.tie) { g.fillStyle = o.tie; g.beginPath(); g.moveTo(-1.8, -27.5); g.lineTo(1.8, -27.5); g.lineTo(1.2, -18.5); g.lineTo(0, -16.5); g.lineTo(-1.2, -18.5); g.closePath(); g.fill(); }
+  arm(1, o.carry ? -1.5 : o.moving ? -step * 0.5 : -0.15);
+  const hg = g.createRadialGradient(-3, -42, 2, 0, -38, 11.5);
+  hg.addColorStop(0, shade(skin, 0.25)); hg.addColorStop(1, skin);
+  g.beginPath(); g.arc(0, -38, 10.5, 0, Math.PI * 2); g.fillStyle = hg; g.fill(); g.stroke();
+  g.beginPath(); g.arc(0, -38, 10.6, Math.PI, 0); // hair with a fringe
+  g.quadraticCurveTo(5, -42, 1, -39.5); g.quadraticCurveTo(-4, -42.5, -10.6, -38); g.closePath();
+  g.fillStyle = o.hair; g.fill(); g.stroke();
+  g.fillStyle = "#1f2937";
+  for (const dx of [-3.6, 3.6]) { g.beginPath(); g.ellipse(dx, -35.8, 1.4, 1.9, 0, 0, Math.PI * 2); g.fill(); }
+  g.fillStyle = "#fff"; g.fillRect(-4, -37, 0.9, 0.9); g.fillRect(3.2, -37, 0.9, 0.9);
+  g.fillStyle = "rgba(244,114,182,.38)";
+  for (const dx of [-6.4, 6.4]) { g.beginPath(); g.ellipse(dx, -32.8, 2.2, 1.3, 0, 0, Math.PI * 2); g.fill(); }
+  g.lineWidth = 1; g.beginPath(); g.arc(0, -33, 2.1, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke(); g.lineWidth = 1.3;
+  if (o.hat) { // puffy chef hat
+    g.fillStyle = "#ffffff";
+    for (const [hx, hy, hr] of [[-5, -54, 4.2], [5, -54, 4.2], [0, -56.5, 5.2]]) { g.beginPath(); g.arc(hx, hy, hr, 0, Math.PI * 2); g.fill(); g.stroke(); }
+    rr(-8, -51, 16, 5.5, 2); g.fill(); g.stroke();
+  }
+  g.restore();
 }
 // Soft round glow (antennas, lamps, flames).
 function glow(x, y, radius, color, alpha = 1) {
@@ -745,9 +755,9 @@ function perimeter(t) {
   const items = [];
   const add = (depth, draw, label) => items.push({ depth, draw, label });
   const stations = [
-    { x: 2.7, label: "API · FastAPI", screen: "#38bdf8", shirt: "#3b82f6", hair: "#2b1d14" },
-    { x: 5.9, label: "Modelo ML", screen: "#a78bfa", shirt: "#db2777", hair: "#5a3a22" },
-    { x: 9.1, label: "Métricas", screen: "#34d399", shirt: "#0d9488", hair: "#1c1c1c" },
+    { x: 2.7, label: "API · FastAPI", screen: "#38bdf8", shirt: "#3b82f6", hair: "#2b1d14", skin: "#f2c79a" },
+    { x: 5.9, label: "Modelo ML", screen: "#a78bfa", shirt: "#db2777", hair: "#5a3a22", skin: "#c68642" },
+    { x: 9.1, label: "Métricas", screen: "#34d399", shirt: "#0d9488", hair: "#1c1c1c", skin: "#8d5524" },
   ];
   for (const s of stations) {
     add(s.x + 0.6, () => {
@@ -765,8 +775,7 @@ function perimeter(t) {
       box(s.x + 0.75, 1.3, 0.55, 0.45, 12, "#c7d2fe", "#818cf8", "#a5b4fc");
       box(s.x + 0.75, 1.62, 0.55, 0.12, 22, "#c7d2fe", "#818cf8", "#a5b4fc", 12);
       const [px, py] = iso(s.x + 1.02, 1.5, 12);
-      const op = personSprite(s.shirt, s.hair);
-      ctx.drawImage(op, Math.round(px - op.width), Math.round(py - op.height * 2 + 8 + Math.sin(t / 700 + s.x)), op.width * 2, op.height * 2);
+      drawPerson(ctx, px, py + 9 + Math.sin(t / 700 + s.x), { shirt: s.shirt, hair: s.hair, skin: s.skin, scale: 0.72 });
     });
   }
   // server room: database racks + backup rack
@@ -1453,8 +1462,8 @@ const PASS = { x: 7.2, y: 2.6 };
 const rest = { pending: new Map(), served: new Map(), waiters: null, chefUntil: 0, lastErr: null, rejectUntil: 0, rejected: 0, servedTotal: 0, last: 0, statsAt: 0 };
 function restWaiters() {
   if (!rest.waiters) {
-    rest.waiters = [[4.6, "#2b1d14"], [6.7, "#7c2d12"], [8.9, "#111827"]].map(([x, hair], i) => ({
-      name: `Mesero ${i + 1}`, hair, slot: i, x, y: 2.8, home: { x, y: 2.8 }, state: "idle", target: null,
+    rest.waiters = [[4.6, "#2b1d14", "#f2c79a"], [6.7, "#7c2d12", "#c68642"], [8.9, "#111827", "#8d5524"]].map(([x, hair, skin], i) => ({
+      name: `Mesero ${i + 1}`, hair, skin, slot: i, x, y: 2.8, home: { x, y: 2.8 }, state: "idle", target: null,
       robotId: null, order: null, carry: null, wait: 0, moving: false,
     }));
   }
@@ -1606,9 +1615,8 @@ function renderRestaurant(t) {
   });
   const chefX = 7.2 + (cooking ? -0.3 : Math.sin(t / 1600) * 0.6);
   add(chefX + 1.25, () => { // the chef = ML model
-    const ch = personSprite("#ffffff", "#3f2a1e", { hat: true, vest: "#e2e8f0", tie: "#ef4444" });
     const [x, y] = iso(chefX, 1.25);
-    ctx.drawImage(ch, Math.round(x - ch.width * 1.5), Math.round(y - ch.height * 3 + (cooking ? Math.sin(t / 80) : 0)), ch.width * 3, ch.height * 3);
+    drawPerson(ctx, x, y + (cooking ? Math.sin(t / 80) : 0), { shirt: "#ffffff", hair: "#3f2a1e", skin: "#e0ac69", hat: true, apron: "#e2e8f0", tie: "#ef4444", moving: !cooking && Math.abs(Math.cos(t / 1600)) > 0.3, t, scale: 1.05 });
   });
   // pantry (database), recipe book (backups) and till (metrics)
   const rows = state.fleet?.storage?.telemetry_rows || 0, jars = Math.round(36 * Math.min(1, Math.log10(rows + 1) / 5));
@@ -1678,12 +1686,12 @@ function renderRestaurant(t) {
   });
   for (const w of rest.waiters) {
     front.push({ depth: w.x + w.y, draw: () => { // waiter = API request in flight
-      const sp = personSprite("#f8fafc", w.hair, { vest: "#111827", tie: "#b91c1c" });
-      const [x, y] = iso(w.x, w.y), bob = w.moving && Math.floor(t / 160) % 2 ? -3 : 0;
-      ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(x, y, 13, 5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.drawImage(sp, Math.round(x - sp.width * 1.5), Math.round(y - sp.height * 3 + bob), sp.width * 3, sp.height * 3);
-      if (w.carry === "ticket") { ctx.fillStyle = "#fffbeb"; ctx.fillRect(Math.round(x) + 14, Math.round(y) - 32 + bob, 10, 13); ctx.fillStyle = "#94a3b8"; ctx.fillRect(Math.round(x) + 16, Math.round(y) - 28 + bob, 6, 1); ctx.fillRect(Math.round(x) + 16, Math.round(y) - 24 + bob, 6, 1); }
-      if (w.carry === "plate") plate(x + 19, y - 36 + bob, w.order?.status, 1);
+      const [x, y] = iso(w.x, w.y), bob = w.moving && Math.floor(t / 160) % 2 ? -1.5 : 0;
+      ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(x, y, 11, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+      drawPerson(ctx, x, y + bob, { shirt: "#f8fafc", hair: w.hair, skin: w.skin, vest: "#111827", tie: "#b91c1c", moving: w.moving, carry: !!w.carry, t });
+      const [hx, hy] = personHand(x, y + bob);
+      if (w.carry === "ticket") { ctx.fillStyle = "#fffbeb"; ctx.strokeStyle = "#cbd5e1"; ctx.fillRect(Math.round(hx) - 4, Math.round(hy) - 14, 9, 12); ctx.strokeRect(Math.round(hx) - 3.5, Math.round(hy) - 13.5, 8, 11); ctx.fillStyle = "#94a3b8"; ctx.fillRect(Math.round(hx) - 2, Math.round(hy) - 10, 5, 1); ctx.fillRect(Math.round(hx) - 2, Math.round(hy) - 7, 5, 1); }
+      if (w.carry === "plate") plate(hx, hy - 3, w.order?.status, 1);
     } });
   }
   front.push({ depth: 12.1 + 12.0 + 0.6, draw: () => plant(12.1, 12.0, t) });
