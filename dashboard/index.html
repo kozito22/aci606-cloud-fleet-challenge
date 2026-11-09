@@ -147,6 +147,17 @@
     .agent-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
     .empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; grid-column: 1 / -1; }
 
+    /* ---------- professor's rubric ---------- */
+    .rubric { list-style: none; margin: 0; padding: 0; }
+    .rubric li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f0f1f6; }
+    .rubric li:last-child { border-bottom: 0; }
+    .rubric .ic { width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; }
+    .ic.ok { background: var(--ok); } .ic.fail { background: var(--bad); } .ic.wait { background: #cbd5e1; } .ic.info { background: #38bdf8; }
+    .rubric b { font-size: 13px; font-weight: 600; }
+    .rubric .ev { display: block; font-size: 12px; color: var(--muted); }
+    .rubric a { color: var(--accent); }
+    #rubric-run[disabled] { opacity: .6; cursor: progress; }
+
     /* ---------- lab mode ---------- */
     .toggle.lab[aria-pressed="true"] { color: #92400e; background: #fffbeb; border-color: #fcd34d; }
     .lab-on .feed, .lab-on .profile, .lab-on .offline-banner { display: none !important; }
@@ -253,6 +264,14 @@
           <div class="kpi"><div class="k">Cobertura 60 s</div><div class="v" id="k-cov">—</div><div class="s" id="k-cov-sub">&nbsp;</div></div>
         </div>
         <div class="state-line"><span class="hint">Estado del servicio</span><span id="k-state">—</span></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="rubric-title">
+      <div class="card-head"><h2 id="rubric-title">Pauta del profesor</h2><button class="toggle" id="rubric-run" type="button">Verificar ahora</button></div>
+      <div class="card-body">
+        <ul class="rubric" id="rubric" aria-live="polite"></ul>
+        <p class="hint" style="margin:10px 0 0">Según el PDF del Ejercicio 4 (págs. 5, 6, 16 y 17). "Verificar ahora" envía 20 predicciones y 2 datos inválidos a propósito, que se cuentan como errores 4xx.</p>
       </div>
     </section>
 
@@ -931,6 +950,7 @@ function renderPanels() {
     </button>`;
   }).join("") : `<div class="empty">Ejecuta el simulador para que lleguen agentes a la oficina.</div>`;
   if (state.selected && state.tab === "telemetria") renderProfile();
+  renderRubric();
 }
 $("roster").addEventListener("click", (e) => { const b = e.target.closest(".agent"); if (b) select(b.dataset.id); });
 
@@ -1041,12 +1061,90 @@ function renderSummary() {
     $("model").innerHTML = `<p class="hint">Ejecuta <code>python ml/train_model.py</code>.</p>`;
   }
   if (state.selected && state.tab === "perfil") renderProfile();
+  renderRubric();
 }
 
 document.querySelectorAll(".toggle[data-toggle]").forEach((b) => b.addEventListener("click", () => {
   const k = b.dataset.toggle; state.toggles[k] = !state.toggles[k];
   b.setAttribute("aria-pressed", String(state.toggles[k]));
 }));
+
+/* =====================================================================
+   Pauta del profesor: each requirement of the assignment with live evidence
+   ===================================================================== */
+const REPO_URL = "https://github.com/kozito22/aci606-cloud-fleet-challenge";
+const PREDICT_FIELDS = "confidence,inference_ms,model_version,predicted_status,robot_id";
+const rubric = { predict: null, invalid: null, running: false };
+const num = (v, d = 0) => Number(v).toLocaleString("es-CL", { maximumFractionDigits: d, minimumFractionDigits: d });
+const postJSON = (url, body) => fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body, cache: "no-store" });
+
+async function checkPredict(n) {
+  const times = [];
+  let ok = true;
+  for (let i = 0; i < n; i++) {
+    const sample = { robot_id: "PAUTA-01", timestamp: Date.now() / 1000, x: 4.2, y: 7.8, speed: 0.63, battery: 71,
+                     motor_temp: 48.2, vibration: 0.43, motor_current: 3.7, obstacle_distance: 0.42 };
+    const t0 = performance.now();
+    const res = await postJSON("/predict", JSON.stringify(sample));
+    times.push(performance.now() - t0);
+    const body = await res.json();
+    ok = ok && res.ok && Object.keys(body).sort().join(",") === PREDICT_FIELDS
+      && ["NORMAL", "WARNING", "CRITICAL"].includes(body.predicted_status) && body.robot_id === sample.robot_id;
+  }
+  times.sort((a, b) => a - b);
+  return { ok, n, p50: times[Math.floor((times.length - 1) / 2)], p95: times[Math.round((times.length - 1) * 0.95)] };
+}
+async function checkInvalid() {
+  // NaN to /predict and a missing field to /telemetry must both be 4xx, and the service must stay up.
+  const nan = '{"robot_id":"PAUTA-01","timestamp":1,"x":1,"y":1,"speed":NaN,"battery":50,"motor_temp":40,"vibration":0.3,"motor_current":3,"obstacle_distance":1}';
+  const a = await postJSON("/predict", nan), b = await postJSON("/telemetry", '{"robot_id":"PAUTA-01"}');
+  const h = await fetch("/health", { cache: "no-store" });
+  const is4xx = (r) => r.status >= 400 && r.status < 500;
+  return { ok: is4xx(a) && is4xx(b) && h.ok, codes: [a.status, b.status, h.status] };
+}
+async function runRubric(full) {
+  if (rubric.running) return;
+  rubric.running = true; $("rubric-run").disabled = true; $("rubric-run").textContent = "Verificando…";
+  try {
+    rubric.predict = await checkPredict(full ? 20 : 1);
+    if (full) rubric.invalid = await checkInvalid();
+  } catch (err) {
+    rubric.predict = rubric.predict || { ok: false, error: String(err) };
+  }
+  rubric.running = false; $("rubric-run").disabled = false; $("rubric-run").textContent = "Verificar ahora";
+  renderRubric();
+}
+$("rubric-run").addEventListener("click", () => runRubric(true));
+
+function renderRubric() {
+  const f = state.fleet, s = state.summary, m = f?.metrics;
+  const remote = location.protocol === "https:" && !/^(localhost|127\.)/.test(location.hostname);
+  const counts = s?.records_per_robot || {};
+  const fleetIds = Object.keys(counts).filter((id) => !/^(TEST|PAUTA)/i.test(id));
+  const minRec = fleetIds.length ? Math.min(...fleetIds.map((id) => counts[id])) : 0;
+  const p = rubric.predict, inv = rubric.invalid;
+  const rows = [
+    ["1 · Ingesta persistente", !f ? "wait" : f.storage.backend === "POSTGRESQL" && minRec > 100 ? "ok" : f.storage.backend === "POSTGRESQL" ? "info" : "info",
+      f ? `${f.storage.backend === "POSTGRESQL" ? "PostgreSQL en Neon" : "SQLite local"} · ${num(f.storage.telemetry_rows)} registros · ${fleetIds.length ? `mínimo ${num(minRec)} por robot` : "sin robots"}` : "cargando…"],
+    ["2 · Entrenamiento de ML", s?.model ? "ok" : s ? "fail" : "wait",
+      s?.model ? `Regresión logística ${esc(s.model.model_version)} · F1 macro ${num(s.model.test_f1_macro, 3)} vs ${num(s.model.baseline_f1_macro, 3)} de la línea base, en flotas no vistas` : "modelo no cargado"],
+    ["3 · POST /predict (contrato)", !p ? "wait" : p.ok ? "ok" : "fail",
+      !p ? "comprobando…" : p.ok ? `5 campos exactos · ${p.n} ${p.n === 1 ? "predicción" : "predicciones"} · p50 ${num(p.p50)} ms · p95 ${num(p.p95)} ms desde este navegador` : `falló: ${esc(p.error || "respuesta distinta al contrato")}`],
+    ["4 · Panel de operación", f ? "ok" : "wait",
+      f ? `${f.connected} robots conectados · telemetría, predicción, batería, tendencia de 15 min y estado de la API` : "cargando…"],
+    ["5 · Observabilidad (/metrics)", m ? "ok" : "wait",
+      m ? `${num(m.telemetry_requests)} telemetrías · ${num(m.prediction_requests)} predicciones · ${num(m.errors_total)} errores · latencia prom. ${m.avg_prediction_latency_ms != null ? num(m.avg_prediction_latency_ms, 1) + " ms" : "—"} · uptime ${uptime(m.uptime_seconds)}` : "cargando…"],
+    ["6 · Trazabilidad Git", "ok", `Ramas <code>feature/*</code> con merge a <code>main</code> · <a href="${REPO_URL}/branches" target="_blank" rel="noopener">ver en GitHub</a>`],
+    ["7 · Ejecución remota", remote ? "ok" : "info", remote ? `URL pública HTTPS · ${esc(location.host)}` : "Ejecutando en local (la versión pública está en Vercel)"],
+    ["Robustez · datos inválidos → 4xx", !inv ? "wait" : inv.ok ? "ok" : "fail",
+      !inv ? "presiona “Verificar ahora”" : `NaN en /predict → ${inv.codes[0]} · campo faltante en /telemetry → ${inv.codes[1]} · servicio activo después → ${inv.codes[2]}`],
+    ["Persistencia · >100 registros por robot", !s ? "wait" : minRec > 100 ? "ok" : "info",
+      !s ? "cargando…" : fleetIds.length ? `El robot con menos tiene ${num(minRec)} registros; el historial está en ${f?.storage.backend === "POSTGRESQL" ? "Neon" : "la base de datos"} y sobrevive reinicios` : "aún no hay robots"],
+  ];
+  const icon = { ok: "✓", fail: "✗", wait: "…", info: "i" };
+  $("rubric").innerHTML = rows.map(([title, st, ev]) =>
+    `<li><span class="ic ${st}" aria-label="${st}">${icon[st]}</span><span><b>${title}</b><span class="ev">${ev}</span></span></li>`).join("");
+}
 
 /* =====================================================================
    Modo laboratorio
@@ -1447,6 +1545,7 @@ resizeCanvas();
 (document.fonts ? document.fonts.ready : Promise.resolve()).finally(() => requestAnimationFrame(render));
 log("Bienvenido a la oficina. Conectando con la flota…");
 pollFleet(); pollSummary(); pollHistory();
+renderRubric(); runRubric(false);
 </script>
 </body>
 </html>

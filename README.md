@@ -157,8 +157,9 @@ El manejador de errores no devuelve el valor inválido, porque un `NaN` no se pu
 | `telemetry_per_minute`, `predictions_by_status`, `telemetry_rows`, `robots` | Operación de la flota |
 | `model` | Versión, F1 y features del modelo cargado |
 
-Los contadores viven en la memoria de cada instancia, como en un exportador de Prometheus. Los datos viven en Neon.
-En Vercel cada instancia reporta sus propias métricas.
+En Vercel varias instancias de la API responden en paralelo. Cada una cuenta sus solicitudes en memoria y guarda esos contadores en la tabla `metrics_snapshot` de Neon cada 10 segundos, después de enviar la respuesta para no agregar latencia.
+`/metrics` suma los contadores de todas las instancias (`"scope": "service"`): solicitudes, errores y latencia promedio corresponden al servicio completo.
+`uptime_seconds`, `p50/p95` y `telemetry_per_minute` son de la instancia que respondió, y su detalle queda en el bloque `instance`.
 
 ## Respaldos
 
@@ -203,6 +204,7 @@ Es una oficina isométrica clara con paredes de vidrio y robots en pixel art.
 - **Ficha del agente** (clic en un robot): pestañas Telemetría (valores, historial de batería, temperatura y estados), Perfil (responsabilidades, herramientas y punto óptimo) y Actividad.
 - **Actividad en vivo:** narra los eventos (cambios de estado, conexiones, respaldos, caídas de la API).
 - **Panel lateral:**
+  - **Pauta del profesor:** los 7 requisitos y las dimensiones de evaluación del PDF, con evidencia en vivo. El botón **Verificar ahora** comprueba desde el navegador el contrato de `/predict` (20 predicciones con su p50/p95), que los datos inválidos respondan 4xx y que el servicio siga activo.
   - Tablero de control: agentes activos, telemetría por minuto, predicciones, latencia p95, errores y cobertura.
   - Estado de la flota, con la distribución actual y la tendencia de 15 minutos.
   - Respaldos y modelo.
