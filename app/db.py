@@ -8,6 +8,7 @@ where the data lives. Credentials never appear in the code.
 """
 from __future__ import annotations
 
+import json
 import os
 import threading
 import time
@@ -22,6 +23,7 @@ from sqlalchemy import (
     MetaData,
     String,
     Table,
+    Text,
     cast,
     create_engine,
     event,
@@ -128,6 +130,17 @@ backup_log = Table(
     Column("location", String(500)),
     Column("offsite_copy", String(500)),
     Column("detail", String(500)),
+)
+
+# Latest request counters of each API instance. On a serverless platform
+# several instances answer in parallel; /metrics adds them up.
+metrics_snapshot = Table(
+    "metrics_snapshot",
+    metadata,
+    Column("instance_id", String(32), primary_key=True),
+    Column("started_at", Float, nullable=False),
+    Column("updated_at", Float, nullable=False),
+    Column("counters", Text, nullable=False),  # JSON
 )
 
 _init_lock = threading.Lock()
@@ -245,6 +258,32 @@ def counts() -> dict:
         total = conn.execute(select(func.count()).select_from(telemetry)).scalar_one()
         robots = conn.execute(select(func.count(func.distinct(telemetry.c.robot_id)))).scalar_one()
     return {"telemetry_rows": total, "robots": robots}
+
+
+def records_per_robot() -> dict[str, int]:
+    """Stored samples of each robot (uses the (robot_id, id) index)."""
+    init_db()
+    query = select(telemetry.c.robot_id, func.count()).group_by(telemetry.c.robot_id)
+    with engine.connect() as conn:
+        return {robot_id: int(n) for robot_id, n in conn.execute(query)}
+
+
+def save_metrics_snapshot(instance_id: str, started_at: float, counters: dict) -> None:
+    init_db()
+    row = {"started_at": started_at, "updated_at": time.time(), "counters": json.dumps(counters)}
+    with engine.begin() as conn:
+        updated = conn.execute(metrics_snapshot.update()
+                               .where(metrics_snapshot.c.instance_id == instance_id).values(**row)).rowcount
+        if not updated:
+            conn.execute(metrics_snapshot.insert().values(instance_id=instance_id, **row))
+
+
+def load_metrics_snapshots() -> list[dict]:
+    init_db()
+    with engine.connect() as conn:
+        rows = conn.execute(select(metrics_snapshot)).all()
+    return [{"instance_id": r.instance_id, "started_at": r.started_at, "updated_at": r.updated_at,
+             "counters": json.loads(r.counters)} for r in rows]
 
 
 def backend_name() -> str:

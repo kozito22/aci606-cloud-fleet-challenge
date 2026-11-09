@@ -29,6 +29,7 @@ async def lifespan(_: FastAPI):
     yield
     if stop_backups:
         stop_backups.set()
+    metrics.flush(force=True)  # keep this instance's last counters in the service totals
 
 
 app = FastAPI(
@@ -186,6 +187,7 @@ def fleet_summary() -> dict:
         "trend": db.trend(15),
         "backups": backup_info,
         "model": model.meta() if model.available() else None,
+        "records_per_robot": db.records_per_robot(),
     }
 
 
