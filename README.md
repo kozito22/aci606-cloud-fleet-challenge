@@ -210,6 +210,25 @@ Es una oficina isométrica clara con paredes de vidrio y robots en pixel art.
   - Estado de la flota, con la distribución actual y la tendencia de 15 minutos.
   - Respaldos y modelo.
 
+### Tres vistas: Oficina, Restaurante y Laboratorio
+
+Arriba de la escena, un selector cambia entre tres vistas. El panel lateral (pauta, tablero, flota, respaldos y modelo) es el mismo en las tres. Las tres flotan sobre un fondo de galaxia con constelaciones (Orión, Cruz del Sur, Casiopea y Osa Mayor).
+
+- **Oficina** (`/dashboard`): la vista descrita arriba.
+- **Restaurante** (`/dashboard#restaurante`): la misma plataforma y los mismos datos reales, contados como un restaurante.
+
+| En el restaurante | En el sistema |
+|---|---|
+| Cliente en su mesa | Cada robot, que hace su pedido (telemetría) cada segundo |
+| Meseros | La API: toman el pedido, lo revisan y lo llevan a la cocina |
+| Chef | El modelo de ML, que «cocina» la predicción |
+| Plato | La respuesta: verde normal, amarillo alerta, rojo crítico |
+| Despensa · Caja · Recetario | Base de datos Neon · métricas · respaldos |
+| Pedido rechazado | Datos inválidos (422) |
+
+  Los meseros caminan de verdad: toman el pedido en la mesa, lo llevan al pase, el chef lo cocina y vuelven con el plato del color del estado predicho. La caja muestra las métricas en vivo.
+- **Laboratorio** (`/dashboard#lab`): la simulación local descrita a continuación.
+
 ### Modo laboratorio
 
 El botón **Modo laboratorio** (o el enlace directo `/dashboard#lab`) cambia la oficina por una **simulación local en el navegador**. No envía datos a la API, no se guarda en Neon y no afecta al modelo ni a las métricas. La flota real la sigue moviendo el simulador oficial, que no se modificó.

@@ -65,7 +65,7 @@
     .toggle { cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 999px; padding: 5px 11px; font-size: 12px; }
     .toggle[aria-pressed="true"] { color: #0e7490; background: #ecfeff; border-color: #a5f3fc; }
     .toggle:focus-visible, .agent:focus-visible, .tab:focus-visible, .close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .stage { position: relative; margin: 12px; border-radius: 12px; overflow: hidden; background: linear-gradient(180deg, #f3f4f9 0%, #e4e7f0 100%); }
+    .stage { position: relative; margin: 12px; border-radius: 12px; overflow: hidden; background: radial-gradient(ellipse at 30% 20%, #1e1b4b 0%, #0b1030 45%, #050816 100%); }
     #office { display: block; width: 100%; height: auto; }
     .feed { position: absolute; left: 12px; bottom: 12px; width: min(560px, calc(100% - 24px)); background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
       border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
@@ -86,7 +86,7 @@
       background: rgba(255,255,255,.97); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 40px rgba(30,40,80,.16); }
     .profile.show { display: block; }
     .p-head { display: flex; gap: 12px; padding: 14px 14px 10px; align-items: center; }
-    .p-head canvas { width: 42px; height: 58px; image-rendering: pixelated; background: var(--panel-2); border-radius: 10px; padding: 4px; }
+    .p-head canvas { width: 42px; height: 55px; image-rendering: pixelated; background: var(--panel-2); border-radius: 10px; padding: 4px; }
     .p-name { font-weight: 700; font-size: 16px; }
     .p-role { font-size: 12px; color: var(--accent); }
     .p-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-top: 2px; }
@@ -158,6 +158,29 @@
     .rubric a { color: var(--accent); }
     #rubric-run[disabled] { opacity: .6; cursor: progress; }
 
+    /* ---------- view modes ---------- */
+    .modes { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); }
+    .mode { border: 0; background: none; cursor: pointer; padding: 4px 12px; border-radius: 999px; font-size: 12px; color: var(--muted); }
+    .mode[aria-selected="true"] { background: #fff; color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(30,40,80,.18); }
+    .mode:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .toggle:disabled { opacity: .45; cursor: not-allowed; }
+    .rest-panel { position: absolute; left: 12px; top: 12px; width: min(340px, calc(100% - 24px)); display: grid; gap: 7px; padding: 10px 12px;
+      background: rgba(255,255,255,.95); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); font-size: 12px; }
+    .rest-panel[hidden] { display: none; }
+    .rest-map { display: grid; gap: 3px; color: var(--muted); line-height: 1.4; margin-top: 6px; }
+    .rest-help summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+    .rest-panel { width: min(300px, calc(100% - 24px)); }
+    .rest-map b { color: var(--text); }
+
+    /* ---------- charts ---------- */
+    .fleet-viz { display: grid; grid-template-columns: 112px 1fr; gap: 16px; align-items: center; }
+    .fleet-viz svg { width: 112px; height: 112px; }
+    .donut-legend { display: grid; gap: 7px; font-size: 12px; }
+    .donut-legend div { display: grid; grid-template-columns: 10px 1fr auto 38px; gap: 8px; align-items: center; }
+    .donut-legend .pct { color: var(--faint); font-variant-numeric: tabular-nums; text-align: right; }
+    .trend { margin-top: 14px; }
+    .trend-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--faint); margin-top: 3px; }
+
     /* ---------- lab mode ---------- */
     .toggle.demo { color: #065f46; border-color: #6ee7b7; font-weight: 600; }
     .toggle.demo[aria-pressed="true"] { color: #fff; background: var(--ok); border-color: var(--ok); }
@@ -184,7 +207,7 @@
       .topbar, .layout { padding-left: 16px; padding-right: 16px; }
       .stage { margin: 12px 0 0; border-radius: 0; }
       .feed, .profile { position: static; width: auto; max-height: none; border-radius: 0; box-shadow: none; border-width: 1px 0 0; }
-      .lab-panel { position: static; width: auto; border-radius: 0; box-shadow: none; border-width: 0 0 1px; }
+      .lab-panel, .rest-panel { position: static; width: auto; border-radius: 0; box-shadow: none; border-width: 0 0 1px; }
     }
     @media (prefers-reduced-motion: reduce) { .live .dot { animation: none; } .stack div { transition: none; } }
   </style>
@@ -192,7 +215,7 @@
 <body>
 <header class="topbar">
   <div class="brand">
-    <div class="hex"><canvas id="logo" width="13" height="18" style="width:20px;height:28px;image-rendering:pixelated" aria-hidden="true"></canvas></div>
+    <div class="hex"><canvas id="logo" width="16" height="21" style="width:20px;height:26px;image-rendering:pixelated" aria-hidden="true"></canvas></div>
     <div><h1>FLEET OFFICE</h1><p>ACI606 · Cloud Fleet HQ</p></div>
   </div>
   <div class="pills" aria-live="polite">
@@ -210,10 +233,14 @@
       <div class="card-head">
         <h2 id="office-title">Oficina de operaciones</h2>
         <div class="toggles">
+          <div class="modes" role="tablist" aria-label="Vista de la flota">
+            <button class="mode" type="button" role="tab" data-mode="office" aria-selected="true">Oficina</button>
+            <button class="mode" type="button" role="tab" data-mode="restaurant" aria-selected="false">Restaurante</button>
+            <button class="mode" type="button" role="tab" data-mode="lab" aria-selected="false">Laboratorio</button>
+          </div>
           <button class="toggle" data-toggle="heat" aria-pressed="true">Cobertura</button>
           <button class="toggle" data-toggle="targets" aria-pressed="true">Puntos óptimos</button>
           <button class="toggle" data-toggle="tags" aria-pressed="true">Etiquetas</button>
-          <button class="toggle lab" id="lab-toggle" type="button" aria-pressed="false">Modo laboratorio</button>
           <button class="toggle demo" id="demo-toggle" type="button" aria-pressed="false" title="Envía telemetría real a la API desde este navegador, con las mismas fórmulas del simulador oficial">Iniciar flota</button>
         </div>
       </div>
@@ -237,6 +264,21 @@
             <button type="button" id="lab-seed">Nuevo escenario</button>
           </div>
           <div class="lab-stats" id="lab-stats"></div>
+        </div>
+        <div class="rest-panel" id="rest-panel" hidden>
+          <div class="lab-title">Modo restaurante<span>la misma plataforma contada como un restaurante · datos reales</span></div>
+          <details class="rest-help">
+          <summary>¿Qué representa cada cosa?</summary>
+          <div class="rest-map">
+            <span><b>Cliente en su mesa</b> = cada robot: hace su pedido (telemetría) cada segundo</span>
+            <span><b>Meseros</b> = la API: toman el pedido, lo revisan y lo llevan a la cocina</span>
+            <span><b>Chef</b> = el modelo de ML: «cocina» la predicción</span>
+            <span><b>Plato</b> = la respuesta: <b style="color:#10b981">verde</b> normal, <b style="color:#f59e0b">amarillo</b> alerta, <b style="color:#ef4444">rojo</b> crítico</span>
+            <span><b>Despensa</b> = base de datos Neon · <b>Caja</b> = métricas · <b>Recetario</b> = respaldos</span>
+            <span><b>Pedido rechazado</b> = datos inválidos (422)</span>
+          </div>
+          </details>
+          <div class="lab-stats" id="rest-stats"></div>
         </div>
         <canvas id="office" width="880" height="640" aria-label="Vista isométrica de la oficina con la flota de robots"></canvas>
         <div class="profile" id="profile" role="dialog" aria-label="Ficha del agente"></div>
@@ -281,11 +323,14 @@
     <section class="card" aria-labelledby="fleet-title">
       <div class="card-head"><h2 id="fleet-title">Estado de la flota</h2></div>
       <div class="card-body">
-        <div class="stack" id="stack"></div>
-        <div class="stack-legend" id="stack-legend"></div>
+        <div class="fleet-viz">
+          <svg id="donut" viewBox="0 0 120 120" role="img" aria-label="Distribución de estados de los robots conectados"></svg>
+          <div class="donut-legend" id="stack-legend"></div>
+        </div>
         <div class="trend">
-          <p class="subhead"><span>Estados predichos por minuto · 15 min</span><span id="trend-total"></span></p>
+          <p class="subhead"><span>Estados por minuto</span><span id="trend-total"></span></p>
           <svg id="trend" viewBox="0 0 300 70" preserveAspectRatio="none" role="img" aria-label="Tendencia de estados por minuto"></svg>
+          <div class="trend-axis"><span>hace 15 min</span><span>hace 10</span><span>hace 5</span><span>ahora</span></div>
         </div>
       </div>
     </section>
@@ -360,11 +405,47 @@ const state = {
    Pixel sprites (robots and operators)
    ===================================================================== */
 const ROBOT_SPRITE = [
-  "......L......", "......A......", "...KKKKKKK...", "..KHHHHHHBK..", "..KHVVVVVBK..", "..KHVEVEVBK..",
-  "..KHVVVVVBK..", "..KBBBBBBbK..", "...KKKKKKK...", "....KGGGK....", ".KKKKKKKKKKK.", ".KHBBBBBBBbK.",
-  ".KHBBLLLBBbK.", ".KHBBBBBBBbK.", ".KbbbbbbbbbK.", "..KKKKKKKKK..", "..KWWK.KWWK..", "..KKKK.KKKK..",
+  ".......LL.......",
+  ".......LL.......",
+  ".......AA.......",
+  "...KKKKKKKKKK...",
+  "..KHHHHHHHHBBK..",
+  "..KHVVVVVVVVBK..",
+  "..KHVeEVVeEVBK..",
+  "..KHVEEVVEEVBK..",
+  "..KHVVVVVVVVBK..",
+  "..KBBBBBBBBBbK..",
+  "...KKKKKKKKKK...",
+  "......KggK......",
+  ".KKKKKKKKKKKKKK.",
+  "KgKHBBBBBBBBbKgK",
+  "KgKHBsSSSSsBbKgK",
+  "KgKHBsSSSSsBbKgK",
+  "KGKHBBBBBBBBbKGK",
+  "KKKbbbbbbbbbbKKK",
+  "..KKKKKKKKKKKK..",
+  "..KWwWK..KWwWK..",
+  "..KKKKK..KKKKK..",
 ];
-const PERSON_SPRITE = ["..HHHHH..", ".HHHHHHH.", ".HHHHHHH.", "..HSSSH..", "...SSS...", ".CCCCCCC.", "CCCCCCCCC", "CCCCCCCCC", "SCCCCCCCS", ".PPPPPPP."];
+const PERSON_SPRITE = [
+  "...HHHHH...",
+  "..HHHHHHH..",
+  "..HSSSSSH..",
+  "..SSKSKSS..",
+  "..SSSSSSS..",
+  "...SSmSS...",
+  "....SSS....",
+  "..CCcRcCC..",
+  ".CCCcCcCCC.",
+  ".CCCcCcCCC.",
+  ".SCCcCcCCS.",
+  "..CCCCCCC..",
+  "..PPPPPPP..",
+  "..PPP.PPP..",
+  "..PPP.PPP..",
+  "..OOO.OOO..",
+];
+const CHEF_HAT = ["...TTTTT...", "..TTTTTTT..", "..TTTTTTT..", "...ttttt..."];
 function shade(hex, f) {
   const n = parseInt(hex.slice(1), 16);
   const ch = (v) => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f)));
@@ -384,16 +465,32 @@ function robotSprite(body, status, blink, off) {
     const base = off ? "#a3abbd" : body;
     const glow = off ? "#5b6275" : COLORS[status] || COLORS.NONE;
     spriteCache.set(key, makeSprite(ROBOT_SPRITE, {
-      K: "#1b2133", B: base, b: shade(base, -0.28), H: shade(base, 0.35), V: "#13203b",
-      E: blink ? "#13203b" : glow, A: "#8a93a8", L: glow, G: "#c4cad8", W: "#2c3145",
+      K: "#141a2b", B: base, b: shade(base, -0.3), H: shade(base, 0.4), V: "#0f1a33",
+      E: blink ? "#0f1a33" : glow, e: blink ? "#0f1a33" : "#ffffff", A: "#9aa3b5", L: glow,
+      g: "#7b8499", G: "#d6dbe6", W: "#262b3d", w: "#5b6478",
+      S: off ? "#3b4252" : glow, s: off ? "#2b3040" : shade(glow, -0.35),
     }));
   }
   return spriteCache.get(key);
 }
-function personSprite(shirt, hair) {
-  const key = `p|${shirt}|${hair}`;
-  if (!spriteCache.has(key)) spriteCache.set(key, makeSprite(PERSON_SPRITE, { H: hair, S: "#f2c79a", C: shirt, P: "#3b4766" }));
+// People: office operators, waiters (vest and tie) and the chef (hat).
+function personSprite(shirt, hair, opts = {}) {
+  const key = `p|${shirt}|${hair}|${opts.vest || ""}|${opts.tie || ""}|${opts.hat ? 1 : 0}`;
+  if (!spriteCache.has(key)) {
+    const vest = opts.vest || shade(shirt, -0.15);
+    const rows = opts.hat ? [...CHEF_HAT, ...PERSON_SPRITE.slice(1)] : PERSON_SPRITE;
+    spriteCache.set(key, makeSprite(rows, {
+      H: hair, S: "#f2c79a", K: "#1f2937", m: "#c2410c", C: shirt, c: vest, R: opts.tie || vest,
+      P: "#334155", O: "#111827", T: "#ffffff", t: "#e2e8f0",
+    }));
+  }
   return spriteCache.get(key);
+}
+// Soft round glow (antennas, lamps, flames).
+function glow(x, y, radius, color, alpha = 1) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+  g.addColorStop(0, color); g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = g; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2); ctx.restore();
 }
 document.getElementById("logo").getContext("2d").drawImage(robotSprite("#59a5ff", "NORMAL", false, false), 0, 0);
 
@@ -419,6 +516,76 @@ function resizeCanvas() {
   ctx.imageSmoothingEnabled = false;
 }
 window.addEventListener("resize", resizeCanvas);
+
+/* ----- galaxy background with constellations (drawn behind every mode) ----- */
+const CONSTELLATIONS = [
+  { name: "ORIÓN", stars: [[86, 28], [168, 36], [116, 84], [131, 90], [146, 96], [96, 138], [176, 132]], lines: [[0, 2], [1, 4], [2, 3], [3, 4], [2, 5], [4, 6]] },
+  { name: "CRUZ DEL SUR", stars: [[712, 30], [718, 126], [672, 78], [752, 70], [736, 102]], lines: [[0, 1], [2, 3]] },
+  { name: "OSA MAYOR", stars: [[662, 548], [700, 538], [736, 552], [768, 566], [800, 556], [838, 584], [806, 610]], lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 3]] },
+  { name: "CASIOPEA", stars: [[28, 470], [60, 500], [92, 478], [124, 508], [158, 486]], lines: [[0, 1], [1, 2], [2, 3], [3, 4]] },
+];
+const galaxy = { key: "", cache: null, stars: [], shoot: null, nextShoot: 4000 };
+function buildGalaxy() {
+  const c = document.createElement("canvas");
+  c.width = canvas.width; c.height = canvas.height;
+  const g = c.getContext("2d"), sc = canvas.width / W;
+  g.setTransform(sc, 0, 0, sc, 0, 0);
+  const bg = g.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, "#050816"); bg.addColorStop(0.5, "#0b1030"); bg.addColorStop(1, "#140a2e");
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  for (const [x, y, r, col] of [[150, 110, 280, "rgba(124,58,237,.32)"], [770, 130, 250, "rgba(14,165,233,.24)"],
+                                [700, 570, 320, "rgba(236,72,153,.20)"], [110, 560, 240, "rgba(56,189,248,.16)"], [440, 330, 420, "rgba(99,102,241,.12)"]]) {
+    const rg = g.createRadialGradient(x, y, 0, x, y, r);
+    rg.addColorStop(0, col); rg.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  }
+  const rnd = mulberry32(606);
+  for (let i = 0; i < 520; i++) { // milky way band across the sky
+    const u = rnd(), x = u * W, y = 70 + u * 500 + (rnd() - 0.5) * 150;
+    g.fillStyle = `rgba(255,255,255,${(0.12 + rnd() * 0.35).toFixed(2)})`; g.fillRect(x, y, rnd() < 0.9 ? 1 : 1.6, rnd() < 0.9 ? 1 : 1.6);
+  }
+  for (let i = 0; i < 360; i++) {
+    g.fillStyle = `rgba(${200 + rnd() * 55 | 0},${210 + rnd() * 45 | 0},255,${(0.2 + rnd() * 0.5).toFixed(2)})`;
+    g.fillRect(rnd() * W, rnd() * H, 1, 1);
+  }
+  galaxy.cache = c;
+  galaxy.stars = Array.from({ length: 70 }, () => ({ x: rnd() * W, y: rnd() * H, r: 0.6 + rnd() * 1.5, p: rnd() * 6.28, s: 0.6 + rnd() * 1.6,
+    c: ["#ffffff", "#c7d2fe", "#a5f3fc", "#fde68a", "#fbcfe8"][rnd() * 5 | 0] }));
+}
+function drawGalaxy(t) {
+  const key = `${canvas.width}x${canvas.height}`;
+  if (galaxy.key !== key) { galaxy.key = key; buildGalaxy(); }
+  ctx.drawImage(galaxy.cache, 0, 0, W, H);
+  for (const st of galaxy.stars) { // twinkling stars
+    const a = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin((t / 1000) * st.s + st.p));
+    ctx.globalAlpha = a; ctx.fillStyle = st.c;
+    ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2); ctx.fill();
+    if (st.r > 1.6) { ctx.strokeStyle = st.c; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(st.x - 4, st.y); ctx.lineTo(st.x + 4, st.y); ctx.moveTo(st.x, st.y - 4); ctx.lineTo(st.x, st.y + 4); ctx.stroke(); }
+  }
+  ctx.globalAlpha = 1;
+  for (const k of CONSTELLATIONS) {
+    ctx.strokeStyle = "rgba(165,180,252,.32)"; ctx.lineWidth = 0.9;
+    ctx.beginPath(); for (const [a, b] of k.lines) { ctx.moveTo(...k.stars[a]); ctx.lineTo(...k.stars[b]); } ctx.stroke();
+    k.stars.forEach(([x, y], i) => { glow(x, y, 7, "rgba(199,210,254,.55)", 0.7 + 0.3 * Math.sin(t / 700 + i)); ctx.fillStyle = "#e0e7ff"; ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill(); });
+    const [lx, ly] = k.stars[0];
+    text(k.name, lx, ly - 12, "rgba(199,210,254,.5)", "600 8px Inter, sans-serif");
+  }
+  ctx.lineWidth = 1;
+  if (t > galaxy.nextShoot && !galaxy.shoot) { // a shooting star every few seconds
+    galaxy.shoot = { x: 120 + Math.random() * 560, y: 10 + Math.random() * 90, start: t };
+    galaxy.nextShoot = t + 5000 + Math.random() * 7000;
+  }
+  if (galaxy.shoot) {
+    const k = (t - galaxy.shoot.start) / 900;
+    if (k >= 1) galaxy.shoot = null;
+    else {
+      const hx = galaxy.shoot.x + k * 330, hy = galaxy.shoot.y + k * 120;
+      const tail = ctx.createLinearGradient(hx - 80, hy - 29, hx, hy);
+      tail.addColorStop(0, "rgba(255,255,255,0)"); tail.addColorStop(1, `rgba(255,255,255,${(0.9 * (1 - k)).toFixed(2)})`);
+      ctx.strokeStyle = tail; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(hx - 80, hy - 29); ctx.lineTo(hx, hy); ctx.stroke(); ctx.lineWidth = 1;
+    }
+  }
+}
 
 function poly(points, fill, stroke, width = 1) {
   ctx.beginPath();
@@ -546,11 +713,22 @@ function drawWallScreen(t) {
 }
 
 /* ----- furniture of the rooms around the arena (always behind its glass) ----- */
-function plant(x, y) {
-  box(x, y, 0.5, 0.5, 14, "#e2e8f0", "#cbd5e1", "#dbe2ea");
-  const [px, py] = iso(x + 0.25, y + 0.25, 14);
-  poly([[px, py - 34], [px + 11, py - 12], [px, py - 2], [px - 11, py - 12]], "#22c55e");
-  poly([[px, py - 34], [px + 11, py - 12], [px, py - 2]], "#16a34a");
+// Potted plant: terracotta pot with a rim, soil and a fan of leaves that sway.
+function plant(x, y, t = 0) {
+  box(x + 0.06, y + 0.06, 0.38, 0.38, 15, "#c2410c", "#9a3412", "#b45309");
+  box(x + 0.02, y + 0.02, 0.46, 0.46, 4, "#f97316", "#c2410c", "#ea580c", 15);
+  const [cx, cy] = iso(x + 0.25, y + 0.25, 19);
+  ctx.fillStyle = "#5b3410"; ctx.beginPath(); ctx.ellipse(cx, cy, 8, 3.6, 0, 0, Math.PI * 2); ctx.fill();
+  const sway = Math.sin(t / 900 + x * 3 + y) * 0.07;
+  const leaves = [[-1.9, 22, "#14532d"], [1.9, 22, "#14532d"], [-1.35, 27, "#166534"], [1.35, 27, "#15803d"],
+                  [-0.75, 31, "#16a34a"], [0.75, 31, "#16a34a"], [-0.2, 35, "#22c55e"], [0.3, 33, "#4ade80"]];
+  for (const [ang, len, col] of leaves) {
+    const a = ang * 0.55 + sway - Math.PI / 2;
+    ctx.save(); ctx.translate(cx + Math.cos(a) * len * 0.5, cy + Math.sin(a) * len * 0.5); ctx.rotate(a + Math.PI / 2);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(0, 0, 4.4, len * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "rgba(220,252,231,.5)"; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(0, len * 0.42); ctx.lineTo(0, -len * 0.42); ctx.stroke();
+    ctx.restore();
+  }
 }
 function perimeter(t) {
   const items = [];
@@ -576,7 +754,8 @@ function perimeter(t) {
       box(s.x + 0.75, 1.3, 0.55, 0.45, 12, "#c7d2fe", "#818cf8", "#a5b4fc");
       box(s.x + 0.75, 1.62, 0.55, 0.12, 22, "#c7d2fe", "#818cf8", "#a5b4fc", 12);
       const [px, py] = iso(s.x + 1.02, 1.5, 12);
-      ctx.drawImage(personSprite(s.shirt, s.hair), Math.round(px - 9), Math.round(py - 22 + Math.sin(t / 700 + s.x)), 18, 20);
+      const op = personSprite(s.shirt, s.hair);
+      ctx.drawImage(op, Math.round(px - op.width), Math.round(py - op.height * 2 + 8 + Math.sin(t / 700 + s.x)), op.width * 2, op.height * 2);
     });
   }
   // server room: database racks + backup rack
@@ -605,7 +784,7 @@ function perimeter(t) {
     box(0.25, y + 0.45, 0.25, 0.4, 40, "#ecfeff", "#67e8f9", "#a5f3fc");
     const [x, yy] = iso(0.37, y + 0.65, 30); ctx.fillStyle = "#0891b2"; ctx.fillRect(Math.round(x) - 2, Math.round(yy), 4, 6);
   }, y === 8.4 ? { text: "Estación de carga", at: [1.0, 9.4, 56] } : null);
-  for (const [x, y] of [[0.35, 0.35], [12.1, 0.45], [0.4, 12.2]]) add(x + y + 0.6, () => plant(x, y));
+  for (const [x, y] of [[0.35, 0.35], [12.1, 0.45], [0.4, 12.2]]) add(x + y + 0.6, () => plant(x, y, t));
   return items;
 }
 
@@ -667,6 +846,7 @@ function drawRobot(r, wx, wy, alpha, moving, primary, t) {
   const bob = moving && Math.floor(t / 180) % 2 ? -PS : 0;
   const dx = Math.round(sx - sprite.width * PS / 2), dy = Math.round(sy - sprite.height * PS + 4 + bob);
   ctx.drawImage(sprite, dx, dy, sprite.width * PS, sprite.height * PS);
+  if (r.connected) glow(dx + 8 * PS, dy + PS, 11, COLORS[status] + "cc", 0.55 + 0.45 * Math.sin(t / 320 + r.seed));
   ctx.restore();
   if (primary) { r.hit = { x: dx, y: dy, w: sprite.width * PS, h: sprite.height * PS }; r.head = [sx, dy - 6]; r.alpha = alpha; }
 }
@@ -705,13 +885,18 @@ function render(t) {
     requestAnimationFrame(render);
     return;
   }
-  ctx.clearRect(0, 0, W, H);
+  if (state.mode === "restaurant") {
+    renderRestaurant(t);
+    requestAnimationFrame(render);
+    return;
+  }
+  drawGalaxy(t);
   drawRoom(t);
   const back = perimeter(t).sort((a, b) => a.depth - b.depth);
   back.forEach((it) => it.draw());
   partitions();
   drawTargets();
-  const front = [...robotDrawables(t), { depth: 12.1 + 12.0 + 0.6, draw: () => plant(12.1, 12.0) }].sort((a, b) => a.depth - b.depth);
+  const front = [...robotDrawables(t), { depth: 12.1 + 12.0 + 0.6, draw: () => plant(12.1, 12.0, t) }].sort((a, b) => a.depth - b.depth);
   front.forEach((it) => it.draw());
   if (state.toggles.tags) {
     for (const it of back) if (it.label) { const [x, y] = iso(...it.label.at); pillTag(x, y, "#22d3ee", it.label.text); }
@@ -870,6 +1055,7 @@ function ingestRobots(list) {
     if (r.connected && !d.connected) { log(`${who(r)} perdió la señal.`, "off", r.id); say(r, "Zzz… sin señal", 6000); }
     if (d.battery < 15 && r.data.battery >= 15) { say(r, `Batería baja: ${fmt(d.battery, 0)}%`); log(`${who(r)} con batería baja (${fmt(d.battery, 0)}%).`, "warn", r.id); }
     r.data = d; r.connected = d.connected;
+    if (isNewSample) restOrder(d);
     if (r.connected && Math.random() < 0.015 && !(r.bubble && now < r.bubble.until)) chatter(r);
   }
   for (const id of [...state.robots.keys()]) if (!seen.has(id)) state.robots.delete(id);
@@ -937,9 +1123,7 @@ function renderPanels() {
   const dbPill = $("pill-db"); dbPill.className = "pill ok";
   dbPill.lastElementChild.textContent = f.storage.backend === "POSTGRESQL" ? "Neon PostgreSQL" : "SQLite local";
 
-  const total = Math.max(1, f.connected);
-  $("stack").innerHTML = ["NORMAL", "WARNING", "CRITICAL"].map((s) => `<div title="${LABEL[s]}" style="width:${100 * f.status_counts[s] / total}%;background:${COLORS[s]}"></div>`).join("");
-  $("stack-legend").innerHTML = ["NORMAL", "WARNING", "CRITICAL"].map((s) => `<span><i class="dot" style="background:${COLORS[s]}"></i>${LABEL[s]} <b>${f.status_counts[s]}</b></span>`).join("");
+  renderDonut(f);
 
   const robots = [...state.robots.values()].sort((a, b) => a.id.localeCompare(b.id));
   $("roster").innerHTML = robots.length ? robots.map((r) => {
@@ -957,11 +1141,36 @@ function renderPanels() {
 }
 $("roster").addEventListener("click", (e) => { const b = e.target.closest(".agent"); if (b) select(b.dataset.id); });
 
+// Fleet status as a donut: one arc per predicted state, total in the centre.
+function renderDonut(f) {
+  const keys = ["NORMAL", "WARNING", "CRITICAL"], total = keys.reduce((n, k) => n + f.status_counts[k], 0);
+  const R = 46, C = 2 * Math.PI * R;
+  let offset = 0;
+  const arcs = keys.map((k) => {
+    const len = total ? C * f.status_counts[k] / total : 0, shown = Math.max(0, len - (len < C ? 2 : 0));
+    const arc = len > 0 ? `<circle cx="60" cy="60" r="${R}" fill="none" stroke="${COLORS[k]}" stroke-width="15" stroke-linecap="butt"
+      stroke-dasharray="${shown.toFixed(2)} ${(C - shown).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 60 60)"><title>${LABEL[k]}: ${f.status_counts[k]}</title></circle>` : "";
+    offset += len;
+    return arc;
+  }).join("");
+  $("donut").innerHTML = `<circle cx="60" cy="60" r="${R}" fill="none" stroke="#eef0f5" stroke-width="15"/>${arcs}
+    <text x="60" y="61" text-anchor="middle" font-family="Inter, sans-serif" font-size="24" font-weight="700" fill="#1d2433">${total}</text>
+    <text x="60" y="77" text-anchor="middle" font-family="Inter, sans-serif" font-size="9.5" fill="#6b7387">conectados</text>`;
+  $("stack-legend").innerHTML = keys.map((k) => `<div><i class="dot" style="background:${COLORS[k]}"></i><span>${LABEL[k]}</span><b>${f.status_counts[k]}</b><span class="pct">${total ? Math.round(100 * f.status_counts[k] / total) : 0}%</span></div>`).join("");
+}
+// Sparkline with a soft area under the line and a dot on the latest value.
+let sparkId = 0;
 function sparkline(values, color) {
   if (values.length < 2) return "";
-  const lo = Math.min(...values), hi = Math.max(...values), span = hi - lo || 1;
-  const pts = values.map((v, i) => `${(i / (values.length - 1) * 300).toFixed(1)},${(31 - (v - lo) / span * 28).toFixed(1)}`).join(" ");
-  return `<svg viewBox="0 0 300 34" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+  const lo = Math.min(...values), hi = Math.max(...values), span = hi - lo || 1, id = `spark${++sparkId}`;
+  const pts = values.map((v, i) => [i / (values.length - 1) * 300, 31 - (v - lo) / span * 26]);
+  const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const [lx, ly] = pts[pts.length - 1];
+  return `<svg viewBox="0 0 300 34" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${color}" stop-opacity=".3"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+    <polygon points="0,34 ${line} 300,34" fill="url(#${id})"/>
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+    <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.6" fill="${color}"/></svg>`;
 }
 function renderProfile() {
   const el = $("profile");
@@ -1001,7 +1210,7 @@ function renderProfile() {
   }
   const scroll = el.scrollTop;
   el.innerHTML = `
-    <div class="p-head"><canvas id="avatar" width="13" height="18"></canvas>
+    <div class="p-head"><canvas id="avatar" width="16" height="21"></canvas>
       <div><div class="p-name">${esc(r.name)} <span class="mono hint">${esc(r.id)}</span></div>
         <div class="p-role">${esc(r.role.rol)} · ${esc(r.role.depto)}</div>
         <div class="p-status"><i class="dot" style="background:${COLORS[status]}"></i>${LABEL[status]} · conf. ${d.confidence != null ? fmt(d.confidence * 100, 1) + "%" : "—"}</div></div>
@@ -1027,15 +1236,16 @@ function renderSummary() {
   $("k-cov-sub").textContent = c.coverage_radius_m != null ? `radio óptimo ${fmt(c.coverage_radius_m, 2)} m` : "sin robots conectados";
 
   const tr = s.trend, maxT = Math.max(1, ...tr.map((b) => b.total)), bw = 300 / tr.length;
-  $("trend").innerHTML = tr.map((b, i) => {
+  const grid = [0.25, 0.5, 0.75, 1].map((q) => `<line x1="0" x2="300" y1="${(68 - q * 62).toFixed(1)}" y2="${(68 - q * 62).toFixed(1)}" stroke="#eef0f5" ${q < 1 ? 'stroke-dasharray="3 3"' : ""}/>`).join("");
+  $("trend").innerHTML = grid + tr.map((b, i) => {
     let y = 68; const parts = [];
     for (const st of ["NORMAL", "WARNING", "CRITICAL"]) {
-      const hgt = b[st] / maxT * 64; y -= hgt;
-      if (hgt > 0) parts.push(`<rect x="${(i * bw + 1.5).toFixed(1)}" y="${y.toFixed(1)}" width="${(bw - 3).toFixed(1)}" height="${hgt.toFixed(1)}" fill="${COLORS[st]}"><title>${new Date(b.minute * 1000).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} · ${LABEL[st]} ${b[st]}</title></rect>`);
+      const hgt = b[st] / maxT * 62; y -= hgt;
+      if (hgt > 0) parts.push(`<rect x="${(i * bw + 2).toFixed(1)}" y="${y.toFixed(1)}" width="${(bw - 4).toFixed(1)}" height="${hgt.toFixed(1)}" rx="1.5" fill="${COLORS[st]}"><title>${new Date(b.minute * 1000).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} · ${LABEL[st]} ${b[st]}</title></rect>`);
     }
     return parts.join("");
-  }).join("") + `<line x1="0" y1="68.5" x2="300" y2="68.5" stroke="#e3e6ef"/>`;
-  $("trend-total").textContent = `${tr.reduce((n, b) => n + b.total, 0).toLocaleString("es-CL")} total`;
+  }).join("") + `<line x1="0" y1="68.5" x2="300" y2="68.5" stroke="#cbd5e1"/>`;
+  $("trend-total").textContent = `${tr.reduce((n, b) => n + b.total, 0).toLocaleString("es-CL")} en 15 min · máx. ${maxT.toLocaleString("es-CL")}/min`;
 
   const b = s.backups, now = Date.now() / 1000;
   const row = (title, info, extra) => {
@@ -1217,6 +1427,279 @@ function renderRubric() {
   const icon = { ok: "✓", fail: "✗", wait: "…", info: "i" };
   $("rubric").innerHTML = rows.map(([title, st, ev]) =>
     `<li><span class="ic ${st}" aria-label="${st}">${icon[st]}</span><span><b>${title}</b><span class="ev">${ev}</span></span></li>`).join("");
+}
+
+/* =====================================================================
+   Modo restaurante: the same platform told as a restaurant, driven by the
+   same real data. Each robot is a customer at a table who places an order
+   (its telemetry) every second. The waiters are the API: they take the
+   order, check it and carry it to the kitchen. The chef is the ML model,
+   who "cooks" the prediction; the plate is the answer (green, amber, red).
+   The pantry is the Neon database, the till the metrics and the recipe
+   book the backups. Invalid data is a rejected order (422).
+   ===================================================================== */
+const TABLES = [];
+for (const ty of [4.1, 7.1, 10.1]) for (const tx of [3.3, 5.8, 8.3, 10.8]) TABLES.push({ x: tx, y: ty });
+const PASS = { x: 7.2, y: 2.6 };
+const rest = { pending: new Map(), served: new Map(), waiters: null, chefUntil: 0, lastErr: null, rejectUntil: 0, rejected: 0, servedTotal: 0, last: 0, statsAt: 0 };
+function restWaiters() {
+  if (!rest.waiters) {
+    rest.waiters = [[4.6, "#2b1d14"], [6.7, "#7c2d12"], [8.9, "#111827"]].map(([x, hair], i) => ({
+      name: `Mesero ${i + 1}`, hair, slot: i, x, y: 2.8, home: { x, y: 2.8 }, state: "idle", target: null,
+      robotId: null, order: null, carry: null, wait: 0, moving: false,
+    }));
+  }
+  return rest.waiters;
+}
+function restOrder(d) { // called for every new telemetry sample
+  if (!d.connected) return;
+  const prev = rest.pending.get(d.robot_id);
+  rest.pending.set(d.robot_id, { status: d.predicted_status, conf: d.confidence, at: prev ? prev.at : performance.now() });
+}
+function restTables() { // first 12 robots by id, one table each
+  const ids = [...state.robots.keys()].sort().slice(0, TABLES.length);
+  return new Map(ids.map((id, i) => [id, { ...TABLES[i], n: i + 1 }]));
+}
+const tableSpot = (tb) => ({ x: tb.x + 1.25, y: tb.y + 0.5 });
+function restUpdate(dt, now, tables) {
+  const busy = new Set(restWaiters().map((w) => w.robotId).filter(Boolean));
+  for (const w of rest.waiters) {
+    if ((w.state === "idle" || w.state === "home") && rest.pending.size) {
+      let pick = null; // the oldest order of a connected customer nobody is serving
+      for (const [id, o] of rest.pending) {
+        const r = state.robots.get(id);
+        if (!busy.has(id) && tables.has(id) && r && r.connected && (!pick || o.at < pick[1].at)) pick = [id, o];
+      }
+      if (pick) {
+        rest.pending.delete(pick[0]); busy.add(pick[0]);
+        Object.assign(w, { robotId: pick[0], order: pick[1], state: "take", target: tableSpot(tables.get(pick[0])), carry: null });
+      }
+    }
+    if (w.state === "cook") {
+      w.wait -= dt;
+      if (w.wait <= 0) {
+        const tb = tables.get(w.robotId);
+        Object.assign(w, { state: "serve", carry: "plate", target: tb ? tableSpot(tb) : w.home });
+      }
+      continue;
+    }
+    if (!w.target) { w.moving = false; continue; }
+    const dx = w.target.x - w.x, dy = w.target.y - w.y, dist = Math.hypot(dx, dy), step = 3.4 * dt;
+    if (dist > step) { w.x += (dx / dist) * step; w.y += (dy / dist) * step; w.moving = true; continue; }
+    w.x = w.target.x; w.y = w.target.y; w.moving = false;
+    if (w.state === "take") {
+      Object.assign(w, { state: "toPass", carry: "ticket", target: { x: PASS.x - 0.9 + w.slot * 0.9, y: PASS.y } });
+    } else if (w.state === "toPass") {
+      Object.assign(w, { state: "cook", carry: null, wait: 0.7, target: null });
+      rest.chefUntil = now + 900;
+    } else if (w.state === "serve") {
+      rest.served.set(w.robotId, { ...w.order, at: now }); rest.servedTotal++;
+      const r = state.robots.get(w.robotId);
+      if (r && Math.random() < 0.18 && !(r.bubble && now < r.bubble.until)) {
+        say(r, { NORMAL: "¡Todo perfecto!", WARNING: "Hmm… algo no anda bien", CRITICAL: "¡Necesito revisión!" }[w.order.status] || "Gracias", 2800);
+      }
+      Object.assign(w, { robotId: null, order: null, carry: null, state: "home", target: w.home });
+    } else if (w.state === "home") {
+      Object.assign(w, { state: "idle", target: null });
+    }
+  }
+  const e4 = state.fleet?.metrics?.errors_4xx; // rejected orders = new 4xx errors in /metrics
+  if (e4 != null) {
+    if (rest.lastErr != null && e4 > rest.lastErr) { rest.rejectUntil = now + 4500; rest.rejected = e4 - rest.lastErr; }
+    rest.lastErr = e4;
+  }
+}
+
+function plate(x, y, status, scale = 1) { // white plate with a dome coloured by the predicted state
+  ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(x, y + 1.5 * scale, 9 * scale, 4 * scale, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#ffffff"; ctx.strokeStyle = "#cbd5e1"; ctx.beginPath(); ctx.ellipse(x, y, 9 * scale, 4.2 * scale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  if (!status) return;
+  const col = COLORS[status] || COLORS.NONE;
+  ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x, y - 1.5 * scale, 5.5 * scale, 4.5 * scale, 0, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.ellipse(x - 2 * scale, y - 4 * scale, 1.6 * scale, 1 * scale, 0, 0, Math.PI * 2); ctx.fill();
+}
+function signBoard(x, y, title, lines) { // dark board with the till's live numbers
+  const w = 150, h = 18 + lines.length * 12, left = Math.round(x - w / 2), top = Math.round(y - h);
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = 10;
+  roundRect(left, top, w, h, 8); ctx.fillStyle = "rgba(15,23,42,.92)"; ctx.fill(); ctx.restore();
+  roundRect(left + .5, top + .5, w - 1, h - 1, 8); ctx.strokeStyle = "rgba(34,211,238,.6)"; ctx.stroke();
+  text(title, left + 9, top + 10, "#67e8f9", "700 9px Inter, sans-serif", "left");
+  lines.forEach(([k, v], i) => {
+    text(k, left + 9, top + 23 + i * 12, "#94a3b8", "400 9px 'JetBrains Mono', monospace", "left");
+    text(v, left + w - 9, top + 23 + i * 12, "#f8fafc", "600 9px 'JetBrains Mono', monospace", "right");
+  });
+}
+function drawRestaurantWalls(t) {
+  ctx.save(); ctx.transform(1, 0.5, 0, 1, OX, OY); // right wall: neon sign
+  ctx.shadowColor = "#f472b6"; ctx.shadowBlur = 12 + 4 * Math.sin(t / 500);
+  text("FLEET BISTRÓ", 232, -82, "#fbcfe8", "800 22px Inter, sans-serif");
+  ctx.shadowBlur = 0;
+  text("cocina abierta · pedidos en tiempo real", 232, -60, "rgba(251,207,232,.85)", "500 9px Inter, sans-serif");
+  ctx.restore();
+  const [bx, by] = iso(0, N), m = state.summary?.model;
+  ctx.save(); ctx.transform(1, -0.5, 0, 1, bx, by); // left wall: chalk menu
+  roundRect(70, -106, 150, 66, 6); ctx.fillStyle = "#1f3b2d"; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = "#8b5a2b"; ctx.stroke(); ctx.lineWidth = 1;
+  text("MENÚ DEL DÍA", 145, -93, "#f8fafc", "700 10px Inter, sans-serif");
+  text(m ? `Predicción ${m.model_version} · F1 ${m.test_f1_macro.toFixed(3)}` : "Predicción del modelo", 145, -78, "#d1fae5", "500 9px Inter, sans-serif");
+  text("verde · amarillo · rojo", 145, -64, "#fde68a", "500 9px Inter, sans-serif");
+  text("servido en ~3 ms", 145, -51, "#e2e8f0", "500 8px Inter, sans-serif");
+  ctx.restore();
+}
+
+function renderRestaurant(t) {
+  const now = performance.now(), tables = restTables();
+  restUpdate(Math.min(0.1, (now - (rest.last || now)) / 1000), now, tables);
+  rest.last = now;
+  drawGalaxy(t);
+  // floating platform: kitchen tiles, stone pantry and a wooden dining room
+  poly([iso(0, N), iso(N, N), iso(N, N, -12), iso(0, N, -12)], "#d6c3a5");
+  poly([iso(N, 0), iso(N, N), iso(N, N, -12), iso(N, 0, -12)], "#c4ae8c");
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const tile = [iso(i, j), iso(i + 1, j), iso(i + 1, j + 1), iso(i, j + 1)];
+    const fill = j < 2 && i >= 2 ? ((i + j) % 2 ? "#f8fafc" : "#dbe3ee") : i < 2 ? ((i + j) % 2 ? "#e7e5e4" : "#d6d3d1") : ((i + j) % 2 ? "#e8c59a" : "#ddb684");
+    poly(tile, fill, "rgba(120,90,60,.16)");
+  }
+  poly([iso(2.8, 3.5), iso(12.7, 3.5), iso(12.7, 12.1), iso(2.8, 12.1)], "rgba(190,24,93,.12)", "rgba(190,24,93,.35)", 2);
+  floorText("COMEDOR · CADA CLIENTE ES UN ROBOT", 3.0, 12.65, "x", 11, "rgba(120,70,30,.5)");
+  floorText("COCINA", 2.4, 1.85, "x", 11, "rgba(71,85,105,.55)");
+  floorText("DESPENSA Y CAJA", 1.75, 9.2, "y", 11, "rgba(87,83,78,.6)");
+  glassWall([iso(0, N), iso(0, 0), iso(0, 0, WH), iso(0, N, WH)], (k) => [iso(0, N - k), iso(0, N - k, WH)]);
+  glassWall([iso(0, 0), iso(N, 0), iso(N, 0, WH), iso(0, 0, WH)], (k) => [iso(k, 0), iso(k, 0, WH)]);
+  drawRestaurantWalls(t);
+
+  const cooking = now < rest.chefUntil, m = state.fleet?.metrics, back = [];
+  const add = (depth, draw) => back.push({ depth, draw });
+  // kitchen
+  add(4.2, () => { box(3.2, 0.3, 2.4, 0.8, 22, "#e2e8f0", "#94a3b8", "#cbd5e1"); box(3.9, 0.35, 0.18, 0.18, 14, "#cbd5e1", "#64748b", "#94a3b8", 22); });
+  add(7.2, () => {
+    box(6.2, 0.3, 2.0, 0.85, 22, "#475569", "#1e293b", "#334155");
+    for (const bx of [6.7, 7.7]) { const [x, y] = iso(bx, 0.72, 22); ctx.fillStyle = "#0f172a"; ctx.beginPath(); ctx.ellipse(x, y, 8, 3.5, 0, 0, Math.PI * 2); ctx.fill(); }
+    const [px, py] = iso(6.7, 0.72, 25);
+    ctx.fillStyle = "#1f2937"; ctx.beginPath(); ctx.ellipse(px, py, 9, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(px + 8, py - 1, 9, 2);
+    const flame = cooking ? 1 : 0.35;
+    for (let k = -1; k <= 1; k++) {
+      const h = (6 + 4 * Math.sin(t / 90 + k * 2)) * flame;
+      ctx.fillStyle = k ? "#f97316" : "#fde047"; ctx.beginPath(); ctx.moveTo(px + k * 5 - 3, py + 4); ctx.lineTo(px + k * 5, py + 4 - h * 1.6); ctx.lineTo(px + k * 5 + 3, py + 4); ctx.fill();
+    }
+    if (cooking) glow(px, py, 22, "rgba(251,146,60,.6)");
+    const [sx, sy] = iso(7.7, 0.72, 30); // a pot always steaming
+    box(7.45, 0.5, 0.45, 0.45, 14, "#94a3b8", "#475569", "#64748b", 22);
+    for (let k = 0; k < 3; k++) { const ph = ((t / 1400 + k / 3) % 1); ctx.fillStyle = `rgba(255,255,255,${(0.45 * (1 - ph)).toFixed(2)})`; ctx.beginPath(); ctx.arc(sx + Math.sin(ph * 6 + k) * 3, sy - 6 - ph * 26, 3 + ph * 4, 0, Math.PI * 2); ctx.fill(); }
+  });
+  add(9.7, () => {
+    box(8.6, 0.3, 2.3, 0.8, 22, "#f1f5f9", "#94a3b8", "#cbd5e1");
+    for (let k = 0; k < 4; k++) { const [x, y] = iso(9.6, 0.7, 24 + k * 2.5); ctx.fillStyle = "#fff"; ctx.strokeStyle = "#cbd5e1"; ctx.beginPath(); ctx.ellipse(x, y, 7, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  });
+  add(12.1, () => {
+    box(11.4, 0.25, 1.1, 0.95, 72, "#f8fafc", "#cbd5e1", "#e2e8f0");
+    for (const z of [30, 58]) { const [x, y] = iso(12.5, 0.45, z); ctx.fillStyle = "#94a3b8"; ctx.fillRect(Math.round(x), Math.round(y), 2, 12); }
+  });
+  const chefX = 7.2 + (cooking ? -0.3 : Math.sin(t / 1600) * 0.6);
+  add(chefX + 1.25, () => { // the chef = ML model
+    const ch = personSprite("#ffffff", "#3f2a1e", { hat: true, vest: "#e2e8f0", tie: "#ef4444" });
+    const [x, y] = iso(chefX, 1.25);
+    ctx.drawImage(ch, Math.round(x - ch.width * 1.5), Math.round(y - ch.height * 3 + (cooking ? Math.sin(t / 80) : 0)), ch.width * 3, ch.height * 3);
+  });
+  // pantry (database), recipe book (backups) and till (metrics)
+  const rows = state.fleet?.storage?.telemetry_rows || 0, jars = Math.round(36 * Math.min(1, Math.log10(rows + 1) / 5));
+  const JAR = ["#f59e0b", "#ef4444", "#22c55e", "#38bdf8", "#a78bfa", "#f472b6"];
+  for (let k = 0; k < 3; k++) {
+    const y0 = 2.4 + k * 1.2;
+    add(1.1 + y0, () => {
+      box(0.3, y0, 0.85, 1.05, 80, "#b07a45", "#7c4a1e", "#93592a");
+      for (let r = 0; r < 4; r++) {
+        const [ax, ay] = iso(1.15, y0, 14 + r * 18), [bx2, by2] = iso(1.15, y0 + 1.05, 14 + r * 18);
+        ctx.strokeStyle = "#5b3410"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx2, by2); ctx.stroke(); ctx.lineWidth = 1;
+        for (let c = 0; c < 3; c++) {
+          const idx = k * 12 + r * 3 + c, [x, y] = iso(1.15, y0 + 0.22 + c * 0.3, 15 + r * 18);
+          if (idx < jars) { ctx.fillStyle = JAR[idx % JAR.length]; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 10, 6, 9); ctx.fillStyle = "#e5e7eb"; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 12, 6, 2); }
+        }
+      }
+    });
+  }
+  add(7.2, () => {
+    box(0.35, 6.3, 0.8, 0.9, 44, "#fef3c7", "#d97706", "#f59e0b");
+    ["#1d4ed8", "#b91c1c", "#15803d", "#7c3aed"].forEach((col, i) => { const [x, y] = iso(0.75, 6.45 + i * 0.17, 46); ctx.fillStyle = col; ctx.fillRect(Math.round(x) - 6, Math.round(y) - 8, 11, 7); });
+    const ok = state.summary?.backups?.logical?.last?.status === "OK", [x, y] = iso(1.15, 6.75, 34);
+    ctx.fillStyle = ok ? "#10b981" : "#f59e0b"; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+  });
+  add(11.2, () => {
+    box(0.3, 9.0, 1.25, 2.2, 30, "#334155", "#0f172a", "#1e293b");
+    box(0.5, 9.7, 0.65, 0.7, 16, "#e5e7eb", "#9ca3af", "#d1d5db", 30);
+    const [x, y] = iso(0.82, 10.05, 47); glow(x, y, 12, "rgba(34,211,238,.5)");
+  });
+  for (const [x, y] of [[12.15, 2.4], [2.15, 12.05]]) add(x + y + 0.6, () => plant(x, y, t));
+  back.sort((a, b) => a.depth - b.depth).forEach((it) => it.draw());
+
+  // the pass: counter between kitchen and dining room, with the order rail
+  box(3.0, 1.75, 8.6, 0.4, 26, "#f8fafc", "#cbd5e1", "#e2e8f0");
+  for (const lx of [4.6, 7.2, 9.8]) { const [x, y] = iso(lx, 1.95, 64); glow(x, y + 24, 20, "rgba(251,191,36,.35)"); ctx.fillStyle = "#334155"; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 22, 2, 22); ctx.fillStyle = "#fbbf24"; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI); ctx.fill(); }
+  const [r0x, r0y] = iso(3.6, 1.95, 48), [r1x, r1y] = iso(10.8, 1.95, 48);
+  ctx.strokeStyle = "#64748b"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(r0x, r0y); ctx.lineTo(r1x, r1y); ctx.stroke(); ctx.lineWidth = 1;
+  const waiting = Math.min(10, rest.pending.size);
+  for (let k = 0; k < waiting; k++) { const [x, y] = iso(4 + k * 0.62, 1.95, 48); ctx.fillStyle = "#fffbeb"; ctx.fillRect(Math.round(x) - 4, Math.round(y), 8, 11); ctx.fillStyle = "#94a3b8"; ctx.fillRect(Math.round(x) - 2, Math.round(y) + 3, 4, 1); ctx.fillRect(Math.round(x) - 2, Math.round(y) + 6, 4, 1); }
+
+  // dining room: tables, customers (robots), plates and waiters
+  const front = [], byTable = new Map([...tables].map(([id, tb]) => [tb.n, id]));
+  TABLES.forEach((tb, i) => {
+    const id = byTable.get(i + 1), r = id && state.robots.get(id), served = id && rest.served.get(id);
+    front.push({ depth: tb.x + tb.y + 0.9, draw: () => {
+      box(tb.x + 0.25, tb.y - 0.42, 0.45, 0.32, 14, "#b45309", "#78350f", "#92400e");
+      box(tb.x + 0.25, tb.y - 0.42, 0.45, 0.08, 30, "#b45309", "#78350f", "#92400e", 14);
+      box(tb.x, tb.y, 0.95, 0.95, 18, "#fafaf9", "#e7e5e4", "#d6d3d1");
+      poly([iso(tb.x, tb.y + 0.95, 18), iso(tb.x + 0.95, tb.y + 0.95, 18), iso(tb.x + 0.95, tb.y + 0.95, 14), iso(tb.x, tb.y + 0.95, 14)], "#be123c");
+      const [x, y] = iso(tb.x + 0.47, tb.y + 0.47, 18);
+      if (r && r.connected) plate(x, y, served ? served.status : null);
+      else { ctx.fillStyle = "#fbbf24"; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 9, 2, 8); glow(x, y - 10, 6, "rgba(253,224,71,.8)", 0.6 + 0.4 * Math.sin(t / 200 + i)); }
+    } });
+    if (r) {
+      const cx = tb.x + 0.47, cy = tb.y + 1.3;
+      front.push({ depth: cx + cy, robot: r, draw: () => {
+        const [sx, sy] = iso(cx, cy), status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
+        if (state.selected === r.id) { ctx.strokeStyle = COLORS[status]; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(sx, sy, 20, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
+        else if (status === "CRITICAL") { ctx.fillStyle = `rgba(239,68,68,${(0.12 + 0.08 * Math.sin(t / 150)).toFixed(3)})`; ctx.beginPath(); ctx.ellipse(sx, sy, 20, 9, 0, 0, Math.PI * 2); ctx.fill(); }
+        ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(sx, sy, 14, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+        const sprite = robotSprite(r.color, status, (Math.floor(t / 120) + r.seed) % 37 === 0, !r.connected);
+        const dx = Math.round(sx - sprite.width * PS / 2), dy = Math.round(sy - sprite.height * PS + 4);
+        ctx.drawImage(sprite, dx, dy, sprite.width * PS, sprite.height * PS);
+        if (r.connected) glow(dx + 8 * PS, dy + PS, 11, COLORS[status] + "cc", 0.55 + 0.45 * Math.sin(t / 320 + r.seed));
+        r.hit = { x: dx, y: dy, w: sprite.width * PS, h: sprite.height * PS }; r.head = [sx, dy - 6]; r.alpha = 1;
+      } });
+    }
+  });
+  for (const w of rest.waiters) {
+    front.push({ depth: w.x + w.y, draw: () => { // waiter = API request in flight
+      const sp = personSprite("#f8fafc", w.hair, { vest: "#111827", tie: "#b91c1c" });
+      const [x, y] = iso(w.x, w.y), bob = w.moving && Math.floor(t / 160) % 2 ? -3 : 0;
+      ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(x, y, 13, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.drawImage(sp, Math.round(x - sp.width * 1.5), Math.round(y - sp.height * 3 + bob), sp.width * 3, sp.height * 3);
+      if (w.carry === "ticket") { ctx.fillStyle = "#fffbeb"; ctx.fillRect(Math.round(x) + 14, Math.round(y) - 32 + bob, 10, 13); ctx.fillStyle = "#94a3b8"; ctx.fillRect(Math.round(x) + 16, Math.round(y) - 28 + bob, 6, 1); ctx.fillRect(Math.round(x) + 16, Math.round(y) - 24 + bob, 6, 1); }
+      if (w.carry === "plate") plate(x + 19, y - 36 + bob, w.order?.status, 1);
+    } });
+  }
+  front.push({ depth: 12.1 + 12.0 + 0.6, draw: () => plant(12.1, 12.0, t) });
+  front.sort((a, b) => a.depth - b.depth).forEach((it) => it.draw());
+
+  if (state.toggles.tags) {
+    for (const [label, at] of [["Cocina · chef = modelo ML", [7.3, 0.6, 98]], ["Pase · meseros = API", [4.0, 1.95, 46]],
+                               ["Despensa = base de datos", [0.75, 3.6, 104]], ["Recetario = respaldos", [0.75, 6.75, 70]]]) {
+      const [x, y] = iso(...at); pillTag(x, y, "#f472b6", label);
+    }
+    drawRobotTags(front.map((it) => it.robot).filter((r) => r && r.head));
+  }
+  if (m) {
+    const [x, y] = iso(0.9, 10.1, 60);
+    signBoard(x + 40, y, "CAJA · MÉTRICAS", [["pedidos", num(m.telemetry_requests)], ["consultas /predict", num(m.prediction_requests)],
+      ["rechazados (4xx)", num(m.errors_4xx)], ["cocina prom.", m.avg_prediction_latency_ms != null ? `${num(m.avg_prediction_latency_ms, 1)} ms` : "—"]]);
+  }
+  if (now < rest.rejectUntil) { const [x, y] = iso(PASS.x, PASS.y, 74); pillTag(x, y, "#ef4444", "Pedido rechazado", `datos inválidos · 422${rest.rejected > 1 ? ` ×${rest.rejected}` : ""}`, "#ef4444"); }
+  text("DATOS REALES · MISMA API, MODELO Y BASE DE DATOS", W - 16, H - 16, "rgba(226,232,240,.75)", "700 10px Inter, sans-serif", "right");
+  if (now - rest.statsAt > 300) {
+    rest.statsAt = now;
+    $("rest-stats").innerHTML = `<span>Comandas en cola <b>${rest.pending.size}</b></span><span>Platos servidos <b>${num(rest.servedTotal)}</b></span>
+      <span>Meseros (API) <b>${rest.waiters.length}</b></span><span>Mesas ocupadas <b>${[...tables.keys()].filter((id) => state.robots.get(id)?.connected).length}</b></span>`;
+  }
 }
 
 /* =====================================================================
@@ -1427,7 +1910,7 @@ function renderLab(t) {
     poly([I(x + w, y), I(x + w, y + d), I(x + w, y + d, h), I(x + w, y, h)], right);
     poly([I(x, y, h), I(x + w, y, h), I(x + w, y + d, h), I(x, y + d, h)], top);
   };
-  ctx.clearRect(0, 0, W, H);
+  drawGalaxy(t);
   poly([I(0, G), I(G, G), I(G, G, -14), I(0, G, -14)], "#d5d9e4");
   poly([I(G, 0), I(G, G), I(G, G, -14), I(G, 0, -14)], "#c7ccd9");
   const vmax = Math.max(1, ...lab.visited.flat());
@@ -1494,7 +1977,7 @@ function renderLab(t) {
   items.sort((a, b) => a.depth - b.depth).forEach((it) => it.draw());
   if (state.toggles.tags) labTags(lab.bots.filter((r) => r.head));
   // caption
-  text("SIMULACIÓN LOCAL · NO ENVÍA DATOS A LA API", W - 16, H - 16, "rgba(100,110,135,.7)", "700 10px Inter, sans-serif", "right");
+  text("SIMULACIÓN LOCAL · NO ENVÍA DATOS A LA API", W - 16, H - 16, "rgba(226,232,240,.75)", "700 10px Inter, sans-serif", "right");
   if (t - lab.statsAt > 250) { lab.statsAt = t; labStats(); }
 }
 function labTags(bots) {
@@ -1539,15 +2022,29 @@ function setLab(on) {
   if (on && !lab.bots.length) labReset(false);
   if (on && state.selected) closeProfile();
   lab.last = performance.now(); lab.hover = null; lab.paint = null;
-  $("lab-toggle").setAttribute("aria-pressed", String(on));
   $("lab-panel").hidden = !on;
   $("stage").classList.toggle("lab-on", on);
   $("office-title").textContent = on ? "Laboratorio de movilidad" : "Oficina de operaciones";
   canvas.style.touchAction = on ? "none" : "";
   canvas.style.cursor = on ? "crosshair" : "default";
 }
-$("lab-toggle").addEventListener("click", () => setLab(!lab.on));
-if (location.hash === "#lab") setLab(true); // direct link: /dashboard#lab
+// Three views of the same fleet: office, restaurant and lab. The side panel
+// (rubric, metrics, backups, model) is the same in all of them.
+state.mode = "office";
+const MODE_TITLES = { office: "Oficina de operaciones", restaurant: "Restaurante Fleet · la misma plataforma como restaurante", lab: "Laboratorio de movilidad" };
+function setMode(mode) {
+  state.mode = mode;
+  setLab(mode === "lab");
+  $("rest-panel").hidden = mode !== "restaurant";
+  $("office-title").textContent = MODE_TITLES[mode];
+  document.querySelectorAll(".mode").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.mode === mode)));
+  for (const k of ["heat", "targets"]) document.querySelector(`.toggle[data-toggle="${k}"]`).disabled = mode === "restaurant";
+  history.replaceState(null, "", mode === "office" ? location.pathname : `#${mode === "lab" ? "lab" : "restaurante"}`);
+}
+document.querySelectorAll(".mode").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+const HASH_MODES = { "#lab": "lab", "#restaurante": "restaurant" }; // direct links
+if (HASH_MODES[location.hash]) setMode(HASH_MODES[location.hash]);
+window.addEventListener("hashchange", () => { const m = HASH_MODES[location.hash] || "office"; if (m !== state.mode) setMode(m); });
 function labCell(e) {
   const rect = canvas.getBoundingClientRect(), gm = labGeom();
   const a = ((e.clientX - rect.left) / viewScale - gm.ox) / (gm.tw / 2), b = ((e.clientY - rect.top) / viewScale - gm.oy) / (gm.th / 2);
