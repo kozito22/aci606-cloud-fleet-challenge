@@ -159,6 +159,8 @@
     #rubric-run[disabled] { opacity: .6; cursor: progress; }
 
     /* ---------- lab mode ---------- */
+    .toggle.demo { color: #065f46; border-color: #6ee7b7; font-weight: 600; }
+    .toggle.demo[aria-pressed="true"] { color: #fff; background: var(--ok); border-color: var(--ok); }
     .toggle.lab[aria-pressed="true"] { color: #92400e; background: #fffbeb; border-color: #fcd34d; }
     .lab-on .feed, .lab-on .profile, .lab-on .offline-banner { display: none !important; }
     .lab-panel { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 12px;
@@ -212,6 +214,7 @@
           <button class="toggle" data-toggle="targets" aria-pressed="true">Puntos óptimos</button>
           <button class="toggle" data-toggle="tags" aria-pressed="true">Etiquetas</button>
           <button class="toggle lab" id="lab-toggle" type="button" aria-pressed="false">Modo laboratorio</button>
+          <button class="toggle demo" id="demo-toggle" type="button" aria-pressed="false" title="Envía telemetría real a la API desde este navegador, con las mismas fórmulas del simulador oficial">Iniciar flota</button>
         </div>
       </div>
       <div class="stage" id="stage">
@@ -247,7 +250,7 @@
 
     <section class="card" aria-labelledby="roster-title">
       <div class="card-head"><h2 id="roster-title">Agentes</h2><span class="hint">Haz clic en un agente para abrir su ficha</span></div>
-      <div class="card-body"><div class="roster" id="roster"><div class="empty">Ejecuta el simulador para que lleguen agentes a la oficina.</div></div></div>
+      <div class="card-body"><div class="roster" id="roster"><div class="empty">Presiona «Iniciar flota» o ejecuta el simulador para que lleguen agentes a la oficina.</div></div></div>
     </section>
   </div>
 
@@ -948,7 +951,7 @@ function renderPanels() {
       <div class="bar" title="Batería ${fmt(batt, 1)}%"><div style="width:${batt}%;background:${batt < 20 ? COLORS.CRITICAL : batt < 50 ? COLORS.WARNING : COLORS.NORMAL}"></div></div>
       <div class="agent-stats"><span>Batería ${fmt(batt, 0)}%</span><span>${fmt(d.motor_temp, 0)} °C</span><span>vib ${fmt(d.vibration, 2)}</span></div>
     </button>`;
-  }).join("") : `<div class="empty">Ejecuta el simulador para que lleguen agentes a la oficina.</div>`;
+  }).join("") : `<div class="empty">Presiona «Iniciar flota» o ejecuta el simulador para que lleguen agentes a la oficina.</div>`;
   if (state.selected && state.tab === "telemetria") renderProfile();
   renderRubric();
 }
@@ -1068,6 +1071,76 @@ document.querySelectorAll(".toggle[data-toggle]").forEach((b) => b.addEventListe
   const k = b.dataset.toggle; state.toggles[k] = !state.toggles[k];
   b.setAttribute("aria-pressed", String(state.toggles[k]));
 }));
+
+/* =====================================================================
+   Flota de demostración: the official simulator, run from this browser.
+   Same formulas as simulator/core.py (which is not modified). Each robot
+   sends one real sample per second to POST /telemetry, so the data goes
+   through validation, the model and the database like any other client.
+   ===================================================================== */
+const DEMO_ROBOTS = 8, DEMO_INTERVAL_MS = 1000, DEMO_MAX_MS = 20 * 60 * 1000;
+const demo = { on: false, robots: [], step: 0, sent: 0, startedAt: 0, stoppedAt: 0, timer: null, rng: Math.random };
+function gauss(mu, sigma) { // Box-Muller, like random.gauss
+  let u = 0; while (u === 0) u = demo.rng();
+  return mu + sigma * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * demo.rng());
+}
+const uniform = (a, b) => a + (b - a) * demo.rng();
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const round = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
+function makeRobot(i) { // core.make_robot
+  return { robot_id: `R${String(i).padStart(2, "0")}`, x: uniform(0, 10), y: uniform(0, 10),
+           heading: uniform(-Math.PI, Math.PI), battery: uniform(70, 100), health: uniform(0.15, 0.95) };
+}
+function stepRobot(r, dt = 1) { // core.step_robot
+  r.health += gauss(0, 0.012);
+  if (demo.rng() < 0.02) r.health -= uniform(0.05, 0.18);
+  r.health = clamp(r.health, 0.05, 0.98);
+  const speed = clamp(gauss(0.72 + 0.18 * r.health, 0.12), 0.05, 1.25);
+  r.heading += gauss(0, 0.11);
+  r.x = wrap10(r.x + Math.cos(r.heading) * speed * dt);
+  r.y = wrap10(r.y + Math.sin(r.heading) * speed * dt);
+  r.battery = Math.max(0, r.battery - (0.035 + 0.025 * speed + (1 - r.health) * 0.02));
+  return {
+    robot_id: r.robot_id, timestamp: Date.now() / 1000, x: round(r.x, 4), y: round(r.y, 4), speed: round(speed, 4),
+    battery: round(r.battery, 3),
+    motor_temp: round(34 + 38 * (1 - r.health) + 10 * speed + gauss(0, 2), 3),
+    vibration: round(Math.max(0, 0.12 + 1.65 * (1 - r.health) + gauss(0, 0.09)), 4),
+    motor_current: round(Math.max(0.2, 1.5 + 2.8 * speed + 2.2 * (1 - r.health) + gauss(0, 0.25)), 4),
+    obstacle_distance: round(clamp(-Math.log(1 - demo.rng()) / 0.72, 0.05, 4), 4),
+  };
+}
+async function demoTick() {
+  if (!demo.on) return;
+  if (Date.now() - demo.startedAt > DEMO_MAX_MS) { stopDemo("se detuvo sola tras 20 minutos"); return; }
+  demo.step++;
+  const results = await Promise.allSettled(demo.robots.map((r) => postJSON("/telemetry", JSON.stringify(stepRobot(r)))));
+  demo.sent = results.filter((x) => x.status === "fulfilled" && x.value.ok).length;
+  $("demo-toggle").textContent = `Detener flota · paso ${demo.step} · ${demo.sent}/${DEMO_ROBOTS}`;
+  if (demo.on) demo.timer = setTimeout(demoTick, DEMO_INTERVAL_MS);
+}
+function startDemo() {
+  // Another simulator already sending R01..R08 would make the robots jump between two positions.
+  // Our own fleet stopped less than 35 s ago still looks "connected": that one is fine.
+  const ownRecent = Date.now() - demo.stoppedAt < 35000;
+  const busy = ownRecent ? [] : (state.fleet?.robots || []).filter((r) => /^R0[1-8]$/.test(r.robot_id) && r.connected);
+  if (busy.length) {
+    log(`No inicié la flota: ${busy.length} robots (R01–R08) ya están enviando datos desde otro simulador.`, "warn");
+    return;
+  }
+  demo.rng = mulberry32(Date.now() % 2147483647);
+  demo.robots = Array.from({ length: DEMO_ROBOTS }, (_, i) => makeRobot(i + 1));
+  demo.on = true; demo.step = 0; demo.startedAt = Date.now();
+  $("demo-toggle").setAttribute("aria-pressed", "true");
+  log(`Flota de demostración iniciada: ${DEMO_ROBOTS} robots envían telemetría real cada segundo desde este navegador.`, "ok");
+  demoTick();
+}
+function stopDemo(reason) {
+  demo.on = false; demo.stoppedAt = Date.now(); clearTimeout(demo.timer);
+  $("demo-toggle").setAttribute("aria-pressed", "false");
+  $("demo-toggle").textContent = "Iniciar flota";
+  log(`Flota de demostración detenida${reason ? ": " + reason : ""}. Los robots quedarán «Sin señal» en 30 s.`, "info");
+}
+$("demo-toggle").addEventListener("click", () => (demo.on ? stopDemo() : startDemo()));
 
 /* =====================================================================
    Pauta del profesor: each requirement of the assignment with live evidence

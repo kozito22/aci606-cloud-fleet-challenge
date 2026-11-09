@@ -199,6 +199,7 @@ Es una oficina isométrica clara con paredes de vidrio y robots en pixel art.
   - **Centro de misiones:** puestos de API, Modelo ML y Métricas, con una pantalla en vivo de telemetría/min, predicciones, p95 y errores.
   - **Sala de servidores:** base de datos y respaldos.
   - **Zona de carga.**
+- **Botón «Iniciar flota»:** pone en marcha 8 robots desde el mismo navegador, sin abrir una terminal. Usa las mismas fórmulas del simulador oficial (`simulator/core.py`, que no se modificó) y envía telemetría real a `POST /telemetry` cada segundo, así que los datos pasan por la validación, el modelo y la base de datos como los de cualquier cliente. Se detiene sola a los 20 minutos y no arranca si otro simulador ya está enviando los robots R01–R08.
 - **Bordes de la arena:** el simulador hace que los robots salgan por un borde y entren por el opuesto, como en Pac-Man (`x %= 10`). El panel lo dibuja como un cruce: el robot se desvanece en un borde y aparece entrando por el otro, sin saltos.
 - **Robots:** cada uno tiene nombre, rol y función. Su placa muestra el estado predicho (Trabajando, Alerta, Crítico o Sin señal) y la batería, y habla con globos de diálogo.
 - **Ficha del agente** (clic en un robot): pestañas Telemetría (valores, historial de batería, temperatura y estados), Perfil (responsabilidades, herramientas y punto óptimo) y Actividad.
