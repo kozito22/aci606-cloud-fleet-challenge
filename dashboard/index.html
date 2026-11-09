@@ -86,7 +86,7 @@
       background: rgba(255,255,255,.97); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 40px rgba(30,40,80,.16); }
     .profile.show { display: block; }
     .p-head { display: flex; gap: 12px; padding: 14px 14px 10px; align-items: center; }
-    .p-head canvas { width: 42px; height: 55px; image-rendering: pixelated; background: var(--panel-2); border-radius: 10px; padding: 4px; }
+    .p-head canvas { width: 42px; height: 55px; background: var(--panel-2); border-radius: 10px; padding: 4px; }
     .p-name { font-weight: 700; font-size: 16px; }
     .p-role { font-size: 12px; color: var(--accent); }
     .p-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-top: 2px; }
@@ -215,7 +215,7 @@
 <body>
 <header class="topbar">
   <div class="brand">
-    <div class="hex"><canvas id="logo" width="16" height="21" style="width:20px;height:26px;image-rendering:pixelated" aria-hidden="true"></canvas></div>
+    <div class="hex"><canvas id="logo" width="40" height="52" style="width:20px;height:26px" aria-hidden="true"></canvas></div>
     <div><h1>FLEET OFFICE</h1><p>ACI606 · Cloud Fleet HQ</p></div>
   </div>
   <div class="pills" aria-live="polite">
@@ -404,29 +404,6 @@ const state = {
 /* =====================================================================
    Pixel sprites (robots and operators)
    ===================================================================== */
-const ROBOT_SPRITE = [
-  ".......LL.......",
-  ".......LL.......",
-  ".......AA.......",
-  "...KKKKKKKKKK...",
-  "..KHHHHHHHHBBK..",
-  "..KHVVVVVVVVBK..",
-  "..KHVeEVVeEVBK..",
-  "..KHVEEVVEEVBK..",
-  "..KHVVVVVVVVBK..",
-  "..KBBBBBBBBBbK..",
-  "...KKKKKKKKKK...",
-  "......KggK......",
-  ".KKKKKKKKKKKKKK.",
-  "KgKHBBBBBBBBbKgK",
-  "KgKHBsSSSSsBbKgK",
-  "KgKHBsSSSSsBbKgK",
-  "KGKHBBBBBBBBbKGK",
-  "KKKbbbbbbbbbbKKK",
-  "..KKKKKKKKKKKK..",
-  "..KWwWK..KWwWK..",
-  "..KKKKK..KKKKK..",
-];
 const PERSON_SPRITE = [
   "...HHHHH...",
   "..HHHHHHH..",
@@ -459,19 +436,51 @@ function makeSprite(rows, palette) {
   rows.forEach((row, y) => [...row].forEach((ch, x) => { if (palette[ch]) { g.fillStyle = palette[ch]; g.fillRect(x, y, 1, 1); } }));
   return c;
 }
-function robotSprite(body, status, blink, off) {
-  const key = `${body}|${status}|${blink}|${off}`;
-  if (!spriteCache.has(key)) {
-    const base = off ? "#a3abbd" : body;
-    const glow = off ? "#5b6275" : COLORS[status] || COLORS.NONE;
-    spriteCache.set(key, makeSprite(ROBOT_SPRITE, {
-      K: "#141a2b", B: base, b: shade(base, -0.3), H: shade(base, 0.4), V: "#0f1a33",
-      E: blink ? "#0f1a33" : glow, e: blink ? "#0f1a33" : "#ffffff", A: "#9aa3b5", L: glow,
-      g: "#7b8499", G: "#d6dbe6", W: "#262b3d", w: "#5b6478",
-      S: off ? "#3b4252" : glow, s: off ? "#2b3040" : shade(glow, -0.35),
-    }));
+// Cartoon robot drawn with smooth shapes (rounded head with a visor, glowing
+// eyes, chest screen with a heartbeat, swinging arms and small wheels). The
+// feet are at (x, y); about 62 px tall at scale 1. Works on any 2D context.
+const BOT_SCALE = 0.8;
+function drawBot(g, x, y, o) {
+  const s = o.scale || 1, body = o.off ? "#a3abbd" : o.color, eye = o.off ? "#5b6275" : o.eye;
+  const dark = shade(body, -0.32), light = shade(body, 0.45), line = "#1b2133";
+  const swing = o.moving ? Math.sin((o.t || 0) / 140) * 0.35 : 0;
+  const rr = (x0, y0, w, h, r) => { g.beginPath(); if (g.roundRect) g.roundRect(x0, y0, w, h, r); else g.rect(x0, y0, w, h); };
+  g.save(); g.translate(x, y); g.scale(s, s);
+  g.lineJoin = "round"; g.lineWidth = 1.4; g.strokeStyle = line;
+  for (const dx of [-7, 7]) { // wheels and legs
+    g.fillStyle = "#8b93a7"; g.fillRect(dx - 1.5, -12, 3, 7);
+    rr(dx - 4, -6, 8, 6, 3); g.fillStyle = "#262b3d"; g.fill(); g.stroke();
+    g.fillStyle = "#5b6478"; g.fillRect(dx - 2, -4.8, 4, 1.2);
   }
-  return spriteCache.get(key);
+  for (const side of [-1, 1]) { // arms swing while walking
+    g.save(); g.translate(side * 11, -28); g.rotate(side * 0.2 + swing * side);
+    rr(-2.4, 0, 4.8, 11, 2.4); g.fillStyle = dark; g.fill(); g.stroke();
+    g.beginPath(); g.arc(0, 12.2, 2.5, 0, Math.PI * 2); g.fillStyle = "#c4cad8"; g.fill(); g.stroke();
+    g.restore();
+  }
+  const bg = g.createLinearGradient(-11, -31, 11, -11);
+  bg.addColorStop(0, light); bg.addColorStop(0.55, body); bg.addColorStop(1, dark);
+  rr(-10.5, -31, 21, 20, 8); g.fillStyle = bg; g.fill(); g.stroke();
+  rr(-6.5, -26.5, 13, 8, 2.5); g.fillStyle = "#0f1a33"; g.fill(); // chest screen
+  g.strokeStyle = eye; g.lineWidth = 1.1;
+  g.beginPath(); g.moveTo(-5, -22.5); g.lineTo(-2, -22.5); g.lineTo(-1, -25); g.lineTo(1, -20); g.lineTo(2.2, -22.5); g.lineTo(5, -22.5); g.stroke();
+  g.strokeStyle = line; g.lineWidth = 1.4;
+  g.fillStyle = "#8b93a7"; g.fillRect(-3, -34, 6, 3.5); // neck
+  const hg = g.createLinearGradient(-13, -52, 13, -34);
+  hg.addColorStop(0, light); hg.addColorStop(0.6, body); hg.addColorStop(1, dark);
+  rr(-13, -52, 26, 19, 8); g.fillStyle = hg; g.fill(); g.stroke();
+  for (const side of [-1, 1]) { g.beginPath(); g.arc(side * 13.5, -42.5, 2.3, 0, Math.PI * 2); g.fillStyle = "#c4cad8"; g.fill(); g.stroke(); }
+  rr(-10, -48.5, 20, 11, 5); g.fillStyle = "#0f1a33"; g.fill(); // visor
+  g.fillStyle = eye;
+  if (o.blink || o.off) { g.fillRect(-6.5, -43.6, 4.5, 1.4); g.fillRect(2, -43.6, 4.5, 1.4); }
+  else {
+    for (const dx of [-4.3, 4.3]) { rr(dx - 2.2, -46.6, 4.4, 6, 2.2); g.fill(); }
+    g.fillStyle = "rgba(255,255,255,.9)"; g.fillRect(-5.2, -45.8, 1.3, 1.3); g.fillRect(3.4, -45.8, 1.3, 1.3);
+  }
+  g.fillStyle = "rgba(255,255,255,.35)"; rr(-9.5, -50.6, 8, 2.2, 1.1); g.fill(); // head shine
+  g.strokeStyle = "#7b8499"; g.beginPath(); g.moveTo(0, -52); g.lineTo(0, -57.5); g.stroke(); // antenna
+  g.beginPath(); g.arc(0, -59.2, 2.6, 0, Math.PI * 2); g.fillStyle = eye; g.fill(); g.strokeStyle = line; g.lineWidth = 1; g.stroke();
+  g.restore();
 }
 // People: office operators, waiters (vest and tie) and the chef (hat).
 function personSprite(shirt, hair, opts = {}) {
@@ -492,7 +501,7 @@ function glow(x, y, radius, color, alpha = 1) {
   g.addColorStop(0, color); g.addColorStop(1, "rgba(0,0,0,0)");
   ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = g; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2); ctx.restore();
 }
-document.getElementById("logo").getContext("2d").drawImage(robotSprite("#59a5ff", "NORMAL", false, false), 0, 0);
+drawBot(document.getElementById("logo").getContext("2d"), 20, 51, { color: "#59a5ff", eye: COLORS.NORMAL, scale: 0.8 });
 
 /* =====================================================================
    Isometric office renderer
@@ -653,7 +662,9 @@ function drawRoom(t) {
     poly(tile, fill, arena ? "rgba(160,170,195,.22)" : "rgba(160,170,195,.14)");
     if (arena && state.toggles.heat && hb) {
       const v = hb[j - A0][i - A0];
-      if (v > 0) poly(tile, `rgba(16,185,129,${(0.07 + 0.3 * Math.log1p(v) / Math.log1p(hmax)).toFixed(3)})`);
+      // a small soft mark inside the tile instead of painting the whole tile
+      if (v > 0) poly([iso(i + 0.22, j + 0.22), iso(i + 0.78, j + 0.22), iso(i + 0.78, j + 0.78), iso(i + 0.22, j + 0.78)],
+                      `rgba(16,185,129,${(0.05 + 0.17 * Math.log1p(v) / Math.log1p(hmax)).toFixed(3)})`);
     }
   }
   // charging pads in the left strip
@@ -840,15 +851,13 @@ function drawRobot(r, wx, wy, alpha, moving, primary, t) {
     ctx.fillStyle = `rgba(239,68,68,${0.12 + 0.08 * Math.sin(t / 150)})`;
     ctx.beginPath(); ctx.ellipse(sx, sy, 20, 9, 0, 0, Math.PI * 2); ctx.fill();
   }
-  ctx.fillStyle = "rgba(30,40,80,.16)"; ctx.beginPath(); ctx.ellipse(sx, sy, 14, 5.5, 0, 0, Math.PI * 2); ctx.fill();
-  const blink = (Math.floor(t / 120) + r.seed) % 37 === 0;
-  const sprite = robotSprite(r.color, status, blink, !r.connected);
-  const bob = moving && Math.floor(t / 180) % 2 ? -PS : 0;
-  const dx = Math.round(sx - sprite.width * PS / 2), dy = Math.round(sy - sprite.height * PS + 4 + bob);
-  ctx.drawImage(sprite, dx, dy, sprite.width * PS, sprite.height * PS);
-  if (r.connected) glow(dx + 8 * PS, dy + PS, 11, COLORS[status] + "cc", 0.55 + 0.45 * Math.sin(t / 320 + r.seed));
+  ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(sx, sy, 11, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+  const blink = (Math.floor(t / 120) + r.seed) % 37 === 0, bob = moving && Math.floor(t / 180) % 2 ? -1.5 : 0;
+  drawBot(ctx, sx, sy + bob, { color: r.color, eye: COLORS[status] || COLORS.NONE, off: !r.connected, blink, moving, t, scale: BOT_SCALE });
+  const top = sy + bob - 62 * BOT_SCALE;
+  if (r.connected) glow(sx, top + 3 * BOT_SCALE, 9, COLORS[status] + "cc", 0.55 + 0.45 * Math.sin(t / 320 + r.seed));
   ctx.restore();
-  if (primary) { r.hit = { x: dx, y: dy, w: sprite.width * PS, h: sprite.height * PS }; r.head = [sx, dy - 6]; r.alpha = alpha; }
+  if (primary) { r.hit = { x: sx - 14, y: top, w: 28, h: sy - top }; r.head = [sx, top - 5]; r.alpha = alpha; }
 }
 
 function drawTargets() {
@@ -1210,7 +1219,7 @@ function renderProfile() {
   }
   const scroll = el.scrollTop;
   el.innerHTML = `
-    <div class="p-head"><canvas id="avatar" width="16" height="21"></canvas>
+    <div class="p-head"><canvas id="avatar" width="84" height="110"></canvas>
       <div><div class="p-name">${esc(r.name)} <span class="mono hint">${esc(r.id)}</span></div>
         <div class="p-role">${esc(r.role.rol)} · ${esc(r.role.depto)}</div>
         <div class="p-status"><i class="dot" style="background:${COLORS[status]}"></i>${LABEL[status]} · conf. ${d.confidence != null ? fmt(d.confidence * 100, 1) + "%" : "—"}</div></div>
@@ -1220,7 +1229,7 @@ function renderProfile() {
     <div class="p-body">${body}</div>`;
   el.classList.add("show");
   el.scrollTop = scroll;
-  $("avatar").getContext("2d").drawImage(robotSprite(r.color, status, false, !r.connected), 0, 0);
+  drawBot($("avatar").getContext("2d"), 42, 106, { color: r.color, eye: COLORS[status] || COLORS.NONE, off: !r.connected, scale: 1.65 });
 }
 $("profile").addEventListener("click", (e) => {
   if (e.target.closest(".close")) return closeProfile();
@@ -1659,12 +1668,11 @@ function renderRestaurant(t) {
         const [sx, sy] = iso(cx, cy), status = r.connected ? (r.data.predicted_status || "NONE") : "OFF";
         if (state.selected === r.id) { ctx.strokeStyle = COLORS[status]; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(sx, sy, 20, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
         else if (status === "CRITICAL") { ctx.fillStyle = `rgba(239,68,68,${(0.12 + 0.08 * Math.sin(t / 150)).toFixed(3)})`; ctx.beginPath(); ctx.ellipse(sx, sy, 20, 9, 0, 0, Math.PI * 2); ctx.fill(); }
-        ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(sx, sy, 14, 5.5, 0, 0, Math.PI * 2); ctx.fill();
-        const sprite = robotSprite(r.color, status, (Math.floor(t / 120) + r.seed) % 37 === 0, !r.connected);
-        const dx = Math.round(sx - sprite.width * PS / 2), dy = Math.round(sy - sprite.height * PS + 4);
-        ctx.drawImage(sprite, dx, dy, sprite.width * PS, sprite.height * PS);
-        if (r.connected) glow(dx + 8 * PS, dy + PS, 11, COLORS[status] + "cc", 0.55 + 0.45 * Math.sin(t / 320 + r.seed));
-        r.hit = { x: dx, y: dy, w: sprite.width * PS, h: sprite.height * PS }; r.head = [sx, dy - 6]; r.alpha = 1;
+        ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(sx, sy, 11, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+        drawBot(ctx, sx, sy, { color: r.color, eye: COLORS[status] || COLORS.NONE, off: !r.connected, blink: (Math.floor(t / 120) + r.seed) % 37 === 0, scale: BOT_SCALE });
+        const top = sy - 62 * BOT_SCALE;
+        if (r.connected) glow(sx, top + 3 * BOT_SCALE, 9, COLORS[status] + "cc", 0.55 + 0.45 * Math.sin(t / 320 + r.seed));
+        r.hit = { x: sx - 14, y: top, w: 28, h: sy - top }; r.head = [sx, top - 5]; r.alpha = 1;
       } });
     }
   });
@@ -1918,7 +1926,8 @@ function renderLab(t) {
     const tile = [I(x, y), I(x + 1, y), I(x + 1, y + 1), I(x, y + 1)];
     poly(tile, (x + y) % 2 ? "#fafbfd" : "#f3f5fa", "rgba(160,170,195,.25)");
     const v = lab.visited[y][x];
-    if (state.toggles.heat && v > 0 && lab.grid[y][x] === 0) poly(tile, `rgba(16,185,129,${(0.06 + 0.26 * Math.log1p(v) / Math.log1p(vmax)).toFixed(3)})`);
+    if (state.toggles.heat && v > 0 && lab.grid[y][x] === 0) poly([I(x + 0.22, y + 0.22), I(x + 0.78, y + 0.22), I(x + 0.78, y + 0.78), I(x + 0.22, y + 0.78)],
+                                                                  `rgba(16,185,129,${(0.05 + 0.17 * Math.log1p(v) / Math.log1p(vmax)).toFixed(3)})`);
   }
   for (const d of lab.docks) {
     poly([I(d.x + 0.08, d.y + 0.08), I(d.x + 0.92, d.y + 0.08), I(d.x + 0.92, d.y + 0.92), I(d.x + 0.08, d.y + 0.92)], "rgba(34,211,238,.2)", "rgba(8,145,178,.7)", 1.5);
@@ -1960,19 +1969,18 @@ function renderLab(t) {
     } });
   }
   for (const d of lab.docks) items.push({ depth: d.x + d.y + 0.2, draw: () => boxL(d.x + 0.04, d.y + 0.36, 0.2, 0.3, 40, "#ecfeff", "#67e8f9", "#a5f3fc") });
-  const ps = Math.max(2, Math.round(3 * gm.k));
+  const bs = Math.max(0.45, Math.min(0.9, gm.k));
   for (const r of lab.bots) items.push({ depth: r.x + r.y, robot: r, draw: () => {
     const [sx, sy] = I(r.x, r.y), key = LAB_MODES[r.mode][1];
     if (r.mode === "charging") {
       ctx.strokeStyle = `rgba(6,182,212,${0.5 + 0.4 * Math.sin(t / 180)})`; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(sx, sy, 19 * gm.k + 6, 8 * gm.k + 3, 0, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1;
     }
-    ctx.fillStyle = "rgba(30,40,80,.16)"; ctx.beginPath(); ctx.ellipse(sx, sy, 13 * gm.k + 3, 5 * gm.k + 1.5, 0, 0, Math.PI * 2); ctx.fill();
-    const sprite = robotSprite(r.color, key, (Math.floor(t / 120) + r.seed) % 37 === 0, r.mode === "empty");
-    const moving = r.path.length > 0 && r.mode !== "charging";
-    const dx = Math.round(sx - sprite.width * ps / 2), dy = Math.round(sy - sprite.height * ps + 3 + (moving && Math.floor(t / 180) % 2 ? -ps : 0));
-    ctx.drawImage(sprite, dx, dy, sprite.width * ps, sprite.height * ps);
-    r.head = [sx, dy - 5];
+    ctx.fillStyle = "rgba(30,40,80,.18)"; ctx.beginPath(); ctx.ellipse(sx, sy, 11 * bs + 2, 4.5 * bs + 1, 0, 0, Math.PI * 2); ctx.fill();
+    const moving = r.path.length > 0 && r.mode !== "charging", bob = moving && Math.floor(t / 180) % 2 ? -1.5 * bs : 0;
+    drawBot(ctx, sx, sy + bob, { color: r.color, eye: COLORS[key], off: r.mode === "empty", blink: (Math.floor(t / 120) + r.seed) % 37 === 0, moving, t, scale: bs });
+    if (r.mode !== "empty") glow(sx, sy + bob - 59 * bs, 9 * bs + 2, COLORS[key] + "cc", 0.55 + 0.45 * Math.sin(t / 320 + r.seed));
+    r.head = [sx, sy + bob - 62 * bs - 5];
   } });
   items.sort((a, b) => a.depth - b.depth).forEach((it) => it.draw());
   if (state.toggles.tags) labTags(lab.bots.filter((r) => r.head));
