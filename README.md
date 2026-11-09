@@ -157,7 +157,7 @@ El manejador de errores no devuelve el valor inválido, porque un `NaN` no se pu
 | `telemetry_per_minute`, `predictions_by_status`, `telemetry_rows`, `robots` | Operación de la flota |
 | `model` | Versión, F1 y features del modelo cargado |
 
-En Vercel varias instancias de la API responden en paralelo. Cada una cuenta sus solicitudes en memoria y guarda esos contadores en la tabla `metrics_snapshot` de Neon cada 10 segundos, después de enviar la respuesta para no agregar latencia.
+En Vercel varias instancias de la API responden en paralelo. Cada una cuenta sus solicitudes en memoria y guarda esos contadores en la tabla `metrics_snapshot` de Neon después de cada solicitud, una vez enviada la respuesta. Si llegan varias solicitudes mientras guarda, se agrupan en la siguiente escritura, así que no se pierde ninguna cuenta.
 `/metrics` suma los contadores de todas las instancias (`"scope": "service"`): solicitudes, errores y latencia promedio corresponden al servicio completo.
 `uptime_seconds`, `p50/p95` y `telemetry_per_minute` son de la instancia que respondió, y su detalle queda en el bloque `instance`.
 

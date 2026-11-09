@@ -1,7 +1,7 @@
 """Operational metrics collected by a lightweight ASGI middleware.
 
 Counters live in the memory of each process (like a Prometheus exporter) and
-each process saves them in the database every few seconds. On a serverless
+each process saves them in the database after its requests. On a serverless
 platform several instances answer in parallel, so /metrics adds up the
 counters of every instance: the totals describe the whole service, not just
 the instance that happened to answer. Uptime and latency percentiles are per
@@ -19,7 +19,6 @@ from starlette.concurrency import run_in_threadpool
 
 STARTED_AT = time.time()
 INSTANCE_ID = os.environ.get("RENDER_INSTANCE_ID") or uuid.uuid4().hex[:8]
-FLUSH_EVERY_S = 10        # how often each instance saves its counters
 ACTIVE_WINDOW_S = 300     # an instance seen in the last 5 minutes counts as active
 
 _lock = threading.Lock()
@@ -34,7 +33,8 @@ inference_ms: deque[float] = deque(maxlen=2000)
 predict_latency_sum = 0.0
 predict_ok = 0
 telemetry_times: deque[float] = deque(maxlen=20000)
-_last_flush = 0.0
+_flushing = False   # a save is running in this instance
+_dirty = False      # counters changed since the last save started
 
 
 def record_prediction(status: str, model_ms: float) -> None:
@@ -70,11 +70,6 @@ def _counters() -> dict:
 
 def flush(force: bool = False) -> None:
     """Save this instance's counters (never raises: metrics must not break requests)."""
-    global _last_flush
-    now = time.time()
-    if not force and now - _last_flush < FLUSH_EVERY_S:
-        return
-    _last_flush = now
     try:
         from app import db
         db.save_metrics_snapshot(INSTANCE_ID, STARTED_AT, _counters())
@@ -146,6 +141,23 @@ def snapshot() -> dict:
     }
 
 
+async def _save_after_request() -> None:
+    """Save the counters after every request without piling up writes: if a
+    save is already running, mark the counters dirty and that save loops once
+    more, so no request is ever left out of the service totals."""
+    global _flushing, _dirty
+    _dirty = True
+    if _flushing:
+        return
+    _flushing = True
+    try:
+        while _dirty:
+            _dirty = False
+            await run_in_threadpool(flush)
+    finally:
+        _flushing = False
+
+
 class MetricsMiddleware:
     """Pure ASGI middleware (cheaper than BaseHTTPMiddleware)."""
 
@@ -188,6 +200,5 @@ class MetricsMiddleware:
                     predict_ok += 1
                 elif key == "POST /telemetry" and code < 400:
                     telemetry_times.append(time.time())
-            # The response has already been sent: saving counters here adds no latency.
-            if time.time() - _last_flush >= FLUSH_EVERY_S:
-                await run_in_threadpool(flush)
+            # The response has already been sent when this runs.
+            await _save_after_request()
