@@ -157,8 +157,9 @@ El manejador de errores no devuelve el valor inválido, porque un `NaN` no se pu
 | `telemetry_per_minute`, `predictions_by_status`, `telemetry_rows`, `robots` | Operación de la flota |
 | `model` | Versión, F1 y features del modelo cargado |
 
-Los contadores viven en la memoria de cada instancia, como en un exportador de Prometheus. Los datos viven en Neon.
-En Vercel cada instancia reporta sus propias métricas.
+En Vercel varias instancias de la API responden en paralelo. Cada una cuenta sus solicitudes en memoria y guarda esos contadores en la tabla `metrics_snapshot` de Neon cada 10 segundos, después de enviar la respuesta para no agregar latencia.
+`/metrics` suma los contadores de todas las instancias (`"scope": "service"`): solicitudes, errores y latencia promedio corresponden al servicio completo.
+`uptime_seconds`, `p50/p95` y `telemetry_per_minute` son de la instancia que respondió, y su detalle queda en el bloque `instance`.
 
 ## Respaldos
 
@@ -203,9 +204,22 @@ Es una oficina isométrica clara con paredes de vidrio y robots en pixel art.
 - **Ficha del agente** (clic en un robot): pestañas Telemetría (valores, historial de batería, temperatura y estados), Perfil (responsabilidades, herramientas y punto óptimo) y Actividad.
 - **Actividad en vivo:** narra los eventos (cambios de estado, conexiones, respaldos, caídas de la API).
 - **Panel lateral:**
+  - **Pauta del profesor:** los 7 requisitos y las dimensiones de evaluación del PDF, con evidencia en vivo. El botón **Verificar ahora** comprueba desde el navegador el contrato de `/predict` (20 predicciones con su p50/p95), que los datos inválidos respondan 4xx y que el servicio siga activo.
   - Tablero de control: agentes activos, telemetría por minuto, predicciones, latencia p95, errores y cobertura.
   - Estado de la flota, con la distribución actual y la tendencia de 15 minutos.
   - Respaldos y modelo.
+
+### Modo laboratorio
+
+El botón **Modo laboratorio** (o el enlace directo `/dashboard#lab`) cambia la oficina por una **simulación local en el navegador**. No envía datos a la API, no se guarda en Neon y no afecta al modelo ni a las métricas. La flota real la sigue moviendo el simulador oficial, que no se modificó.
+
+- **Grilla variable:** de 8 × 8 a 24 × 24 celdas, con 2 a 12 robots y velocidad 1×, 2× o 4×.
+- **Herramientas:** dibujar o borrar obstáculos arrastrando el mouse (o el dedo), y agregar o quitar puertos de carga.
+- **Escenarios aleatorios:** "Obstáculos al azar" y "Nuevo escenario" usan una semilla, para que cada escenario sea distinto y reproducible. Los obstáculos al azar nunca dejan zonas aisladas.
+- **Rutas:** cada robot calcula el camino más corto con búsqueda en anchura (BFS) y lo recalcula si se le pone un obstáculo delante. Explora prefiriendo las celdas menos visitadas.
+- **Batería:** cada celda recorrida gasta batería. Antes de elegir un destino, el robot verifica que le alcanza para la ida y para volver al puerto más cercano. Si no, va a cargar; si el puerto está ocupado, espera en cola. Al completar la carga vuelve a explorar.
+
+Es un complemento visual. Los datos que se evalúan (telemetría, predicción, métricas y persistencia) son los de la flota real.
 
 ## Despliegue: Vercel + Neon
 

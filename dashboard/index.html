@@ -147,11 +147,42 @@
     .agent-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
     .empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; grid-column: 1 / -1; }
 
+    /* ---------- professor's rubric ---------- */
+    .rubric { list-style: none; margin: 0; padding: 0; }
+    .rubric li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f0f1f6; }
+    .rubric li:last-child { border-bottom: 0; }
+    .rubric .ic { width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; }
+    .ic.ok { background: var(--ok); } .ic.fail { background: var(--bad); } .ic.wait { background: #cbd5e1; } .ic.info { background: #38bdf8; }
+    .rubric b { font-size: 13px; font-weight: 600; }
+    .rubric .ev { display: block; font-size: 12px; color: var(--muted); }
+    .rubric a { color: var(--accent); }
+    #rubric-run[disabled] { opacity: .6; cursor: progress; }
+
+    /* ---------- lab mode ---------- */
+    .toggle.lab[aria-pressed="true"] { color: #92400e; background: #fffbeb; border-color: #fcd34d; }
+    .lab-on .feed, .lab-on .profile, .lab-on .offline-banner { display: none !important; }
+    .lab-panel { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 12px;
+      background: rgba(255,255,255,.95); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); font-size: 12px; }
+    .lab-panel[hidden] { display: none; }
+    .lab-title { flex-basis: 100%; font-weight: 700; font-size: 13px; }
+    .lab-title span { font-weight: 400; font-size: 11px; color: var(--muted); margin-left: 6px; }
+    .lab-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lab-panel button, .lab-panel select { cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; padding: 4px 9px; font: inherit; }
+    .lab-panel button:hover { border-color: #a5f3fc; }
+    .lab-panel .tool[aria-pressed="true"] { color: #0e7490; background: #ecfeff; border-color: #a5f3fc; font-weight: 600; }
+    .lab-panel button:focus-visible, .lab-panel input:focus-visible, .lab-panel select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .lab-panel label { display: grid; grid-template-columns: auto 96px 30px; align-items: center; gap: 8px; color: var(--muted); }
+    .lab-panel input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .lab-panel output { font: 12px var(--mono); color: var(--text); text-align: right; }
+    .lab-stats { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 2px 16px; padding-top: 7px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+    .lab-stats b { color: var(--text); font-variant-numeric: tabular-nums; }
+
     @media (max-width: 1150px) { .layout { grid-template-columns: 1fr; } .side { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
     @media (max-width: 700px) {
       .topbar, .layout { padding-left: 16px; padding-right: 16px; }
       .stage { margin: 12px 0 0; border-radius: 0; }
       .feed, .profile { position: static; width: auto; max-height: none; border-radius: 0; box-shadow: none; border-width: 1px 0 0; }
+      .lab-panel { position: static; width: auto; border-radius: 0; box-shadow: none; border-width: 0 0 1px; }
     }
     @media (prefers-reduced-motion: reduce) { .live .dot { animation: none; } .stack div { transition: none; } }
   </style>
@@ -180,9 +211,30 @@
           <button class="toggle" data-toggle="heat" aria-pressed="true">Cobertura</button>
           <button class="toggle" data-toggle="targets" aria-pressed="true">Puntos óptimos</button>
           <button class="toggle" data-toggle="tags" aria-pressed="true">Etiquetas</button>
+          <button class="toggle lab" id="lab-toggle" type="button" aria-pressed="false">Modo laboratorio</button>
         </div>
       </div>
       <div class="stage" id="stage">
+        <div class="lab-panel" id="lab-panel" hidden>
+          <div class="lab-title">Laboratorio de movilidad<span>simulación local en tu navegador · no envía datos a la API</span></div>
+          <div class="lab-row" role="group" aria-label="Herramienta de edición">
+            <button class="tool" type="button" data-tool="obstacle" aria-pressed="true">Obstáculo</button>
+            <button class="tool" type="button" data-tool="erase" aria-pressed="false">Borrar</button>
+            <button class="tool" type="button" data-tool="dock" aria-pressed="false">Puerto de carga</button>
+          </div>
+          <label>Celdas <input type="range" id="lab-size" min="8" max="24" step="1" value="14"><output id="lab-size-out">14</output></label>
+          <label>Robots <input type="range" id="lab-robots" min="2" max="12" step="1" value="6"><output id="lab-robots-out">6</output></label>
+          <label>Obstáculos <input type="range" id="lab-density" min="0" max="30" step="2" value="12"><output id="lab-density-out">12%</output></label>
+          <label>Velocidad
+            <select id="lab-speed" aria-label="Velocidad de la simulación"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select><span></span>
+          </label>
+          <div class="lab-row">
+            <button type="button" id="lab-random">Obstáculos al azar</button>
+            <button type="button" id="lab-clear">Limpiar</button>
+            <button type="button" id="lab-seed">Nuevo escenario</button>
+          </div>
+          <div class="lab-stats" id="lab-stats"></div>
+        </div>
         <canvas id="office" width="880" height="640" aria-label="Vista isométrica de la oficina con la flota de robots"></canvas>
         <div class="profile" id="profile" role="dialog" aria-label="Ficha del agente"></div>
         <div class="feed" id="feed">
@@ -212,6 +264,14 @@
           <div class="kpi"><div class="k">Cobertura 60 s</div><div class="v" id="k-cov">—</div><div class="s" id="k-cov-sub">&nbsp;</div></div>
         </div>
         <div class="state-line"><span class="hint">Estado del servicio</span><span id="k-state">—</span></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="rubric-title">
+      <div class="card-head"><h2 id="rubric-title">Pauta del profesor</h2><button class="toggle" id="rubric-run" type="button">Verificar ahora</button></div>
+      <div class="card-body">
+        <ul class="rubric" id="rubric" aria-live="polite"></ul>
+        <p class="hint" style="margin:10px 0 0">Según el PDF del Ejercicio 4 (págs. 5, 6, 16 y 17). "Verificar ahora" envía 20 predicciones y 2 datos inválidos a propósito, que se cuentan como errores 4xx.</p>
       </div>
     </section>
 
@@ -635,6 +695,13 @@ function drawTargets() {
 }
 
 function render(t) {
+  if (lab.on) {
+    labUpdate(Math.min(0.1, (t - lab.last) / 1000) * lab.speed);
+    lab.last = t;
+    renderLab(t);
+    requestAnimationFrame(render);
+    return;
+  }
   ctx.clearRect(0, 0, W, H);
   drawRoom(t);
   const back = perimeter(t).sort((a, b) => a.depth - b.depth);
@@ -695,8 +762,8 @@ function robotAt(e) {
   const hits = [...state.robots.values()].filter((r) => r.hit && x >= r.hit.x && x <= r.hit.x + r.hit.w && y >= r.hit.y && y <= r.hit.y + r.hit.h);
   return hits.sort((a, b) => (wrap10(b.px) + wrap10(b.py)) - (wrap10(a.px) + wrap10(a.py)))[0];
 }
-canvas.addEventListener("click", (e) => { const r = robotAt(e); if (r) select(r.id); });
-canvas.addEventListener("mousemove", (e) => { canvas.style.cursor = robotAt(e) ? "pointer" : "default"; });
+canvas.addEventListener("click", (e) => { if (lab.on) return; const r = robotAt(e); if (r) select(r.id); });
+canvas.addEventListener("mousemove", (e) => { if (lab.on) return; canvas.style.cursor = robotAt(e) ? "pointer" : "default"; });
 
 /* =====================================================================
    Activity feed + speech bubbles
@@ -883,6 +950,7 @@ function renderPanels() {
     </button>`;
   }).join("") : `<div class="empty">Ejecuta el simulador para que lleguen agentes a la oficina.</div>`;
   if (state.selected && state.tab === "telemetria") renderProfile();
+  renderRubric();
 }
 $("roster").addEventListener("click", (e) => { const b = e.target.closest(".agent"); if (b) select(b.dataset.id); });
 
@@ -993,12 +1061,483 @@ function renderSummary() {
     $("model").innerHTML = `<p class="hint">Ejecuta <code>python ml/train_model.py</code>.</p>`;
   }
   if (state.selected && state.tab === "perfil") renderProfile();
+  renderRubric();
 }
 
-document.querySelectorAll(".toggle").forEach((b) => b.addEventListener("click", () => {
+document.querySelectorAll(".toggle[data-toggle]").forEach((b) => b.addEventListener("click", () => {
   const k = b.dataset.toggle; state.toggles[k] = !state.toggles[k];
   b.setAttribute("aria-pressed", String(state.toggles[k]));
 }));
+
+/* =====================================================================
+   Pauta del profesor: each requirement of the assignment with live evidence
+   ===================================================================== */
+const REPO_URL = "https://github.com/kozito22/aci606-cloud-fleet-challenge";
+const PREDICT_FIELDS = "confidence,inference_ms,model_version,predicted_status,robot_id";
+const rubric = { predict: null, invalid: null, running: false };
+const num = (v, d = 0) => Number(v).toLocaleString("es-CL", { maximumFractionDigits: d, minimumFractionDigits: d });
+const postJSON = (url, body) => fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body, cache: "no-store" });
+
+async function checkPredict(n) {
+  const times = [];
+  let ok = true;
+  for (let i = 0; i < n; i++) {
+    const sample = { robot_id: "PAUTA-01", timestamp: Date.now() / 1000, x: 4.2, y: 7.8, speed: 0.63, battery: 71,
+                     motor_temp: 48.2, vibration: 0.43, motor_current: 3.7, obstacle_distance: 0.42 };
+    const t0 = performance.now();
+    const res = await postJSON("/predict", JSON.stringify(sample));
+    times.push(performance.now() - t0);
+    const body = await res.json();
+    ok = ok && res.ok && Object.keys(body).sort().join(",") === PREDICT_FIELDS
+      && ["NORMAL", "WARNING", "CRITICAL"].includes(body.predicted_status) && body.robot_id === sample.robot_id;
+  }
+  times.sort((a, b) => a - b);
+  return { ok, n, p50: times[Math.floor((times.length - 1) / 2)], p95: times[Math.round((times.length - 1) * 0.95)] };
+}
+async function checkInvalid() {
+  // NaN to /predict and a missing field to /telemetry must both be 4xx, and the service must stay up.
+  const nan = '{"robot_id":"PAUTA-01","timestamp":1,"x":1,"y":1,"speed":NaN,"battery":50,"motor_temp":40,"vibration":0.3,"motor_current":3,"obstacle_distance":1}';
+  const a = await postJSON("/predict", nan), b = await postJSON("/telemetry", '{"robot_id":"PAUTA-01"}');
+  const h = await fetch("/health", { cache: "no-store" });
+  const is4xx = (r) => r.status >= 400 && r.status < 500;
+  return { ok: is4xx(a) && is4xx(b) && h.ok, codes: [a.status, b.status, h.status] };
+}
+async function runRubric(full) {
+  if (rubric.running) return;
+  rubric.running = true; $("rubric-run").disabled = true; $("rubric-run").textContent = "Verificando…";
+  try {
+    rubric.predict = await checkPredict(full ? 20 : 1);
+    if (full) rubric.invalid = await checkInvalid();
+  } catch (err) {
+    rubric.predict = rubric.predict || { ok: false, error: String(err) };
+  }
+  rubric.running = false; $("rubric-run").disabled = false; $("rubric-run").textContent = "Verificar ahora";
+  renderRubric();
+}
+$("rubric-run").addEventListener("click", () => runRubric(true));
+
+function renderRubric() {
+  const f = state.fleet, s = state.summary, m = f?.metrics;
+  const remote = location.protocol === "https:" && !/^(localhost|127\.)/.test(location.hostname);
+  const counts = s?.records_per_robot || {};
+  const fleetIds = Object.keys(counts).filter((id) => !/^(TEST|PAUTA)/i.test(id));
+  const minRec = fleetIds.length ? Math.min(...fleetIds.map((id) => counts[id])) : 0;
+  const p = rubric.predict, inv = rubric.invalid;
+  const rows = [
+    ["1 · Ingesta persistente", !f ? "wait" : f.storage.backend === "POSTGRESQL" && minRec > 100 ? "ok" : f.storage.backend === "POSTGRESQL" ? "info" : "info",
+      f ? `${f.storage.backend === "POSTGRESQL" ? "PostgreSQL en Neon" : "SQLite local"} · ${num(f.storage.telemetry_rows)} registros · ${fleetIds.length ? `mínimo ${num(minRec)} por robot` : "sin robots"}` : "cargando…"],
+    ["2 · Entrenamiento de ML", s?.model ? "ok" : s ? "fail" : "wait",
+      s?.model ? `Regresión logística ${esc(s.model.model_version)} · F1 macro ${num(s.model.test_f1_macro, 3)} vs ${num(s.model.baseline_f1_macro, 3)} de la línea base, en flotas no vistas` : "modelo no cargado"],
+    ["3 · POST /predict (contrato)", !p ? "wait" : p.ok ? "ok" : "fail",
+      !p ? "comprobando…" : p.ok ? `5 campos exactos · ${p.n} ${p.n === 1 ? "predicción" : "predicciones"} · p50 ${num(p.p50)} ms · p95 ${num(p.p95)} ms desde este navegador` : `falló: ${esc(p.error || "respuesta distinta al contrato")}`],
+    ["4 · Panel de operación", f ? "ok" : "wait",
+      f ? `${f.connected} robots conectados · telemetría, predicción, batería, tendencia de 15 min y estado de la API` : "cargando…"],
+    ["5 · Observabilidad (/metrics)", m ? "ok" : "wait",
+      m ? `${num(m.telemetry_requests)} telemetrías · ${num(m.prediction_requests)} predicciones · ${num(m.errors_total)} errores · latencia prom. ${m.avg_prediction_latency_ms != null ? num(m.avg_prediction_latency_ms, 1) + " ms" : "—"} · uptime ${uptime(m.uptime_seconds)}` : "cargando…"],
+    ["6 · Trazabilidad Git", "ok", `Ramas <code>feature/*</code> con merge a <code>main</code> · <a href="${REPO_URL}/branches" target="_blank" rel="noopener">ver en GitHub</a>`],
+    ["7 · Ejecución remota", remote ? "ok" : "info", remote ? `URL pública HTTPS · ${esc(location.host)}` : "Ejecutando en local (la versión pública está en Vercel)"],
+    ["Robustez · datos inválidos → 4xx", !inv ? "wait" : inv.ok ? "ok" : "fail",
+      !inv ? "presiona “Verificar ahora”" : `NaN en /predict → ${inv.codes[0]} · campo faltante en /telemetry → ${inv.codes[1]} · servicio activo después → ${inv.codes[2]}`],
+    ["Persistencia · >100 registros por robot", !s ? "wait" : minRec > 100 ? "ok" : "info",
+      !s ? "cargando…" : fleetIds.length ? `El robot con menos tiene ${num(minRec)} registros; el historial está en ${f?.storage.backend === "POSTGRESQL" ? "Neon" : "la base de datos"} y sobrevive reinicios` : "aún no hay robots"],
+  ];
+  const icon = { ok: "✓", fail: "✗", wait: "…", info: "i" };
+  $("rubric").innerHTML = rows.map(([title, st, ev]) =>
+    `<li><span class="ic ${st}" aria-label="${st}">${icon[st]}</span><span><b>${title}</b><span class="ev">${ev}</span></span></li>`).join("");
+}
+
+/* =====================================================================
+   Modo laboratorio
+   A local sandbox, separate from the real fleet. The official simulator
+   decides real positions and battery (and must not be modified), so here
+   the browser runs its own robots on a grid the operator can edit: size,
+   obstacles and charging docks. Nothing is sent to the API or stored.
+   ===================================================================== */
+COLORS.CHARGING = "#06b6d4";
+const LAB_MODES = {
+  explore: ["Explorando", "NORMAL"], toDock: ["Rumbo a carga", "WARNING"], queue: ["En cola", "WARNING"],
+  charging: ["Cargando", "CHARGING"], blocked: ["Bloqueado", "CRITICAL"], empty: ["Sin batería", "CRITICAL"],
+};
+const LAB_DRAIN = 1.4;    // % of battery per cell travelled
+const LAB_CHARGE = 14;    // % per second while docked
+const LAB_RESERVE = 6;    // % kept in reserve when deciding to go charge
+const LAB_SPEED = 1.8;    // cells per second at 1×
+const lab = {
+  on: false, size: 14, robots: 6, density: 0.12, seed: 0, speed: 1, tool: "obstacle",
+  grid: [], visited: [], docks: [], bots: [], charges: 0, rng: Math.random, last: 0, paint: null, hover: null, statsAt: 0,
+};
+
+function mulberry32(a) {
+  return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(lab.rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const inGrid = (x, y) => x >= 0 && y >= 0 && x < lab.size && y < lab.size;
+const isDock = (x, y) => lab.docks.some((d) => d.x === x && d.y === y);
+const freeCell = (x, y) => inGrid(x, y) && lab.grid[y][x] === 0;
+const botOn = (x, y) => lab.bots.some((r) => (r.tx === x && r.ty === y) || (r.path[0] && r.path[0].x === x && r.path[0].y === y));
+
+// Breadth-first search: shortest routes on the grid (4 directions, obstacles block).
+function bfs(sx, sy) {
+  const n = lab.size, dist = new Int32Array(n * n).fill(-1), prev = new Int32Array(n * n).fill(-1), q = [sy * n + sx];
+  dist[sy * n + sx] = 0;
+  for (let h = 0; h < q.length; h++) {
+    const c = q[h], x = c % n, y = (c / n) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy, k = ny * n + nx;
+      if (freeCell(nx, ny) && dist[k] < 0) { dist[k] = dist[c] + 1; prev[k] = c; q.push(k); }
+    }
+  }
+  return { dist, prev, n };
+}
+function routeTo(b, x, y) {
+  let k = y * b.n + x;
+  if (b.dist[k] < 0) return null;
+  const path = [];
+  while (b.prev[k] >= 0) { path.push({ x: k % b.n, y: (k / b.n) | 0 }); k = b.prev[k]; }
+  return path.reverse();
+}
+// Distance from every cell to its nearest charging dock (multi-source BFS).
+function dockDistances() {
+  const n = lab.size, dist = new Int32Array(n * n).fill(-1), q = [];
+  for (const d of lab.docks) { dist[d.y * n + d.x] = 0; q.push(d.y * n + d.x); }
+  for (let h = 0; h < q.length; h++) {
+    const c = q[h], x = c % n, y = (c / n) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy, k = ny * n + nx;
+      if (freeCell(nx, ny) && dist[k] < 0) { dist[k] = dist[c] + 1; q.push(k); }
+    }
+  }
+  return dist;
+}
+function allFreeConnected() {
+  const d = lab.docks[0], b = bfs(d.x, d.y);
+  let free = 0, reached = 0;
+  for (let y = 0; y < lab.size; y++) for (let x = 0; x < lab.size; x++) if (lab.grid[y][x] === 0) { free++; if (b.dist[y * b.n + x] >= 0) reached++; }
+  return free === reached;
+}
+
+function ensureDocks() { // docks along the left edge, about one per 4 robots
+  const need = Math.max(2, Math.ceil(lab.robots / 4)), mid = Math.floor(lab.size / 2);
+  for (let i = 0; lab.docks.length < need && i < lab.size * 2; i++) {
+    const y = mid + (i % 2 ? -1 : 1) * Math.ceil(i / 2) * 2;
+    if (inGrid(0, y) && !isDock(0, y)) { lab.grid[y][0] = 0; lab.docks.push({ x: 0, y, occupant: null }); }
+  }
+}
+function randomObstacles() {
+  const n = lab.size, cells = [];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if (!isDock(x, y)) lab.grid[y][x] = 0;
+    if (!isDock(x, y) && !isDock(x - 1, y) && !botOn(x, y)) cells.push([x, y]); // keep the cell in front of each dock open
+  }
+  let target = Math.round(n * n * lab.density);
+  for (const [x, y] of shuffle(cells)) {
+    if (target <= 0) break;
+    lab.grid[y][x] = 1;
+    if (allFreeConnected()) target--; else lab.grid[y][x] = 0; // never wall off part of the floor
+  }
+  lab.bots.forEach((r) => { r.path = []; });
+}
+function spawnBots() {
+  lab.docks.forEach((d) => { d.occupant = null; });
+  const cells = [];
+  for (let y = 0; y < lab.size; y++) for (let x = 0; x < lab.size; x++) if (freeCell(x, y) && !isDock(x, y)) cells.push([x, y]);
+  lab.bots = shuffle(cells).slice(0, lab.robots).map(([x, y], i) => ({
+    ...identity(`R${String(i + 1).padStart(2, "0")}`), id: i, seed: i * 7, x: x + 0.5, y: y + 0.5, tx: x, ty: y,
+    path: [], goal: null, mode: "explore", wantsCharge: false, dock: null, wait: 0, battery: 25 + lab.rng() * 75,
+  }));
+}
+function labReset(newScenario) {
+  if (newScenario || !lab.seed) lab.seed = 1000 + Math.floor(Math.random() * 9000);
+  lab.rng = mulberry32(lab.seed);
+  const n = lab.size;
+  lab.grid = Array.from({ length: n }, () => new Array(n).fill(0));
+  lab.visited = Array.from({ length: n }, () => new Array(n).fill(0));
+  lab.docks = []; lab.bots = []; lab.charges = 0;
+  ensureDocks();
+  randomObstacles();
+  spawnBots();
+}
+
+function labDecide(r, dt) {
+  if (r.wait > 0) { r.wait -= dt; return; }
+  const b = bfs(r.tx, r.ty), toDock = dockDistances();
+  // Battery left after walking `cells` cells and then back to the nearest dock from `end`.
+  const leftAfter = (cells, end) => r.battery - (cells + Math.max(0, toDock[end])) * LAB_DRAIN;
+  if (!r.wantsCharge && toDock[r.ty * b.n + r.tx] >= 0 && leftAfter(0, r.ty * b.n + r.tx) <= LAB_RESERVE + 2 * LAB_DRAIN) {
+    r.wantsCharge = true;
+  }
+  if (r.wantsCharge) {
+    if (r.dock && r.dock.x === r.tx && r.dock.y === r.ty) {
+      r.mode = "charging"; r.goal = null; lab.charges++;
+      say(r, "Cargando batería…", 2500);
+      return;
+    }
+    if (!r.dock) {
+      // Free docks it can actually reach with the battery it has left; otherwise it waits its turn.
+      const options = lab.docks.filter((d) => { const c = b.dist[d.y * b.n + d.x]; return !d.occupant && c >= 0 && c * LAB_DRAIN < r.battery; })
+        .sort((p, q) => b.dist[p.y * b.n + p.x] - b.dist[q.y * b.n + q.x]);
+      if (!options.length) { // every dock busy (queue) or unreachable (blocked)
+        r.mode = lab.docks.some((d) => b.dist[d.y * b.n + d.x] >= 0) ? "queue" : "blocked";
+        r.wait = 0.6; r.goal = null;
+        return;
+      }
+      r.dock = options[0]; r.dock.occupant = r;
+      if (r.mode !== "toDock") say(r, `Batería ${Math.round(r.battery)}%: voy a cargar`, 2500);
+    }
+    const route = routeTo(b, r.dock.x, r.dock.y);
+    if (!route) { r.dock.occupant = null; r.dock = null; r.mode = "blocked"; r.wait = 1; return; }
+    r.path = route; r.goal = { x: r.dock.x, y: r.dock.y }; r.mode = "toDock";
+    return;
+  }
+  // Explore: among a few random reachable cells, prefer the least visited one,
+  // but only destinations from which the robot can still get back to a dock.
+  let best = null, reachable = false;
+  for (let i = 0; i < 18; i++) {
+    const x = Math.floor(lab.rng() * lab.size), y = Math.floor(lab.rng() * lab.size), k = y * b.n + x, d = b.dist[k];
+    if (d < 2 || isDock(x, y)) continue;
+    reachable = true;
+    if (toDock[k] >= 0 && leftAfter(d, k) <= LAB_RESERVE) continue;
+    const score = lab.visited[y][x] * 3 + d * 0.15 + lab.rng();
+    if (!best || score < best.s) best = { x, y, s: score };
+  }
+  if (!best && reachable && lab.docks.some((dk) => b.dist[dk.y * b.n + dk.x] >= 0)) { r.wantsCharge = true; return; } // nothing affordable: charge first
+  if (!best) { r.mode = "blocked"; r.wait = 1; r.goal = null; return; }
+  r.path = routeTo(b, best.x, best.y); r.goal = { x: best.x, y: best.y }; r.mode = "explore";
+}
+
+function labUpdate(dt) {
+  for (const r of lab.bots) {
+    if (r.mode === "empty") continue;
+    if (r.mode === "charging") {
+      r.battery = Math.min(100, r.battery + LAB_CHARGE * dt);
+      if (r.battery >= 100) {
+        r.dock.occupant = null; r.dock = null; r.wantsCharge = false; r.mode = "explore";
+        say(r, "¡Carga completa!", 2500);
+      }
+      continue;
+    }
+    if (!r.path.length) { labDecide(r, dt); continue; }
+    let step = LAB_SPEED * dt;
+    while (step > 0 && r.path.length) {
+      const next = r.path[0];
+      if (lab.grid[next.y][next.x] === 1) { r.path = []; break; } // a new obstacle on the route: plan again
+      const cx = next.x + 0.5, cy = next.y + 0.5, dx = cx - r.x, dy = cy - r.y, d = Math.hypot(dx, dy);
+      if (d <= step) {
+        r.x = cx; r.y = cy; r.tx = next.x; r.ty = next.y; r.path.shift(); step -= d;
+        r.battery = Math.max(0, r.battery - LAB_DRAIN);
+        lab.visited[next.y][next.x]++;
+        if (r.battery <= 0) {
+          r.mode = "empty"; r.path = []; say(r, "Sin batería", 4000);
+          if (r.dock) { r.dock.occupant = null; r.dock = null; } // free the dock it had reserved
+          break;
+        }
+      } else { r.x += (dx / d) * step; r.y += (dy / d) * step; step = 0; }
+    }
+  }
+}
+
+/* ----- lab drawing (same isometric style, grid size is variable) ----- */
+function labGeom() {
+  // Leave room at the top when the toolbar floats over the canvas, and fit
+  // the grid in what is left (by width and by height).
+  const panel = $("lab-panel");
+  const top = !panel.hidden && getComputedStyle(panel).position === "absolute" ? (panel.offsetHeight + 24) / viewScale : 0;
+  const G = lab.size, availH = H - top - 70;
+  const tw = Math.max(16, Math.min(64, Math.floor(Math.min((W - 40) / G, (2 * availH) / G) / 2) * 2)), th = tw / 2;
+  return { G, tw, th, k: tw / 64, ox: W / 2, oy: top + 50 + (availH - G * th) / 2 };
+}
+function renderLab(t) {
+  const gm = labGeom(), G = gm.G;
+  const I = (x, y, z = 0) => [gm.ox + (x - y) * gm.tw / 2, gm.oy + (x + y) * gm.th / 2 - z * gm.k];
+  const boxL = (x, y, w, d, h, top, left, right) => {
+    poly([I(x, y + d), I(x + w, y + d), I(x + w, y + d, h), I(x, y + d, h)], left);
+    poly([I(x + w, y), I(x + w, y + d), I(x + w, y + d, h), I(x + w, y, h)], right);
+    poly([I(x, y, h), I(x + w, y, h), I(x + w, y + d, h), I(x, y + d, h)], top);
+  };
+  ctx.clearRect(0, 0, W, H);
+  poly([I(0, G), I(G, G), I(G, G, -14), I(0, G, -14)], "#d5d9e4");
+  poly([I(G, 0), I(G, G), I(G, G, -14), I(G, 0, -14)], "#c7ccd9");
+  const vmax = Math.max(1, ...lab.visited.flat());
+  for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) {
+    const tile = [I(x, y), I(x + 1, y), I(x + 1, y + 1), I(x, y + 1)];
+    poly(tile, (x + y) % 2 ? "#fafbfd" : "#f3f5fa", "rgba(160,170,195,.25)");
+    const v = lab.visited[y][x];
+    if (state.toggles.heat && v > 0 && lab.grid[y][x] === 0) poly(tile, `rgba(16,185,129,${(0.06 + 0.26 * Math.log1p(v) / Math.log1p(vmax)).toFixed(3)})`);
+  }
+  for (const d of lab.docks) {
+    poly([I(d.x + 0.08, d.y + 0.08), I(d.x + 0.92, d.y + 0.08), I(d.x + 0.92, d.y + 0.92), I(d.x + 0.08, d.y + 0.92)], "rgba(34,211,238,.2)", "rgba(8,145,178,.7)", 1.5);
+    const [cx, cy] = I(d.x + 0.5, d.y + 0.5);
+    text("⚡", cx, cy, "rgba(8,145,178,.9)", `700 ${Math.round(14 * gm.k + 4)}px Inter, sans-serif`);
+  }
+  // back glass rails
+  const rail = 22;
+  poly([I(0, G), I(0, 0), I(0, 0, rail), I(0, G, rail)], "rgba(186,230,253,.3)");
+  poly([I(0, 0), I(G, 0), I(G, 0, rail), I(0, 0, rail)], "rgba(186,230,253,.3)");
+  ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(...I(0, G, rail)); ctx.lineTo(...I(0, 0, rail)); ctx.lineTo(...I(G, 0, rail)); ctx.stroke(); ctx.lineWidth = 1;
+  // hover cell with the colour of the active tool
+  if (lab.hover) {
+    const { x, y } = lab.hover, col = { obstacle: "#475569", erase: "#ef4444", dock: "#0891b2" }[lab.tool];
+    poly([I(x, y), I(x + 1, y), I(x + 1, y + 1), I(x, y + 1)], col + "22", col, 2);
+  }
+  // planned routes
+  if (state.toggles.targets) {
+    for (const r of lab.bots) {
+      if (!r.goal || !r.path.length) continue;
+      ctx.setLineDash([4, 5]); ctx.strokeStyle = r.color; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(...I(r.x, r.y)); r.path.forEach((c) => ctx.lineTo(...I(c.x + 0.5, c.y + 0.5))); ctx.stroke();
+      ctx.setLineDash([]); ctx.lineWidth = 1;
+      if (r.mode === "explore") {
+        const [fx, fy] = I(r.goal.x + 0.5, r.goal.y + 0.5), s = Math.max(0.6, gm.k);
+        ctx.fillStyle = "#475569"; ctx.fillRect(fx - 1, fy - 16 * s, 2, 16 * s);
+        ctx.fillStyle = r.color; ctx.beginPath(); ctx.moveTo(fx + 1, fy - 16 * s); ctx.lineTo(fx + 10 * s, fy - 12.5 * s); ctx.lineTo(fx + 1, fy - 9 * s); ctx.fill();
+      }
+    }
+  }
+  // obstacles, chargers and robots, back to front
+  const items = [];
+  for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) {
+    if (lab.grid[y][x] === 1) items.push({ depth: x + y + 1, draw: () => {
+      boxL(x + 0.06, y + 0.06, 0.88, 0.88, 34, "#e2e8f0", "#94a3b8", "#b6c0cf");
+      ctx.strokeStyle = "rgba(34,211,238,.8)"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(...I(x + 0.06, y + 0.94, 34)); ctx.lineTo(...I(x + 0.94, y + 0.94, 34)); ctx.lineTo(...I(x + 0.94, y + 0.06, 34)); ctx.stroke(); ctx.lineWidth = 1;
+    } });
+  }
+  for (const d of lab.docks) items.push({ depth: d.x + d.y + 0.2, draw: () => boxL(d.x + 0.04, d.y + 0.36, 0.2, 0.3, 40, "#ecfeff", "#67e8f9", "#a5f3fc") });
+  const ps = Math.max(2, Math.round(3 * gm.k));
+  for (const r of lab.bots) items.push({ depth: r.x + r.y, robot: r, draw: () => {
+    const [sx, sy] = I(r.x, r.y), key = LAB_MODES[r.mode][1];
+    if (r.mode === "charging") {
+      ctx.strokeStyle = `rgba(6,182,212,${0.5 + 0.4 * Math.sin(t / 180)})`; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(sx, sy, 19 * gm.k + 6, 8 * gm.k + 3, 0, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1;
+    }
+    ctx.fillStyle = "rgba(30,40,80,.16)"; ctx.beginPath(); ctx.ellipse(sx, sy, 13 * gm.k + 3, 5 * gm.k + 1.5, 0, 0, Math.PI * 2); ctx.fill();
+    const sprite = robotSprite(r.color, key, (Math.floor(t / 120) + r.seed) % 37 === 0, r.mode === "empty");
+    const moving = r.path.length > 0 && r.mode !== "charging";
+    const dx = Math.round(sx - sprite.width * ps / 2), dy = Math.round(sy - sprite.height * ps + 3 + (moving && Math.floor(t / 180) % 2 ? -ps : 0));
+    ctx.drawImage(sprite, dx, dy, sprite.width * ps, sprite.height * ps);
+    r.head = [sx, dy - 5];
+  } });
+  items.sort((a, b) => a.depth - b.depth).forEach((it) => it.draw());
+  if (state.toggles.tags) labTags(lab.bots.filter((r) => r.head));
+  // caption
+  text("SIMULACIÓN LOCAL · NO ENVÍA DATOS A LA API", W - 16, H - 16, "rgba(100,110,135,.7)", "700 10px Inter, sans-serif", "right");
+  if (t - lab.statsAt > 250) { lab.statsAt = t; labStats(); }
+}
+function labTags(bots) {
+  const placed = [], bubbles = [], now = performance.now();
+  for (const r of bots.sort((a, b) => b.head[1] - a.head[1])) {
+    const [label, key] = LAB_MODES[r.mode], sub = `${label} · ${Math.round(r.battery)}%`;
+    const w = Math.round(textWidth(r.name, "600 11px Inter, sans-serif") + textWidth(sub, "500 10px Inter, sans-serif") + 36);
+    const rect = { x: r.head[0] - w / 2, y: r.head[1] - 20, w, h: 26 };
+    for (let i = 0; i < 5 && placed.some((p) => overlaps(rect, p)); i++) rect.y -= 27;
+    placed.push(rect);
+    if (rect.y + 20 < r.head[1] - 1) { ctx.strokeStyle = "rgba(100,116,139,.55)"; ctx.beginPath(); ctx.moveTo(r.head[0], r.head[1]); ctx.lineTo(r.head[0], rect.y + 25); ctx.stroke(); }
+    const plate = pillTag(r.head[0], rect.y + 20, COLORS[key], r.name, sub, COLORS[key]);
+    ctx.fillStyle = "#e6e8ef"; ctx.fillRect(plate.left + 10, plate.top + plate.h + 2, plate.w - 20, 3);
+    ctx.fillStyle = r.battery < 20 ? COLORS.CRITICAL : r.battery < 50 ? COLORS.WARNING : COLORS.NORMAL;
+    ctx.fillRect(plate.left + 10, plate.top + plate.h + 2, (plate.w - 20) * r.battery / 100, 3);
+    if (r.bubble && now < r.bubble.until) bubbles.push({ r, x: r.head[0], top: plate.top });
+  }
+  let shown = 0;
+  for (const b of bubbles) {
+    if (shown >= 3) break;
+    const bw = Math.min(190, textWidth(b.r.bubble.text, "500 11px Inter, sans-serif") + 16);
+    const rect = { x: b.x - bw / 2, y: b.top - 32, w: bw, h: 30 };
+    if (placed.some((p) => overlaps(rect, p))) continue;
+    placed.push(rect); bubble(b.x, b.top, b.r.bubble.text); shown++;
+  }
+}
+function labStats() {
+  let free = 0, seen = 0, walls = 0;
+  for (let y = 0; y < lab.size; y++) for (let x = 0; x < lab.size; x++) {
+    if (lab.grid[y][x] === 1) walls++; else { free++; if (lab.visited[y][x] > 0) seen++; }
+  }
+  const avg = lab.bots.reduce((s, r) => s + r.battery, 0) / Math.max(1, lab.bots.length);
+  const charging = lab.bots.filter((r) => r.mode === "charging").length;
+  $("lab-stats").innerHTML = `<span>Escenario <b>#${lab.seed}</b></span><span>Grilla <b>${lab.size}×${lab.size}</b></span>
+    <span>Cobertura <b>${Math.round(100 * seen / Math.max(1, free))}%</b></span><span>Obstáculos <b>${walls}</b></span>
+    <span>Batería prom. <b>${Math.round(avg)}%</b></span><span>Cargando <b>${charging}</b> · cargas <b>${lab.charges}</b></span>`;
+}
+
+/* ----- lab controls ----- */
+function setLab(on) {
+  lab.on = on;
+  if (on && !lab.bots.length) labReset(false);
+  if (on && state.selected) closeProfile();
+  lab.last = performance.now(); lab.hover = null; lab.paint = null;
+  $("lab-toggle").setAttribute("aria-pressed", String(on));
+  $("lab-panel").hidden = !on;
+  $("stage").classList.toggle("lab-on", on);
+  $("office-title").textContent = on ? "Laboratorio de movilidad" : "Oficina de operaciones";
+  canvas.style.touchAction = on ? "none" : "";
+  canvas.style.cursor = on ? "crosshair" : "default";
+}
+$("lab-toggle").addEventListener("click", () => setLab(!lab.on));
+if (location.hash === "#lab") setLab(true); // direct link: /dashboard#lab
+function labCell(e) {
+  const rect = canvas.getBoundingClientRect(), gm = labGeom();
+  const a = ((e.clientX - rect.left) / viewScale - gm.ox) / (gm.tw / 2), b = ((e.clientY - rect.top) / viewScale - gm.oy) / (gm.th / 2);
+  const x = Math.floor((a + b) / 2), y = Math.floor((b - a) / 2);
+  return inGrid(x, y) ? { x, y } : null;
+}
+function labPaint(c) {
+  if (!c) return;
+  // Fill every cell between the previous pointer position and this one, so a
+  // fast drag draws a continuous wall instead of scattered blocks.
+  const from = lab.lastCell || c, steps = Math.max(Math.abs(c.x - from.x), Math.abs(c.y - from.y));
+  for (let i = 0; i <= steps; i++) {
+    const x = Math.round(from.x + ((c.x - from.x) * i) / Math.max(1, steps)), y = Math.round(from.y + ((c.y - from.y) * i) / Math.max(1, steps));
+    if (isDock(x, y) || (lab.paint === 1 && botOn(x, y))) continue; // never drop a wall on a robot or the cell it is entering
+    lab.grid[y][x] = lab.paint;
+  }
+  lab.lastCell = c;
+}
+function labToggleDock(c) {
+  if (!c) return;
+  const i = lab.docks.findIndex((d) => d.x === c.x && d.y === c.y);
+  if (i >= 0) {
+    if (lab.docks.length > 1 && !lab.docks[i].occupant) lab.docks.splice(i, 1);
+  } else if (freeCell(c.x, c.y) && !botOn(c.x, c.y)) {
+    lab.docks.push({ x: c.x, y: c.y, occupant: null });
+  }
+}
+canvas.addEventListener("pointerdown", (e) => {
+  if (!lab.on) return;
+  const c = labCell(e);
+  if (lab.tool === "dock") { labToggleDock(c); return; }
+  lab.paint = lab.tool === "erase" ? 0 : (c && lab.grid[c.y][c.x] === 1 ? 0 : 1); // drag to paint, or to erase if you start on a wall
+  lab.lastCell = null;
+  labPaint(c);
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* keep painting while inside the canvas */ }
+});
+canvas.addEventListener("pointermove", (e) => {
+  if (!lab.on) return;
+  lab.hover = labCell(e);
+  if (lab.paint !== null) labPaint(lab.hover);
+});
+for (const ev of ["pointerup", "pointercancel"]) canvas.addEventListener(ev, () => { lab.paint = null; });
+canvas.addEventListener("pointerleave", () => { lab.hover = null; });
+document.querySelectorAll(".lab-panel .tool").forEach((b) => b.addEventListener("click", () => {
+  lab.tool = b.dataset.tool;
+  document.querySelectorAll(".lab-panel .tool").forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+}));
+$("lab-size").addEventListener("input", (e) => { lab.size = +e.target.value; $("lab-size-out").textContent = lab.size; labReset(false); });
+$("lab-robots").addEventListener("input", (e) => {
+  lab.robots = +e.target.value; $("lab-robots-out").textContent = lab.robots;
+  ensureDocks(); spawnBots();
+});
+$("lab-density").addEventListener("input", (e) => {
+  lab.density = +e.target.value / 100; $("lab-density-out").textContent = `${e.target.value}%`;
+  randomObstacles();
+});
+$("lab-speed").addEventListener("change", (e) => { lab.speed = +e.target.value; });
+$("lab-random").addEventListener("click", () => randomObstacles());
+$("lab-clear").addEventListener("click", () => {
+  for (let y = 0; y < lab.size; y++) for (let x = 0; x < lab.size; x++) lab.grid[y][x] = 0;
+  lab.bots.forEach((r) => { r.path = []; });
+});
+$("lab-seed").addEventListener("click", () => labReset(true));
 
 /* =====================================================================
    Boot
@@ -1007,6 +1546,7 @@ resizeCanvas();
 (document.fonts ? document.fonts.ready : Promise.resolve()).finally(() => requestAnimationFrame(render));
 log("Bienvenido a la oficina. Conectando con la flota…");
 pollFleet(); pollSummary(); pollHistory();
+renderRubric(); runRubric(false);
 </script>
 </body>
 </html>

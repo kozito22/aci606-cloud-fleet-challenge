@@ -99,6 +99,13 @@ Así funciona el simulador: después de moverse, aplica `x %= 10` e `y %= 10`, d
 El panel dibuja la ruta más corta sobre el toro (`|dx| <= 5`) y muestra el cruce con un desvanecimiento, en vez de un salto.
 La misma distancia toroidal se usa para asignar los puntos óptimos.
 
+**¿Qué es el modo laboratorio? ¿Cambia algo de lo evaluado?**
+Es una simulación local en el navegador para experimentar con obstáculos, tamaño de grilla y carga de batería. No envía datos a la API ni a Neon, y no toca el modelo: la flota real sigue siendo la del simulador oficial.
+No sirve para evitar *data leakage*. Ese riesgo ya se controla en el entrenamiento separando las flotas, y el modelo no usa la posición (`x`, `y`).
+
+**¿Cómo deciden los robots del laboratorio cuándo cargar?**
+Cada celda gasta batería. Antes de ir a un destino, el robot calcula con BFS la ida y la vuelta al puerto más cercano. Si no le alcanza con reserva, va a cargar; si el puerto está ocupado, espera en cola.
+
 ## Demostración en vivo (checklist)
 
 1. `GET /health` para despertar el servicio.
