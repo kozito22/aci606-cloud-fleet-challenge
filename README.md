@@ -229,7 +229,7 @@ Arriba de la escena, un selector cambia entre cuatro vistas. El panel lateral (p
   Los meseros caminan de verdad: toman el pedido en la mesa, lo llevan al pase, el chef lo cocina y vuelven con el plato del color del estado predicho. La caja muestra las métricas en vivo.
 - **Laboratorio** (`/dashboard#lab`): la simulación local descrita a continuación.
 - **¿Cómo funciona?** (`/dashboard#como-funciona`): vista 2D sencilla que explica el sistema por dentro.
-  - **Video del recorrido** (3:50 min, sin voz, con subtítulos): muestra todo el panel paso a paso. Está en `public/media/fleet-office-recorrido.mp4`; Vercel lo sirve desde su CDN en `/media/…` (en local lo sirve la API).
+  - **Video del recorrido** (3:20 min, 30 cps, con voz, música y subtítulos): muestra todo el panel paso a paso. Está en `public/media/fleet-office-recorrido-voz.mp4`; Vercel lo sirve desde su CDN en `/media/…` (en local lo sirve la API). La voz se generó sin conexión con [Piper](https://github.com/OHF-Voice/piper1-gpl) (voz `es_MX-claude-high`, licencia Apache 2.0) y la música es original, sintetizada con código.
   - **Mapa del viaje de un dato**: robot → internet → API → revisión → modelo → base de datos → panel, con un sobre que viaja con datos reales.
   - **Ficha de cada pieza**: explicación simple o técnica, por qué está hecha así y un valor en vivo.
   - **«¿Qué pasa si…?»**: 15 casos; 9 tienen un botón que hace la petición real (422, 200, carga, `/health`, `/metrics`, historial).
