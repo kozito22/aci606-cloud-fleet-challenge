@@ -159,7 +159,7 @@
     #rubric-run[disabled] { opacity: .6; cursor: progress; }
 
     /* ---------- view modes ---------- */
-    .modes { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); }
+    .modes { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); }
     .mode { border: 0; background: none; cursor: pointer; padding: 4px 12px; border-radius: 999px; font-size: 12px; color: var(--muted); }
     .mode[aria-selected="true"] { background: #fff; color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(30,40,80,.18); }
     .mode:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -202,7 +202,58 @@
     .lab-stats { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 2px 16px; padding-top: 7px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
     .lab-stats b { color: var(--text); font-variant-numeric: tabular-nums; }
 
-    @media (max-width: 1150px) { .layout { grid-template-columns: 1fr; } .side { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+    /* ---------- guide mode: simple 2D, retro ---------- */
+    .guide { display: none; padding: 18px; background: #fffdf5; color: #1d2433; font-size: 13px;
+      background-image: radial-gradient(#e7e1cf 1px, transparent 1px); background-size: 16px 16px; }
+    .guide-on { background: #fffdf5 !important; }
+    .guide-on #office, .guide-on .feed, .guide-on .profile, .guide-on .offline-banner { display: none !important; }
+    .guide-on .guide { display: block; }
+    .g-box { background: #fff; border: 2px solid #1d2433; border-radius: 4px; box-shadow: 4px 4px 0 #1d2433; }
+    .g-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+    .g-head h3 { margin: 0; font: 700 15px var(--mono); letter-spacing: .02em; }
+    .g-head p { margin: 2px 0 0; color: #5b6478; font-size: 12px; }
+    .g-switch { display: inline-flex; border: 2px solid #1d2433; border-radius: 4px; overflow: hidden; }
+    .g-switch button { border: 0; background: #fff; padding: 4px 10px; cursor: pointer; font: 600 12px var(--mono); color: #1d2433; }
+    .g-switch button[aria-pressed="true"] { background: #1d2433; color: #fffdf5; }
+    .g-map { padding: 8px; }
+    .g-map svg { display: block; width: 100%; height: auto; }
+    .g-map .st { cursor: pointer; }
+    .g-map .st:focus { outline: none; }
+    .g-map .st:focus-visible rect.frame { stroke: var(--accent); stroke-width: 4; }
+    .g-ticker { margin: 8px 2px 0; padding: 7px 10px; background: #1d2433; color: #d1fae5; border-radius: 3px; font: 12px/1.5 var(--mono); min-height: 2.6em; }
+    .g-ticker b { color: #fde68a; font-weight: 500; }
+    .g-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; margin-top: 16px; align-items: start; }
+    .g-card { padding: 14px 16px; }
+    .g-card h4 { margin: 0 0 2px; font: 700 14px var(--mono); }
+    .g-card .tag { display: inline-block; font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: #5b6478; margin-bottom: 8px; }
+    .g-card h5 { margin: 10px 0 3px; font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: #0e7490; }
+    .g-card p { margin: 0; line-height: 1.55; }
+    .g-live { margin-top: 10px; padding: 7px 10px; background: #ecfdf5; border: 2px dashed #10b981; border-radius: 3px; font: 12px/1.5 var(--mono); }
+    .g-card a { color: #0e7490; font-weight: 600; }
+    .g-qs { padding: 12px 14px; }
+    .g-qs h4 { margin: 0 0 8px; font: 700 14px var(--mono); }
+    .g-q { border-top: 2px dotted #d6d0bd; }
+    .g-q summary { cursor: pointer; padding: 7px 0; font-weight: 600; list-style: none; display: flex; gap: 8px; }
+    .g-q summary::-webkit-details-marker { display: none; }
+    .g-q summary::before { content: "+"; font: 700 13px var(--mono); color: #0e7490; width: 12px; flex: none; }
+    .g-q[open] summary::before { content: "−"; }
+    .g-q .ans { padding: 0 0 10px 20px; line-height: 1.55; }
+    .g-q .ans small { display: block; margin-top: 4px; color: #5b6478; }
+    .g-try { margin-top: 7px; border: 2px solid #1d2433; background: #fde68a; border-radius: 3px; padding: 3px 10px; cursor: pointer; font: 700 12px var(--mono); box-shadow: 2px 2px 0 #1d2433; }
+    .g-try:active { transform: translate(2px, 2px); box-shadow: none; }
+    .g-try:disabled { opacity: .55; cursor: progress; }
+    .g-out { margin: 7px 0 0; padding: 7px 9px; background: #1d2433; color: #e2e8f0; border-radius: 3px; font: 11.5px/1.5 var(--mono); white-space: pre-wrap; word-break: break-word; }
+    .g-out:empty { display: none; }
+    .g-out .ok { color: #6ee7b7; } .g-out .bad { color: #fca5a5; } .g-out .warn { color: #fde68a; }
+    .g-gloss { margin-top: 16px; padding: 12px 14px; }
+    .g-gloss h4 { margin: 0 0 8px; font: 700 14px var(--mono); }
+    .g-gloss dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px 18px; }
+    .g-gloss dt { font: 700 12px var(--mono); color: #0e7490; }
+    .g-gloss dd { margin: 0 0 4px; color: #3b4357; font-size: 12px; }
+    @media (max-width: 900px) { .g-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .guide { padding: 12px; } .g-map { overflow-x: auto; } .g-map svg { min-width: 640px; } }
+
+    @media (max-width: 1150px) { .layout { grid-template-columns: minmax(0, 1fr); } .side { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
     @media (max-width: 700px) {
       .topbar, .layout { padding-left: 16px; padding-right: 16px; }
       .stage { margin: 12px 0 0; border-radius: 0; }
@@ -237,6 +288,7 @@
             <button class="mode" type="button" role="tab" data-mode="office" aria-selected="true">Oficina</button>
             <button class="mode" type="button" role="tab" data-mode="restaurant" aria-selected="false">Restaurante</button>
             <button class="mode" type="button" role="tab" data-mode="lab" aria-selected="false">Laboratorio</button>
+            <button class="mode" type="button" role="tab" data-mode="guide" aria-selected="false">¿Cómo funciona?</button>
           </div>
           <button class="toggle" data-toggle="heat" aria-pressed="true">Cobertura</button>
           <button class="toggle" data-toggle="targets" aria-pressed="true">Puntos óptimos</button>
@@ -279,6 +331,25 @@
           </div>
           </details>
           <div class="lab-stats" id="rest-stats"></div>
+        </div>
+        <div class="guide" id="guide">
+          <div class="g-head">
+            <div><h3>¿CÓMO FUNCIONA? · EL VIAJE DE UN DATO</h3>
+              <p>Toca cualquier parte del mapa para saber qué es, qué hace y por qué está hecha así. El sobre que viaja usa datos reales de la flota.</p></div>
+            <div class="g-switch" role="group" aria-label="Tipo de explicación">
+              <button type="button" data-level="kid" aria-pressed="true">Como a un niño</button>
+              <button type="button" data-level="tech" aria-pressed="false">Técnica</button>
+            </div>
+          </div>
+          <div class="g-box g-map">
+            <svg id="g-svg" viewBox="0 0 900 270" role="group" aria-label="Mapa del sistema: robot, internet, API, revisión, modelo, base de datos y panel"></svg>
+            <div class="g-ticker" id="g-ticker" aria-live="polite">Preparando el primer viaje…</div>
+          </div>
+          <div class="g-grid">
+            <article class="g-box g-card" id="g-card" aria-live="polite"></article>
+            <section class="g-box g-qs" aria-labelledby="g-qs-title"><h4 id="g-qs-title">¿QUÉ PASA SI…?</h4><div id="g-qs"></div></section>
+          </div>
+          <section class="g-box g-gloss" aria-labelledby="g-gloss-title"><h4 id="g-gloss-title">PALABRAS DIFÍCILES</h4><dl id="g-gloss"></dl></section>
         </div>
         <canvas id="office" width="880" height="640" aria-label="Vista isométrica de la oficina con la flota de robots"></canvas>
         <div class="profile" id="profile" role="dialog" aria-label="Ficha del agente"></div>
@@ -903,6 +974,11 @@ function render(t) {
     requestAnimationFrame(render);
     return;
   }
+  if (state.mode === "guide") {
+    guideFrame(t);
+    requestAnimationFrame(render);
+    return;
+  }
   if (state.mode === "restaurant") {
     renderRestaurant(t);
     requestAnimationFrame(render);
@@ -1082,9 +1158,11 @@ async function pollFleet() {
   try {
     const fleet = await getJSON("/fleet");
     state.fleet = fleet;
+    state.fleetAt = Date.now();
     setApi(true);
     ingestRobots(fleet.robots);
     renderPanels();
+    guideLive();
   } catch (err) { setApi(false); }
   setTimeout(pollFleet, POLL_MS);
 }
@@ -1096,6 +1174,7 @@ async function pollSummary() {
       log(`Respaldo lógico completado: ${Number(last.rows || 0).toLocaleString("es-CL")} filas.`, "ok");
     state.lastBackup = last ? last.finished_at : 0;
     renderSummary();
+    guideLive();
   } catch (err) { /* status is shown by pollFleet */ }
   setTimeout(pollSummary, 5000);
 }
@@ -2044,21 +2123,342 @@ function setLab(on) {
   canvas.style.touchAction = on ? "none" : "";
   canvas.style.cursor = on ? "crosshair" : "default";
 }
+
+/* =====================================================================
+   «¿Cómo funciona?»: the journey of one sample, explained part by part
+   ===================================================================== */
+// 8×8 pixel icons: "#" outline, "c" station color.
+const G_ICONS = {
+  robot:    ["...c....", "..####..", ".#c##c#.", ".######.", "...##...", ".#cccc#.", ".#cccc#.", "..#..#.."],
+  net:      ["........", "########", "#c....c#", "#.c..c.#", "#..cc..#", "#......#", "########", "........"],
+  api:      [".######.", ".#cccc#.", ".#cccc#.", ".#ccc##.", ".#cccc#.", ".#cccc#.", ".#cccc#.", "########"],
+  check:    ["........", ".......c", "......cc", "c....cc.", "cc..cc..", ".cccc...", "..cc....", "........"],
+  model:    ["..####..", ".#cccc#.", "#cc..cc#", "#c.cc.c#", "#cccccc#", ".#cccc#.", "..####..", ".######."],
+  db:       [".######.", "#cccccc#", "#.####.#", "#cccccc#", "#.####.#", "#cccccc#", "#.####.#", ".######."],
+  panel:    ["########", "#cccccc#", "#c.c.cc#", "#cc.c.c#", "#cccccc#", "########", "...##...", ".######."],
+  metrics:  ["........", "......c.", "......c.", "...c..c.", "...c..c.", "c..c..c.", "c..c..c.", "########"],
+  backups:  ["####....", "#cc#....", "#cc####.", "####cc#.", "...#cc#.", "...#cc#.", "...####.", "........"],
+  coverage: ["..####..", ".#....#.", "#..cc..#", "#.c##c.#", "#.c##c.#", "#..cc..#", ".#....#.", "..####.."],
+};
+const nf = (v, d = 0) => (v === null || v === undefined || Number.isNaN(+v) ? "—" : num(v, d));
+const gAgo = (ts) => { if (!ts) return "nunca"; const s = Math.max(0, Date.now() / 1000 - ts); return s < 90 ? `hace ${Math.round(s)} s` : s < 5400 ? `hace ${Math.round(s / 60)} min` : `hace ${(s / 3600).toFixed(1)} h`; };
+const G_STATIONS = [
+  { id: "robot", col: 0, row: 0, color: "#38bdf8", name: "Robot", tech: "Simulador (cliente)",
+    kid: "Es como un niño que cada segundo le manda una cartita a la oficina contando cómo se siente: qué tan rápido va, qué tan caliente está su motor, cuánto tiembla, cuánta corriente usa y cuánta batería le queda.",
+    pro: "El simulador del profesor (carpeta simulator/) o el botón «Iniciar flota» crean una muestra por robot cada segundo con 10 campos (robot_id, timestamp, x, y, speed, battery, motor_temp, vibration, motor_current, obstacle_distance) y la mandan con POST /telemetry. La batería baja con el tiempo y la posición se mueve en un mundo de 10×10 que da la vuelta en los bordes.",
+    why: "No tenemos robots de verdad: el simulador produce datos con las mismas reglas que tendrían los reales, así se puede probar todo el sistema. No lo modificamos porque es lo que usa el profesor para evaluar.",
+    live: () => { const f = state.fleet; return f ? `${f.connected} robots conectados de ${f.robots.length} conocidos` : "Esperando a la flota…"; },
+    see: ["/robots", "Lista de robots (JSON)"] },
+  { id: "net", col: 1, row: 0, color: "#a78bfa", name: "Internet", tech: "HTTPS + Vercel",
+    kid: "La carta viaja por internet dentro de un sobre cerrado con candado, para que nadie la pueda leer ni cambiar en el camino. Llega a un edificio en Estados Unidos donde vive nuestra oficina.",
+    pro: "La petición viaja como JSON sobre HTTPS (cifrado TLS) hasta Vercel, región iad1 (Washington). Vercel ejecuta la API como funciones: prende instancias cuando llegan peticiones, crea más si hay mucha carga y las apaga cuando no hay trabajo.",
+    why: "HTTPS protege los datos. Vercel no necesita que mantengamos un servidor encendido: escala solo y cada push a main se publica automáticamente. La base de datos Neon está en la misma región para que la consulta sea corta.",
+    live: () => (guide.rtt ? `Ida y vuelta desde tu navegador hasta la API: ${nf(guide.rtt)} ms` : "Midiendo la distancia…"),
+    see: ["/health", "Estado del servicio"] },
+  { id: "api", col: 2, row: 0, color: "#0891b2", name: "API", tech: "FastAPI (Python)",
+    kid: "Es el portero de la oficina. Recibe cada carta, mira a qué puerta va y se la lleva a quien corresponde. También responde preguntas, como «¿qué le pasó al robot R01?».",
+    pro: "FastAPI con estas puertas (rutas): POST /telemetry guarda una muestra, POST /predict devuelve la predicción, GET /robots y /robots/{id}/history leen datos, GET /metrics muestra la observabilidad, GET /health dice si todo está vivo, y /fleet, /fleet/summary, /coverage y /backups alimentan este panel.",
+    why: "FastAPI es rápido, revisa los datos automáticamente con modelos (Pydantic) y crea documentación sola en /docs. Es Python, el mismo lenguaje del modelo de ML, así que el modelo se carga dentro de la misma API.",
+    live: () => { const m = state.fleet?.metrics; return m ? `${nf(m.requests_total)} peticiones atendidas · ${m.instances_active || 1} instancia(s) activa(s) · encendida hace ${nf((m.uptime_seconds || 0) / 60)} min` : "—"; },
+    see: ["/docs", "Documentación automática"] },
+  { id: "check", col: 3, row: 0, color: "#f59e0b", name: "Revisión", tech: "Validación (Pydantic)",
+    kid: "Antes de dejar pasar una carta, el revisor mira que esté completa y que tenga sentido. Una batería de 150 % o una velocidad negativa no existen. Si la carta está mal, la devuelve con una nota que dice qué está mal (eso es el código 422) y la oficina sigue trabajando normal.",
+    pro: "Pydantic exige los 10 campos con su tipo. Rangos: battery entre 0 y 100; speed, vibration, motor_current y obstacle_distance ≥ 0; robot_id de 1 a 20 caracteres. Rechaza NaN e Infinity (allow_inf_nan=False). Un manejador propio responde 422 con el campo y el motivo sin repetir el valor inválido (si repitiera un NaN, el JSON fallaría y daría 500).",
+    why: "Un dato malo que entra ensucia la base de datos y engaña al modelo. Es mejor detenerlo en la puerta, avisar exactamente qué falló y no caerse por eso.",
+    live: () => { const m = state.fleet?.metrics; return m ? `${nf(m.errors_4xx)} peticiones rechazadas (4xx) · ${nf(m.errors_5xx)} errores del servidor (5xx)` : "—"; },
+    see: ["/metrics", "Contadores de errores"] },
+  { id: "model", col: 4, row: 0, color: "#ec4899", name: "Modelo", tech: "Machine learning",
+    kid: "Es como un doctor que aprendió mirando miles de robots. Con 4 pistas (velocidad, temperatura del motor, vibración y corriente) adivina si el robot está bien (verde), regular (amarillo) o mal (rojo), y dice qué tan seguro está.",
+    pro: "Regresión logística (scikit-learn) sobre 4 variables, entrenada con 16 flotas del generador oficial. Se separó por fleet_id (GroupShuffleSplit y GroupKFold): ninguna flota está a la vez en entrenamiento y en prueba, así no hay data leakage. F1 macro 0,907 en prueba contra 0,288 de la línea base (decir siempre la clase más común); validación cruzada 0,920. Guardado en models/model.joblib con su ficha model_meta.json.",
+    why: "Se compararon 4 modelos: la regresión logística empata con los más complejos, es unas 250 veces más rápida y se puede explicar. No usa la batería (solo cuenta cuánto tiempo pasó) ni la distancia a obstáculos (no se relaciona con el estado del motor).",
+    live: () => { const md = state.summary?.model, m = state.fleet?.metrics; return md ? `${md.model_version || "modelo"} · F1 ${nf(md.test_f1_macro, 3)} · piensa en ${nf(m?.avg_inference_ms, 2)} ms por predicción` : "—"; },
+    see: ["/metrics", "Ficha del modelo en /metrics"] },
+  { id: "db", col: 5, row: 0, color: "#10b981", name: "Base de datos", tech: "PostgreSQL en Neon",
+    kid: "Es un cuaderno gigante donde se anota cada carta con su hora y lo que dijo el doctor. Nunca se borra nada, así que podemos ver la historia de cada robot aunque la oficina cierre y vuelva a abrir.",
+    pro: "SQLAlchemy Core sobre PostgreSQL en Neon (en local, SQLite). Tabla telemetry: cada muestra con su predicción y confianza; backup_log: cada respaldo; metrics_snapshot: los contadores de cada instancia. Usa el pooler de Neon con pool_pre_ping y pool_recycle para reconectar si la base se durmió.",
+    why: "Vercel prende y apaga instancias y su disco es temporal: lo que se guarde ahí se pierde. Por eso los datos viven en una base de datos aparte, que no se pierde con reinicios ni con un nuevo deploy.",
+    live: () => { const st = state.fleet?.storage; return st ? `${st.backend} · ${nf(st.telemetry_rows)} registros guardados de ${st.robots} robots` : "—"; },
+    see: ["/robots/R01/history?limit=5", "Historial de R01"] },
+  { id: "panel", col: 6, row: 0, color: "#6366f1", name: "Panel", tech: "Dashboard",
+    kid: "Es la ventana por donde miramos la oficina. Cada segundo y medio pregunta «¿qué hay de nuevo?» y dibuja a los robots donde están, con su color. No guarda nada: solo muestra.",
+    pro: "Un archivo HTML con JavaScript servido en /dashboard. Pide /fleet cada 1,5 s, /fleet/summary cada 5 s y el historial del robot abierto cada 3 s. Las cuatro vistas (Oficina, Restaurante, Laboratorio y ¿Cómo funciona?) usan los mismos datos; el Laboratorio es una simulación aparte que no envía nada.",
+    why: "Separar la ventana de la API permite que muchas personas miren a la vez sin cambiar nada, y que si cierras la página la API y la base sigan funcionando.",
+    live: () => `Última actualización ${state.fleetAt ? gAgo(state.fleetAt / 1000) : "pendiente"}`,
+    see: ["/dashboard", "Este panel"] },
+  { id: "metrics", col: 2, row: 1, color: "#0891b2", name: "Métricas", tech: "Observabilidad",
+    kid: "Es alguien con una libreta que cuenta cuántas cartas llegaron, cuántas venían malas y cuánto se demoró en responder cada una.",
+    pro: "Un middleware ASGI mide cada petición: total, errores 4xx y 5xx, latencia de /predict (promedio, p50, p95) y uptime. Cada instancia guarda sus contadores en la tabla metrics_snapshot después de cada petición y GET /metrics suma todas (scope: service).",
+    why: "En Vercel puede haber varias copias de la API a la vez. Si cada una contara sola, /metrics mostraría solo una parte. Guardando en la base, la suma da el total exacto (probado: 300 enviadas = 300 contadas).",
+    live: () => { const m = state.fleet?.metrics; return m ? `p50 ${nf(m.p50_prediction_latency_ms, 1)} ms · p95 ${nf(m.p95_prediction_latency_ms, 1)} ms · ${nf(m.prediction_requests)} predicciones` : "—"; },
+    see: ["/metrics", "Métricas completas"] },
+  { id: "backups", col: 5, row: 1, color: "#10b981", name: "Respaldos", tech: "Lógico · físico · offsite",
+    kid: "Cada cierto tiempo se saca una fotocopia del cuaderno y se guarda en otro lugar, por si se moja o se pierde. Hay dos tipos: una copia de lo escrito (lógico) y una copia del cuaderno entero (físico).",
+    pro: "Lógico: exporta las tablas a CSV comprimido (cada 30 min por defecto). Físico: copia binaria de la base (cada 6 h en SQLite; en Neon lo hace el proveedor continuamente con WAL y restauración a un punto en el tiempo). Offsite: copia en otra ubicación. Se guardan los 10 últimos (rotación) y cada uno queda en backup_log. En la nube los dispara GitHub Actions.",
+    why: "Una sola copia es un punto de falla. Con copias de distinto tipo en distintos lugares, si se borra algo por error se puede volver atrás.",
+    live: () => { const b = state.summary?.backups; return b ? `Lógico cada ${nf(b.logical?.every_minutes)} min (último ${gAgo(b.logical?.last?.finished_at)}) · físico cada ${nf((b.physical?.every_minutes || 0) / 60)} h · lo programa: ${b.scheduler}` : "—"; },
+    see: ["/backups", "Estado de los respaldos"] },
+  { id: "coverage", col: 6, row: 1, color: "#6366f1", name: "Cobertura", tech: "Puntos óptimos",
+    kid: "Para cuidar toda la sala, cada robot recibe un punto al que ir, así no se amontonan en un rincón y no quedan zonas sin visitar.",
+    pro: "Se divide la sala en una grilla y se cuentan las celdas visitadas en el último minuto. Los puntos óptimos salen de un diagrama de Voronoi centroidal (k-means), y cada robot se asigna a uno con el algoritmo húngaro (el reparto con menos camino total). Las distancias consideran que el mundo da la vuelta en los bordes.",
+    why: "Es lo que pedía la idea del proyecto: que los robots cubran el máximo espacio. Se calcula con los datos reales guardados.",
+    live: () => { const c = state.summary?.coverage; return c ? `Cobertura del último minuto: ${nf(c.coverage_pct, 1)} % de la sala (${c.cells_covered} de ${c.cells_total} celdas)` : "—"; },
+    see: ["/coverage", "Cobertura (JSON)"] },
+];
+const G_FLOW = ["robot", "net", "api", "check", "model", "db", "panel"];
+const G_QUESTIONS = [
+  { q: "…un robot manda una carta incompleta?", a: "El revisor la devuelve con el código 422 y una lista de lo que falta. No se guarda nada y la oficina sigue funcionando.",
+    t: "Pydantic marca cada campo faltante como «Field required». Es un error del cliente (4xx), no del servidor.", run: "missing" },
+  { q: "…manda un número imposible, como batería 150 %?", a: "También 422: la batería tiene que estar entre 0 y 100. Lo mismo pasa con una velocidad o vibración negativa.", run: "range" },
+  { q: "…manda NaN («no es un número»)?", a: "422. Al principio esto rompía el servidor (error 500) porque el mensaje de error intentaba repetir el NaN; lo arreglamos con un manejador propio que solo dice qué campo falló.", run: "nan" },
+  { q: "…manda un dato correcto a /predict?", a: "Responde 200 con exactamente 5 campos: robot_id, predicted_status, confidence, model_version e inference_ms. Es el contrato que pide el profesor y no se le cambió ningún nombre.",
+    t: "/predict solo predice; quien guarda en la base de datos es /telemetry.", run: "predict" },
+  { q: "…muchos piden cosas al mismo tiempo?", a: "Vercel crea más copias de la API. En la prueba de carga mandamos 300 predicciones, 10 a la vez: 0 errores, p95 de 246 a 305 ms desde Chile.", run: "burst" },
+  { q: "…se reinicia el servidor o hago un nuevo deploy?", a: "No se pierde nada: los datos están en Neon, fuera del servidor. Anota cuántos registros hay, reinicia y vuelve a mirar: habrá los mismos o más.", run: "count" },
+  { q: "…un robot deja de mandar cartas?", a: "Después de 30 segundos sin datos aparece como «Sin señal» (gris). Sus datos viejos siguen guardados y cuando vuelve a enviar se reconecta solo." },
+  { q: "…un robot llega al borde de la sala?", a: "Sale por un lado y entra por el lado opuesto, como en los juegos antiguos de pantalla que da la vuelta. Así lo hace el simulador del profesor (x % 10), y el panel lo dibuja con un desvanecido en el borde." },
+  { q: "…se le acaba la batería a un robot?", a: "En el simulador del profesor la batería solo baja y no se recarga: el robot sigue enviando datos y el panel avisa bajo 15 %. En el Laboratorio sí van solos a un puerto de carga, pero esa es una simulación aparte que no envía datos." },
+  { q: "…el modelo se equivoca?", a: "Puede pasar: acierta cerca de 9 de cada 10 (F1 0,907). Por eso da su confianza, y el panel solo anuncia un cambio de estado si se repite dos veces seguidas, para no dar falsas alarmas por un dato ruidoso." },
+  { q: "…se duerme o se cae la base de datos?", a: "/health muestra database_ok en falso y la píldora «Base de datos» se pone roja. /predict sigue respondiendo porque el modelo vive en la memoria de la API; guardar telemetría falla hasta que la base vuelve, y la conexión se recupera sola (pool_pre_ping).", run: "health" },
+  { q: "…alguien borra datos por error?", a: "Se recupera desde un respaldo: el lógico (CSV) se puede volver a cargar tabla por tabla, y en Neon se puede volver la base a un minuto anterior." },
+  { q: "…hay varias copias de la API a la vez?", a: "Cada copia guarda sus contadores en la base y /metrics los suma. Por eso /metrics dice «scope: service» y cuántas instancias hay.", run: "metrics" },
+  { q: "…quiero ver la historia de un robot?", a: "GET /robots/R01/history devuelve sus muestras ordenadas, con la predicción de cada una. En el panel, haz clic en un robot y se abre su ficha.", run: "history" },
+  { q: "…cierro esta página?", a: "No pasa nada: el panel es solo una ventana. La API, el modelo y la base de datos siguen funcionando en la nube." },
+];
+const G_GLOSSARY = [
+  ["API", "Un programa que recibe pedidos por internet y responde. Es el portero."],
+  ["JSON", "Una forma ordenada de escribir datos: nombre del campo y su valor."],
+  ["HTTPS", "Internet con candado: los datos viajan cifrados."],
+  ["200 / 422 / 500", "Respuestas: 200 = todo bien; 422 = tus datos están mal; 500 = falló el servidor."],
+  ["Modelo de ML", "Un programa que aprendió de ejemplos a adivinar algo."],
+  ["F1 macro", "Nota del modelo de 0 a 1 que da el mismo peso a las tres clases."],
+  ["Data leakage", "Hacer trampa sin querer: probar el modelo con datos parecidos a los que ya vio."],
+  ["p50 / p95", "La mitad de las respuestas tarda menos que p50; 95 de cada 100 tardan menos que p95."],
+  ["Instancia", "Una copia de la API funcionando. Vercel puede tener varias."],
+  ["Deploy", "Publicar una versión nueva en la nube."],
+  ["Respaldo", "Una copia de seguridad de los datos."],
+  ["Telemetría", "Los datos que un robot manda sobre sí mismo."],
+];
+
+const guide = { level: "kid", sel: "robot", rtt: null, trip: null, extra: [], built: false, lastRtt: 0 };
+const GW = 106, GH = 74, GX0 = 22, GDX = 124, GY = [36, 182];
+const gPos = (id) => { const st = G_STATIONS.find((o) => o.id === id); return { x: GX0 + st.col * GDX, y: GY[st.row] }; };
+const gCenter = (id) => { const p = gPos(id); return { x: p.x + GW / 2, y: p.y + GH / 2 }; };
+function gIcon(name, color, x, y, px) {
+  return G_ICONS[name].map((rowS, j) => [...rowS].map((ch, i) => ch === "." ? "" :
+    `<rect x="${x + i * px}" y="${y + j * px}" width="${px}" height="${px}" fill="${ch === "#" ? "#1d2433" : color}"/>`).join("")).join("");
+}
+function buildGuide() {
+  const svg = $("g-svg");
+  let h = `<defs><marker id="g-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#1d2433"/></marker></defs>`;
+  for (let i = 0; i < G_FLOW.length - 1; i++) {
+    const a = gPos(G_FLOW[i]), b = gPos(G_FLOW[i + 1]);
+    h += `<line x1="${a.x + GW + 2}" y1="${a.y + GH / 2}" x2="${b.x - 3}" y2="${b.y + GH / 2}" stroke="#1d2433" stroke-width="2.5" marker-end="url(#g-arrow)"/>`;
+  }
+  for (const [from, to] of [["api", "metrics"], ["db", "backups"], ["panel", "coverage"]]) {
+    const a = gPos(from), b = gPos(to);
+    h += `<line x1="${a.x + GW / 2}" y1="${a.y + GH + 3}" x2="${b.x + GW / 2}" y2="${b.y - 4}" stroke="#1d2433" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#g-arrow)"/>`;
+  }
+  const lx = gPos("robot").x, mono = `font-family="JetBrains Mono, monospace"`;
+  h += `<text x="${lx}" y="${GY[1] + 6}" ${mono} font-size="11" fill="#5b6478">ARRIBA: EL CAMINO DE CADA</text>`;
+  h += `<text x="${lx}" y="${GY[1] + 21}" ${mono} font-size="11" fill="#5b6478">DATO, 1 VEZ POR SEGUNDO →</text>`;
+  h += `<text x="${lx}" y="${GY[1] + 44}" ${mono} font-size="11" fill="#5b6478">ABAJO: SERVICIOS DE APOYO</text>`;
+  h += `<text x="${lx}" y="${GY[1] + 59}" ${mono} font-size="10.5" fill="#8a91a3">(la línea punteada = trabajan</text>`;
+  h += `<text x="${lx}" y="${GY[1] + 73}" ${mono} font-size="10.5" fill="#8a91a3">con lo que pasa arriba)</text>`;
+  for (const st of G_STATIONS) {
+    const { x, y } = gPos(st.id);
+    h += `<g class="st" data-id="${st.id}" role="button" tabindex="0" aria-label="${esc(st.name)}: ${esc(st.tech)}">
+      <rect x="${x + 4}" y="${y + 4}" width="${GW}" height="${GH}" rx="3" fill="#1d2433"/>
+      <rect class="frame" x="${x}" y="${y}" width="${GW}" height="${GH}" rx="3" fill="#fff" stroke="#1d2433" stroke-width="2.5"/>
+      <rect class="band" x="${x + 1.5}" y="${y + 1.5}" width="${GW - 3}" height="7" fill="${st.color}"/>
+      ${gIcon(st.id, st.color, x + GW / 2 - 16, y + 13, 4)}
+      <text x="${x + GW / 2}" y="${y + 59}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="11.5" fill="#1d2433">${esc(st.name.toUpperCase())}</text>
+      <text x="${x + GW / 2}" y="${y + 70}" text-anchor="middle" font-family="Inter, sans-serif" font-size="8.6" fill="#5b6478">${esc(st.tech)}</text>
+    </g>`;
+  }
+  h += `<g id="g-packet"></g><g id="g-extra"></g>`;
+  svg.innerHTML = h;
+  svg.querySelectorAll(".st").forEach((g) => {
+    g.addEventListener("click", () => guideSelect(g.dataset.id));
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); guideSelect(g.dataset.id); } });
+  });
+  $("g-qs").innerHTML = G_QUESTIONS.map((it, i) => `<details class="g-q"><summary>${esc(it.q)}</summary><div class="ans">${esc(it.a)}${it.t ? `<small>${esc(it.t)}</small>` : ""}
+      ${it.run ? `<div><button class="g-try" type="button" data-run="${it.run}">▶ Probar de verdad</button></div><pre class="g-out" id="g-out-${it.run}"></pre>` : ""}</div></details>`).join("");
+  $("g-qs").querySelectorAll(".g-try").forEach((b) => b.addEventListener("click", () => guideRun(b)));
+  $("g-gloss").innerHTML = G_GLOSSARY.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
+  document.querySelectorAll(".g-switch button").forEach((b) => b.addEventListener("click", () => {
+    guide.level = b.dataset.level;
+    document.querySelectorAll(".g-switch button").forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+    renderGuideCard();
+  }));
+  guide.built = true;
+  guideSelect(guide.sel);
+}
+function guideSelect(id) {
+  guide.sel = id;
+  document.querySelectorAll("#g-svg .st").forEach((g) => {
+    const on = g.dataset.id === id;
+    g.querySelector(".frame").setAttribute("fill", on ? "#fef9c3" : "#fff");
+    g.setAttribute("aria-pressed", String(on));
+  });
+  renderGuideCard();
+}
+function renderGuideCard() {
+  const st = G_STATIONS.find((o) => o.id === guide.sel);
+  let live = "—";
+  try { live = st.live(); } catch (err) { /* data not loaded yet */ }
+  $("g-card").innerHTML = `<h4>${esc(st.name)}</h4><span class="tag">${esc(st.tech)}</span>
+    <h5>${guide.level === "kid" ? "¿Qué es? (como a un niño)" : "¿Qué hace? (técnico)"}</h5><p>${esc(guide.level === "kid" ? st.kid : st.pro)}</p>
+    <h5>¿Por qué está hecho así?</h5><p>${esc(st.why)}</p>
+    <div class="g-live">● En vivo: ${esc(live)}</div>
+    <h5>Míralo tú mismo</h5><p><a href="${st.see[0]}" target="_blank" rel="noopener">${esc(st.see[0])}</a> · ${esc(st.see[1])}</p>`;
+}
+
+// One trip: an envelope walks robot → … → panel (about 0.55 s per hop).
+// "bad" trips stop at the check, turn red and go back with a 422.
+function guideSample() {
+  const live = [...state.robots.values()].filter((r) => r.connected && r.data);
+  if (!live.length) return { d: null, status: "NORMAL", conf: null };
+  const r = live[Math.floor(Math.random() * live.length)];
+  return { d: r.data, status: r.data.predicted_status || "NORMAL", conf: r.data.confidence };
+}
+function guideTrip(kind = "ok", note = "") {
+  const smp = guideSample();
+  guide.trip = { kind, t0: performance.now(), hop: 550, ...smp, note, sent: false, saved: false };
+  const d = smp.d;
+  if (kind === "bad") $("g-ticker").innerHTML = `▶ Carta con errores: ${esc(note)} → <b>el revisor la devuelve (422)</b> y nada se guarda.`;
+  else if (d) $("g-ticker").innerHTML = `▶ <b>${esc(d.robot_id)}</b> envía: velocidad ${fmt(d.speed, 2)} · temperatura ${fmt(d.motor_temp, 1)} °C · vibración ${fmt(d.vibration, 2)} · corriente ${fmt(d.motor_current, 2)} · batería ${fmt(d.battery, 0)} %`;
+  else $("g-ticker").innerHTML = `▶ No hay robots conectados. Presiona <b>«Iniciar flota»</b> para ver viajar datos reales; mientras, este es un viaje de ejemplo.`;
+}
+function guideFrame(t) {
+  if (!guide.built) return;
+  if (!guide.trip) guideTrip();
+  const tr = guide.trip, k = Math.max(0, (t - tr.t0) / tr.hop); // a frame can start just before a trip created by a click
+  const path = tr.kind === "bad" ? ["robot", "net", "api", "check", "api", "net", "robot"] : G_FLOW;
+  const seg = Math.min(path.length - 1, Math.floor(k)), f = Math.min(1, k - seg);
+  const a = gCenter(path[seg]), b = gCenter(path[Math.min(path.length - 1, seg + 1)]);
+  const ease = f < 0.5 ? 2 * f * f : 1 - (-2 * f + 2) ** 2 / 2;
+  const x = a.x + (b.x - a.x) * ease, y = a.y - 44 + (b.y - a.y) * ease + Math.sin(f * Math.PI) * -6;
+  const judged = tr.kind === "ok" && k >= 4.5, rejected = tr.kind === "bad" && k >= 3;
+  const fill = rejected ? COLORS.CRITICAL : judged ? COLORS[tr.status] || "#fff" : "#fff";
+  const label = rejected ? "422" : judged ? ({ NORMAL: "OK", WARNING: "!", CRITICAL: "!!" }[tr.status] || "") : "";
+  $("g-packet").innerHTML = `<g transform="translate(${Math.round(x)} ${Math.round(y)})">
+    <rect x="-15" y="-10" width="30" height="20" fill="#1d2433" transform="translate(2 2)"/>
+    <rect x="-15" y="-10" width="30" height="20" fill="${fill}" stroke="#1d2433" stroke-width="2"/>
+    ${label ? `<text y="4" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="10" fill="#fff">${label}</text>`
+            : `<path d="M-15 -10L0 2L15 -10" fill="none" stroke="#1d2433" stroke-width="2"/>`}</g>`;
+  // the station the envelope is in lights up
+  const at = path[Math.round(Math.min(path.length - 1, k))];
+  document.querySelectorAll("#g-svg .st").forEach((g) => g.querySelector(".band").setAttribute("height", g.dataset.id === at ? 12 : 7));
+  if (tr.kind === "ok" && !tr.sent && k >= 4.5 && tr.d) {
+    tr.sent = true;
+    $("g-ticker").innerHTML += `<br>→ el modelo dice <b>${esc(tr.status)}</b>${tr.conf != null ? ` con ${fmt(tr.conf * 100, 0)} % de seguridad` : ""} · se anota en la base de datos y el panel lo dibuja`;
+  }
+  // side trips: a small dot to metrics (every trip) and to backups (now and then)
+  if (tr.kind === "ok" && k >= 2 && !tr.m) { tr.m = true; guide.extra.push({ from: "api", to: "metrics", t0: t }); }
+  if (tr.kind === "ok" && k >= 5 && !tr.saved) { tr.saved = true; if (Math.random() < 0.35) guide.extra.push({ from: "db", to: "backups", t0: t }); }
+  guide.extra = guide.extra.filter((e) => t - e.t0 < 700);
+  $("g-extra").innerHTML = guide.extra.map((e) => {
+    const p = Math.min(1, (t - e.t0) / 700), A = gCenter(e.from), B = gCenter(e.to);
+    return `<rect x="${A.x - 4}" y="${A.y + 36 + (B.y - A.y - 72) * p}" width="8" height="8" fill="#1d2433"/>`;
+  }).join("");
+  if (k >= path.length - 1 + 1.6) guideTrip();
+}
+// Called after every poll, so the live line is fresh even without animation frames.
+function guideLive() {
+  if (state.mode !== "guide" || !guide.built) return;
+  if (Date.now() - guide.lastRtt > 10000) { guide.lastRtt = Date.now(); guidePing(); }
+  const c = $("g-card").querySelector(".g-live");
+  try { if (c) c.textContent = `● En vivo: ${G_STATIONS.find((o) => o.id === guide.sel).live()}`; } catch (err) { /* data not loaded yet */ }
+}
+async function guidePing() {
+  try { const t0 = performance.now(); await fetch("/health", { cache: "no-store" }); guide.rtt = performance.now() - t0; } catch (err) { guide.rtt = null; }
+}
+
+// «Probar de verdad»: real requests to this same API, shown as they come back.
+const G_BASE = () => ({ robot_id: "GUIA-01", timestamp: Date.now() / 1000, x: 4.2, y: 7.8, speed: 0.63, battery: 71,
+                        motor_temp: 48.2, vibration: 0.43, motor_current: 3.7, obstacle_distance: 0.42 });
+const gLine = (cls, text) => `<span class="${cls}">${esc(text)}</span>`;
+async function gShow(res) {
+  let body = null;
+  try { body = await res.json(); } catch (err) { /* no JSON */ }
+  const cls = res.ok ? "ok" : res.status < 500 ? "warn" : "bad";
+  return { body, head: gLine(cls, `HTTP ${res.status} ${res.ok ? "(todo bien)" : res.status === 422 ? "(datos inválidos: rechazados)" : ""}`) };
+}
+// Pydantic answers in English; each line adds what it means in Spanish.
+const G_MSG = [[/^Field required$/, "falta este campo"], [/less than or equal to (\S+)/, "debe ser ≤ $1"], [/greater than or equal to (\S+)/, "debe ser ≥ $1"],
+               [/finite number/, "tiene que ser un número de verdad (NaN no vale)"], [/valid number/, "tiene que ser un número"], [/valid string/, "tiene que ser texto"]];
+const gEs = (msg) => { for (const [re, es] of G_MSG) { const m = String(msg).match(re); if (m) return es.replace("$1", m[1] || ""); } return ""; };
+const gErrors = (body) => (body?.detail || []).slice(0, 4).map((e) => `  · ${e.loc?.slice(1).join(".") || e.loc?.join(".")}: ${e.msg}${gEs(e.msg) ? `  → ${gEs(e.msg)}` : ""}`).join("\n");
+async function guideRun(btn) {
+  const kind = btn.dataset.run, out = $(`g-out-${kind}`);
+  btn.disabled = true; out.textContent = "Enviando…";
+  try {
+    let html = "";
+    if (kind === "missing") {
+      const { head, body } = await gShow(await postJSON("/telemetry", JSON.stringify({ robot_id: "GUIA-01", timestamp: Date.now() / 1000 })));
+      html = `POST /telemetry  {"robot_id":"GUIA-01","timestamp":…}\n${head}\nLo que falta:\n${esc(gErrors(body))}${(body?.detail?.length || 0) > 4 ? `\n  · …y ${body.detail.length - 4} campos más` : ""}`;
+      guideTrip("bad", "faltan 8 campos");
+    } else if (kind === "range") {
+      const { head, body } = await gShow(await postJSON("/predict", JSON.stringify({ ...G_BASE(), battery: 150 })));
+      html = `POST /predict  {… "battery": 150 …}\n${head}\n${esc(gErrors(body))}`;
+      guideTrip("bad", "batería 150 %");
+    } else if (kind === "nan") {
+      const raw = JSON.stringify(G_BASE()).replace('"speed":0.63', '"speed":NaN');
+      const { head, body } = await gShow(await postJSON("/predict", raw));
+      html = `POST /predict  {… "speed": NaN …}\n${head}\n${esc(gErrors(body))}`;
+      guideTrip("bad", "velocidad NaN");
+    } else if (kind === "predict") {
+      const t0 = performance.now(), { head, body } = await gShow(await postJSON("/predict", JSON.stringify(G_BASE())));
+      html = `POST /predict  (velocidad 0,63 · temp. 48,2 °C · vibración 0,43 · corriente 3,7)\n${head} en ${fmt(performance.now() - t0, 0)} ms\n${esc(JSON.stringify(body, null, 1))}`;
+    } else if (kind === "burst") {
+      const times = [], codes = []; let next = 0;
+      const one = async () => { while (next < 30) { next++; const t0 = performance.now(); const r = await postJSON("/predict", JSON.stringify(G_BASE())); times.push(performance.now() - t0); codes.push(r.status); } };
+      const t0 = performance.now();
+      await Promise.all(Array.from({ length: 5 }, one));
+      times.sort((a, b) => a - b);
+      const errs = codes.filter((c) => c !== 200).length;
+      html = `30 predicciones, 5 a la vez, en ${fmt((performance.now() - t0) / 1000, 1)} s\n${gLine(errs ? "bad" : "ok", `${errs} errores`)}\np50 ${fmt(times[14], 0)} ms · p95 ${fmt(times[28], 0)} ms · la más lenta ${fmt(times[29], 0)} ms`;
+    } else if (kind === "count") {
+      const f = await getJSON("/fleet"), st = f.storage || {};
+            html = `GET /fleet → storage\n${gLine("ok", `${st.backend}: ${nf(st.telemetry_rows)} registros guardados`)}\nAnota este número, reinicia (Vercel → Redeploy) y vuelve a probar:\nverás el mismo número o uno mayor.`;
+    } else if (kind === "health") {
+      const t0 = performance.now(), h = await getJSON("/health");
+      html = `GET /health (${fmt(performance.now() - t0, 0)} ms)\n${gLine(h.database_ok ? "ok" : "bad", `database: ${h.database} · database_ok: ${h.database_ok}`)}\nstatus: ${esc(h.status)} · commit: ${esc(h.commit)}`;
+    } else if (kind === "metrics") {
+      const m = await getJSON("/metrics");
+      html = `GET /metrics\nscope: ${esc(m.scope)} · instancias activas: ${m.instances_active}\npeticiones: ${nf(m.requests_total)} · errores 4xx: ${nf(m.errors_4xx)} · 5xx: ${nf(m.errors_5xx)}\nesta instancia: ${nf(m.instance?.requests_total)} peticiones`;
+    } else if (kind === "history") {
+      const id = [...state.robots.keys()].sort()[0] || "R01";
+      const hist = await getJSON(`/robots/${encodeURIComponent(id)}/history?limit=3&details=true`);
+      const rows = Array.isArray(hist) ? hist : [];
+      html = `GET /robots/${esc(id)}/history?limit=3\n${gLine("ok", `${rows.length} registros (los más recientes)`)}\n${esc(rows.map((r) => `  · ${new Date((r.timestamp || 0) * 1000).toLocaleTimeString("es-CL")} temp ${fmt(r.motor_temp, 1)} °C → ${r.predicted_status || "—"}`).join("\n")) || "  (este robot aún no tiene datos)"}`;
+    }
+    out.innerHTML = html;
+  } catch (err) {
+    out.innerHTML = gLine("bad", `No se pudo: ${err.message}`);
+  } finally { btn.disabled = false; }
+}
+
 // Three views of the same fleet: office, restaurant and lab. The side panel
 // (rubric, metrics, backups, model) is the same in all of them.
 state.mode = "office";
-const MODE_TITLES = { office: "Oficina de operaciones", restaurant: "Restaurante Fleet · la misma plataforma como restaurante", lab: "Laboratorio de movilidad" };
+const MODE_TITLES = { office: "Oficina de operaciones", restaurant: "Restaurante Fleet · la misma plataforma como restaurante", lab: "Laboratorio de movilidad", guide: "¿Cómo funciona? · el sistema por dentro" };
+const MODE_HASH = { office: "", restaurant: "#restaurante", lab: "#lab", guide: "#como-funciona" };
 function setMode(mode) {
   state.mode = mode;
   setLab(mode === "lab");
   $("rest-panel").hidden = mode !== "restaurant";
+  $("stage").classList.toggle("guide-on", mode === "guide");
+  if (mode === "guide") { if (state.selected) closeProfile(); if (!guide.built) buildGuide(); else renderGuideCard(); }
+  else resizeCanvas();
   $("office-title").textContent = MODE_TITLES[mode];
   document.querySelectorAll(".mode").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.mode === mode)));
-  for (const k of ["heat", "targets"]) document.querySelector(`.toggle[data-toggle="${k}"]`).disabled = mode === "restaurant";
-  history.replaceState(null, "", mode === "office" ? location.pathname : `#${mode === "lab" ? "lab" : "restaurante"}`);
+  for (const k of ["heat", "targets"]) document.querySelector(`.toggle[data-toggle="${k}"]`).disabled = mode === "restaurant" || mode === "guide";
+  document.querySelector('.toggle[data-toggle="tags"]').disabled = mode === "guide";
+  history.replaceState(null, "", location.pathname + MODE_HASH[mode]);
 }
 document.querySelectorAll(".mode").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
-const HASH_MODES = { "#lab": "lab", "#restaurante": "restaurant" }; // direct links
+const HASH_MODES = { "#lab": "lab", "#restaurante": "restaurant", "#como-funciona": "guide" }; // direct links
 if (HASH_MODES[location.hash]) setMode(HASH_MODES[location.hash]);
 window.addEventListener("hashchange", () => { const m = HASH_MODES[location.hash] || "office"; if (m !== state.mode) setMode(m); });
 function labCell(e) {
