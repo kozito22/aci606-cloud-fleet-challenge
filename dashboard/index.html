@@ -215,6 +215,11 @@
     .g-switch { display: inline-flex; border: 2px solid #1d2433; border-radius: 4px; overflow: hidden; }
     .g-switch button { border: 0; background: #fff; padding: 4px 10px; cursor: pointer; font: 600 12px var(--mono); color: #1d2433; }
     .g-switch button[aria-pressed="true"] { background: #1d2433; color: #fffdf5; }
+    .g-video { padding: 10px; margin-bottom: 16px; }
+    .g-video-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin: 0 2px 8px; }
+    .g-video-head h4 { margin: 0; font: 700 14px var(--mono); }
+    .g-video-head span { color: #5b6478; font: 12px var(--mono); }
+    .g-video video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #141a2b; border: 2px solid #1d2433; border-radius: 3px; }
     .g-map { padding: 8px; }
     .g-map svg { display: block; width: 100%; height: auto; }
     .g-map .st { cursor: pointer; }
@@ -341,6 +346,13 @@
               <button type="button" data-level="tech" aria-pressed="false">Técnica</button>
             </div>
           </div>
+          <section class="g-box g-video" aria-labelledby="g-video-title">
+            <div class="g-video-head"><h4 id="g-video-title">▶ VIDEO · RECORRIDO DEL PANEL</h4><span>3:50 min · sin voz · con subtítulos</span></div>
+            <video id="g-video" controls preload="none" playsinline poster="/media/recorrido-portada.jpg">
+              <source src="/media/fleet-office-recorrido.mp4" type="video/mp4">
+              Tu navegador no puede reproducir el video: <a href="/media/fleet-office-recorrido.mp4">descárgalo aquí</a>.
+            </video>
+          </section>
           <div class="g-box g-map">
             <svg id="g-svg" viewBox="0 0 900 270" role="group" aria-label="Mapa del sistema: robot, internet, API, revisión, modelo, base de datos y panel"></svg>
             <div class="g-ticker" id="g-ticker" aria-live="polite">Preparando el primer viaje…</div>
@@ -2450,7 +2462,7 @@ function setMode(mode) {
   $("rest-panel").hidden = mode !== "restaurant";
   $("stage").classList.toggle("guide-on", mode === "guide");
   if (mode === "guide") { if (state.selected) closeProfile(); if (!guide.built) buildGuide(); else renderGuideCard(); }
-  else resizeCanvas();
+  else { resizeCanvas(); $("g-video").pause(); }
   $("office-title").textContent = MODE_TITLES[mode];
   document.querySelectorAll(".mode").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.mode === mode)));
   for (const k of ["heat", "targets"]) document.querySelector(`.toggle[data-toggle="${k}"]`).disabled = mode === "restaurant" || mode === "guide";
