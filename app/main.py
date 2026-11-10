@@ -9,7 +9,7 @@ from typing import Literal
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from app import backups, coverage, db, metrics, model
@@ -230,6 +230,20 @@ def root() -> RedirectResponse:
 def favicon() -> Response:
     # Browsers request it automatically; answering 204 keeps it out of the 4xx count.
     return Response(status_code=204)
+
+
+PUBLIC_MEDIA = Path(__file__).resolve().parents[1] / "public" / "media"
+if not os.environ.get("VERCEL"):
+    # On Vercel, public/ is served by the CDN at the root path
+    # (public/media/x.mp4 -> /media/x.mp4) and never reaches this function, so
+    # large files avoid the function response limit. Locally there is no CDN,
+    # so the same URLs are answered here.
+    @app.get("/media/{name}", include_in_schema=False)
+    def media(name: str) -> FileResponse:
+        path = (PUBLIC_MEDIA / name).resolve()
+        if path.parent != PUBLIC_MEDIA.resolve() or not path.is_file():
+            raise HTTPException(status_code=404, detail="Not found")
+        return FileResponse(path)
 
 
 @app.get("/dashboard", response_class=HTMLResponse)

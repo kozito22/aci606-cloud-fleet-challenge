@@ -210,9 +210,9 @@ Es una oficina isométrica clara con paredes de vidrio y robots en pixel art.
   - Estado de la flota, con la distribución actual y la tendencia de 15 minutos.
   - Respaldos y modelo.
 
-### Tres vistas: Oficina, Restaurante y Laboratorio
+### Cuatro vistas: Oficina, Restaurante, Laboratorio y ¿Cómo funciona?
 
-Arriba de la escena, un selector cambia entre tres vistas. El panel lateral (pauta, tablero, flota, respaldos y modelo) es el mismo en las tres. Las tres flotan sobre un fondo de galaxia con constelaciones (Orión, Cruz del Sur, Casiopea y Osa Mayor).
+Arriba de la escena, un selector cambia entre cuatro vistas. El panel lateral (pauta, tablero, flota, respaldos y modelo) es el mismo en todas. Las tres flotan sobre un fondo de galaxia con constelaciones (Orión, Cruz del Sur, Casiopea y Osa Mayor).
 
 - **Oficina** (`/dashboard`): la vista descrita arriba.
 - **Restaurante** (`/dashboard#restaurante`): la misma plataforma y los mismos datos reales, contados como un restaurante.
@@ -228,6 +228,11 @@ Arriba de la escena, un selector cambia entre tres vistas. El panel lateral (pau
 
   Los meseros caminan de verdad: toman el pedido en la mesa, lo llevan al pase, el chef lo cocina y vuelven con el plato del color del estado predicho. La caja muestra las métricas en vivo.
 - **Laboratorio** (`/dashboard#lab`): la simulación local descrita a continuación.
+- **¿Cómo funciona?** (`/dashboard#como-funciona`): vista 2D sencilla que explica el sistema por dentro.
+  - **Video del recorrido** (3:50 min, sin voz, con subtítulos): muestra todo el panel paso a paso. Está en `public/media/fleet-office-recorrido.mp4`; Vercel lo sirve desde su CDN en `/media/…` (en local lo sirve la API).
+  - **Mapa del viaje de un dato**: robot → internet → API → revisión → modelo → base de datos → panel, con un sobre que viaja con datos reales.
+  - **Ficha de cada pieza**: explicación simple o técnica, por qué está hecha así y un valor en vivo.
+  - **«¿Qué pasa si…?»**: 15 casos; 9 tienen un botón que hace la petición real (422, 200, carga, `/health`, `/metrics`, historial).
 
 ### Modo laboratorio
 
